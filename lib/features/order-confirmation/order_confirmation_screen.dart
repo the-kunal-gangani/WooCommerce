@@ -50,7 +50,6 @@ class OrderConfirmationScreen extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 16.0),
                 children: [
-                  // --- SECTION 1: SUCCESS HEADER ---
                   const CircleAvatar(
                     radius: 36,
                     backgroundColor: Colors.green,
@@ -70,8 +69,6 @@ class OrderConfirmationScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   const Divider(),
-
-                  // --- SECTION 2: ORDER DETAILS ---
                   ListTile(
                     leading: const Icon(Icons.receipt_long, color: Colors.blue),
                     title: const Text('Order Number'),
@@ -102,8 +99,6 @@ class OrderConfirmationScreen extends StatelessWidget {
                     ),
                   ),
                   const Divider(),
-
-                  // --- SECTION 3: ORDERED ITEMS ---
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                     child: Text(
@@ -143,8 +138,6 @@ class OrderConfirmationScreen extends StatelessWidget {
                     ),
                   ),
                   const Divider(),
-
-                  // --- SECTION 4: PAYMENT SUMMARY ---
                   ListTile(
                     title: const Text(
                       'Total Paid',

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/route_manager.dart';
-import 'package:get/state_manager.dart';
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 
 class CheckoutScreen extends StatelessWidget {

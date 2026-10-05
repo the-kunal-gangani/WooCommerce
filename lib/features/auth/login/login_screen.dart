@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/core/configs/app_config.dart';
-import 'package:magna_data_ai_ecommerce/features/auth/forget-password/forget_password_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/login/login_controller.dart';
 
 class LoginScreen extends GetView<LoginController> {
