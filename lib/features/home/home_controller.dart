@@ -14,7 +14,7 @@ class HomeController extends GetxController {
 
   void navigateToCartPage() {
     Flexify.goRemoveAll(
-      const AddToCartScreen(),
+      const CartScreen(),
       animation: FlexifyRouteAnimations.blur,
       duration: const Duration(milliseconds: 800),
     );

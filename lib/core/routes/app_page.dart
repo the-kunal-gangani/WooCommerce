@@ -5,6 +5,7 @@ import 'package:magna_data_ai_ecommerce/features/auth/forget-password/forget_pas
 import 'package:magna_data_ai_ecommerce/features/auth/login/login_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/login/login_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/register/register_screen.dart';
+import 'package:magna_data_ai_ecommerce/features/checkout/checkout_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/onboarding/onboarding_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/onboarding/onboarding_screen.dart';
@@ -61,6 +62,8 @@ class AppPages {
       page: () => const ProductDetailsScreen(),
     ),
 
-    GetPage(name: AppRoutes.cart, page: () => const AddToCartScreen()),
+    GetPage(name: AppRoutes.cart, page: () => const CartScreen()),
+
+    GetPage(name: AppRoutes.checkout, page: () => const CheckoutScreen()),
   ];
 }

@@ -1,129 +1,113 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_instance/src/extension_instance.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
-import 'package:magna_data_ai_ecommerce/features/add-to-cart/add_to_cart_controller.dart';
 
-class AddToCartScreen extends StatelessWidget {
-  const AddToCartScreen({super.key});
+class CartScreen extends StatelessWidget {
+  const CartScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(AddToCartController());
+    // Static dummy data for UI display
+    final List<Map<String, dynamic>> cartItems = [
+      {
+        'name': 'Wireless Headphones',
+        'color': 'Navy Blue',
+        'price': 199.99,
+        'quantity': 1,
+      },
+      {
+        'name': 'Ergonomic Mechanical Keyboard',
+        'color': 'Matte Black',
+        'price': 149.50,
+        'quantity': 2,
+      },
+      {
+        'name': 'Smart Fitness Watch',
+        'color': 'Silver',
+        'price': 89.99,
+        'quantity': 1,
+      },
+    ];
+
+    const double subtotal = 588.98;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Add to Cart'), centerTitle: true),
+      appBar: AppBar(title: const Text('My Cart'), centerTitle: true),
       body: SafeArea(
         child: Column(
           children: [
+            // List of Cart Items
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      height: 220,
-                      width: double.infinity,
+              child: ListView.separated(
+                itemCount: cartItems.length,
+                separatorBuilder: (context, index) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  final item = cartItems[index];
+
+                  return ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 8.0,
+                    ),
+                    leading: Container(
+                      width: 50,
+                      height: 50,
                       decoration: BoxDecoration(
                         color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(
-                        Icons.headphones,
-                        size: 100,
-                        color: Colors.grey,
-                      ),
+                      child: const Icon(Icons.shopping_bag, color: Colors.grey),
                     ),
-                    const SizedBox(height: 20),
-                    Text(
-                      controller.productName,
-                      style: Theme.of(context).textTheme.titleLarge
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                    title: Text(
+                      item['name'],
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '\$${controller.basePrice.toStringAsFixed(2)}',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Theme.of(context).primaryColor,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Select Color',
-                      style: Theme.of(context).textTheme.bodyLarge
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 12),
-                    Obx(
-                      () => Row(
-                        children: controller.availableColors.map((color) {
-                          final isSelected =
-                              controller.selectedColor.value == color;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: ChoiceChip(
-                              label: Text(color),
-                              selected: isSelected,
-                              onSelected: (_) => controller.selectColor(color),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Quantity',
-                      style: Theme.of(context).textTheme.bodyLarge
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade300),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.remove),
-                                onPressed: controller.decrementQuantity,
-                              ),
-                              Obx(
-                                () => Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12.0,
-                                  ),
-                                  // style: const TextStyle(
-                                  //   fontSize: 16,
-                                  //   fontWeight: FontWeight.bold,
-                                  // ),
-                                  child: Text('${controller.quantity.value}'),
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.add),
-                                onPressed: controller.incrementQuantity,
-                              ),
-                            ],
+                        const SizedBox(height: 4),
+                        Text('Color: ${item['color']}'),
+                        const SizedBox(height: 2),
+                        Text(
+                          '\$${item['price'].toStringAsFixed(2)}',
+                          style: TextStyle(
+                            color: Theme.of(context).primaryColor,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.remove_circle_outline),
+                          onPressed: () {},
+                        ),
+                        Text(
+                          '${item['quantity']}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add_circle_outline),
+                          onPressed: () {},
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
+
+            // Bottom Summary & Pay Bar
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Theme.of(context).scaffoldBackgroundColor,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withAlpha(0.05.toInt()),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, -4),
                   ),
@@ -136,39 +120,36 @@ class AddToCartScreen extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text(
-                        'Total Price',
+                        'Total Amount',
                         style: TextStyle(color: Colors.grey, fontSize: 12),
                       ),
                       const SizedBox(height: 4),
-                      Obx(
-                        () => Text(
-                          '\$${controller.totalPrice.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      Text(
+                        '\$${subtotal.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(width: 24),
                   Expanded(
-                    child: ElevatedButton.icon(
+                    child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      icon: const Icon(Icons.shopping_cart_outlined),
-                      label: const Text(
-                        'Add to Cart',
+                      onPressed: () {},
+                      child: const Text(
+                        'Checkout & Pay',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      onPressed: controller.addToCart,
                     ),
                   ),
                 ],
