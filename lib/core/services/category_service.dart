@@ -18,7 +18,7 @@ class CategoryService {
         'page': page,
         'per_page': perPage,
         'hide_empty': hideEmpty,
-        if (parent != null) 'parent': parent,
+        'parent': ?parent,
         if (search != null && search.isNotEmpty) 'search': search,
       },
     );
