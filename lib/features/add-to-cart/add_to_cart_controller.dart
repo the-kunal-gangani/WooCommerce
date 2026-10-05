@@ -1,5 +1,7 @@
+import 'package:flexify/flexify.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:magna_data_ai_ecommerce/features/checkout/checkout_screen.dart';
 
 class AddToCartController extends GetxController {
   final String productName = 'Premium Wireless Headphones';
@@ -33,6 +35,14 @@ class AddToCartController extends GetxController {
       backgroundColor: Colors.black87,
       colorText: Colors.white,
       margin: const EdgeInsets.all(16),
+    );
+  }
+
+  void navigateToCheckout() {
+    Flexify.goRemoveAll(
+      const CheckoutScreen(),
+      animation: FlexifyRouteAnimations.blur,
+      duration: const Duration(milliseconds: 800),
     );
   }
 }

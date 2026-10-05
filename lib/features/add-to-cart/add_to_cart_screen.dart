@@ -1,10 +1,16 @@
+import 'package:flexify/flexify.dart';
 import 'package:flutter/material.dart';
+import 'package:magna_data_ai_ecommerce/features/checkout/checkout_screen.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    void goToCheckout() {
+      Flexify.go(CheckoutScreen());
+    }
+
     // Static dummy data for UI display
     final List<Map<String, dynamic>> cartItems = [
       {
@@ -142,7 +148,9 @@ class CartScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: () {},
+                      onPressed: () {
+                        goToCheckout();
+                      },
                       child: const Text(
                         'Checkout & Pay',
                         style: TextStyle(

@@ -9,6 +9,7 @@ import 'package:magna_data_ai_ecommerce/features/checkout/checkout_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/onboarding/onboarding_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/onboarding/onboarding_screen.dart';
+import 'package:magna_data_ai_ecommerce/features/order-confirmation/order_confirmation_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/product-details/product_details_screen.dart';
 
 import '../../features/splash/splash_controller.dart';
@@ -65,5 +66,10 @@ class AppPages {
     GetPage(name: AppRoutes.cart, page: () => const CartScreen()),
 
     GetPage(name: AppRoutes.checkout, page: () => const CheckoutScreen()),
+
+    GetPage(
+      name: AppRoutes.orderConfirmation,
+      page: () => const OrderConfirmationScreen(),
+    ),
   ];
 }
