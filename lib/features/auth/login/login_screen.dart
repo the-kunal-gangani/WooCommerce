@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/core/configs/app_config.dart';
+import 'package:magna_data_ai_ecommerce/features/auth/forget-password/forget_password_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/login/login_controller.dart';
 
 class LoginScreen extends GetView<LoginController> {
@@ -14,6 +15,14 @@ class LoginScreen extends GetView<LoginController> {
           : Get.put(LoginController());
 
       controller.navigateToRegisterScreen();
+    }
+
+    void forgetPassword(BuildContext context) {
+      final controller = Get.isRegistered<LoginController>()
+          ? Get.find<LoginController>()
+          : Get.put(LoginController());
+
+      controller.navigateToForgetPasswordScreen();
     }
 
     final theme = Theme.of(context);
@@ -129,7 +138,7 @@ class LoginScreen extends GetView<LoginController> {
                     ),
                     TextButton(
                       onPressed: () {
-                        // Navigate to Forgot Password
+                        forgetPassword(context);
                       },
                       child: Text(
                         "Forgot Password?",

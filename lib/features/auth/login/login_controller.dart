@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flexify/flexify.dart';
+import 'package:magna_data_ai_ecommerce/features/auth/forget-password/forget_password_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/register/register_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_screen.dart';
 
@@ -49,6 +50,14 @@ class LoginController extends GetxController {
   void navigateToRegisterScreen() {
     Flexify.goRemoveAll(
       const RegisterScreen(),
+      animation: FlexifyRouteAnimations.blur,
+      duration: const Duration(milliseconds: 800),
+    );
+  }
+
+  void navigateToForgetPasswordScreen() {
+    Flexify.goRemoveAll(
+      const ForgotPasswordScreen(),
       animation: FlexifyRouteAnimations.blur,
       duration: const Duration(milliseconds: 800),
     );
