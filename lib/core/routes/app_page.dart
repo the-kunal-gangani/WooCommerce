@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/login/login_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/login/login_screen.dart';
+import 'package:magna_data_ai_ecommerce/features/auth/register/register_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/onboarding/onboarding_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/onboarding/onboarding_screen.dart';
@@ -35,5 +36,13 @@ class AppPages {
     ),
 
     GetPage(name: AppRoutes.home, page: () => const HomeScreen()),
+
+    GetPage(
+      name: AppRoutes.register,
+      page: () => const RegisterScreen(),
+      binding: BindingsBuilder.put(
+        () => BindingsBuilder.put(() => const RegisterScreen()),
+      ),
+    ),
   ];
 }

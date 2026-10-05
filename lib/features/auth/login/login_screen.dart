@@ -8,6 +8,14 @@ class LoginScreen extends GetView<LoginController> {
 
   @override
   Widget build(BuildContext context) {
+    void registerAccount(BuildContext context) {
+      final controller = Get.isRegistered<LoginController>()
+          ? Get.find<LoginController>()
+          : Get.put(LoginController());
+
+      controller.navigateToRegisterScreen();
+    }
+
     final theme = Theme.of(context);
     final primaryColor = theme.primaryColor;
 
@@ -176,7 +184,7 @@ class LoginScreen extends GetView<LoginController> {
                     ),
                     GestureDetector(
                       onTap: () {
-                        // Navigate to RegisterScreen
+                        registerAccount(context);
                       },
                       child: Text(
                         "Sign Up",

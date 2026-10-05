@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flexify/flexify.dart';
+import 'package:magna_data_ai_ecommerce/features/auth/register/register_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_screen.dart';
 
 class LoginController extends GetxController {
@@ -43,6 +44,14 @@ class LoginController extends GetxController {
         snackPosition: SnackPosition.BOTTOM,
       );
     }
+  }
+
+  void navigateToRegisterScreen() {
+    Flexify.goRemoveAll(
+      const RegisterScreen(),
+      animation: FlexifyRouteAnimations.blur,
+      duration: const Duration(milliseconds: 800),
+    );
   }
 
   @override
