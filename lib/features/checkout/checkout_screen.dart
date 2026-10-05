@@ -164,7 +164,9 @@ class CheckoutScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: () {},
+                      onPressed: () {
+                        orderConfirmation();
+                      },
                       child: const Text(
                         'Place Order',
                         style: TextStyle(

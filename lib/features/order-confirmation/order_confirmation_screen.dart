@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_navigation/src/extension_navigation.dart';
+import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 
 class OrderConfirmationScreen extends StatelessWidget {
   const OrderConfirmationScreen({super.key});
@@ -8,6 +11,10 @@ class OrderConfirmationScreen extends StatelessWidget {
     const String orderId = '#ORD-2026-98421';
     const String estimatedDelivery = 'Wed, Oct 8 - Fri, Oct 10';
     const double totalAmount = 651.10;
+
+    void redirectToHome() {
+      Get.toNamed(AppRoutes.home);
+    }
 
     final List<Map<String, dynamic>> items = [
       {
@@ -53,10 +60,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                   const Text(
                     'Thank You for Your Order!',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   const Text(
@@ -77,7 +81,10 @@ class OrderConfirmationScreen extends StatelessWidget {
                     ),
                   ),
                   ListTile(
-                    leading: const Icon(Icons.local_shipping_outlined, color: Colors.orange),
+                    leading: const Icon(
+                      Icons.local_shipping_outlined,
+                      color: Colors.orange,
+                    ),
                     title: const Text('Estimated Delivery'),
                     subtitle: const Text(
                       estimatedDelivery,
@@ -85,9 +92,14 @@ class OrderConfirmationScreen extends StatelessWidget {
                     ),
                   ),
                   const ListTile(
-                    leading: Icon(Icons.location_on_outlined, color: Colors.redAccent),
+                    leading: Icon(
+                      Icons.location_on_outlined,
+                      color: Colors.redAccent,
+                    ),
                     title: Text('Shipping Address'),
-                    subtitle: Text('123 Main Street, Apt 4B, New York, NY 10001'),
+                    subtitle: Text(
+                      '123 Main Street, Apt 4B, New York, NY 10001',
+                    ),
                   ),
                   const Divider(),
 
@@ -96,41 +108,50 @@ class OrderConfirmationScreen extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                     child: Text(
                       'Items Ordered (${items.length})',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style: Theme.of(context).textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                   ),
-                  ...items.map((item) => ListTile(
-                        leading: Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(Icons.shopping_bag, color: Colors.grey),
+                  ...items.map(
+                    (item) => ListTile(
+                      leading: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        title: Text(
-                          item['name'],
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        child: const Icon(
+                          Icons.shopping_bag,
+                          color: Colors.grey,
                         ),
-                        subtitle: Text('Qty: ${item['quantity']} | Color: ${item['color']}'),
-                        trailing: Text(
-                          '\$${(item['price'] * item['quantity']).toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
+                      ),
+                      title: Text(
+                        item['name'],
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        'Qty: ${item['quantity']} | Color: ${item['color']}',
+                      ),
+                      trailing: Text(
+                        '\$${(item['price'] * item['quantity']).toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
                         ),
-                      )),
+                      ),
+                    ),
+                  ),
                   const Divider(),
 
                   // --- SECTION 4: PAYMENT SUMMARY ---
                   ListTile(
                     title: const Text(
                       'Total Paid',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                     trailing: Text(
                       '\$${totalAmount.toStringAsFixed(2)}',
@@ -173,7 +194,10 @@ class OrderConfirmationScreen extends StatelessWidget {
                       icon: const Icon(Icons.map_outlined),
                       label: const Text(
                         'Track Order',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       onPressed: () {},
                     ),
@@ -188,10 +212,15 @@ class OrderConfirmationScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: () {},
+                      onPressed: () {
+                        redirectToHome();
+                      },
                       child: const Text(
                         'Continue Shopping',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
