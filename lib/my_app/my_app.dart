@@ -1,6 +1,5 @@
 import 'package:flexify/flexify.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/core/bindings/inital_binding.dart';
 import 'package:magna_data_ai_ecommerce/core/configs/app_config.dart';

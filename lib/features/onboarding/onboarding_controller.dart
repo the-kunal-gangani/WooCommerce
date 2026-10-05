@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
@@ -8,8 +9,10 @@ class OnboardingController extends GetxController {
 
   void completeOnboarding() {
     _storage.write(_onboardingKey, true);
-    Get.offAllNamed(AppRoutes.login);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Get.offAllNamed(AppRoutes.login);
+    });
   }
 
-  bool get isFirstLaunch => !_storage.read<bool>(_onboardingKey)!;
+  bool get isFirstLaunch => _storage.read<bool>(_onboardingKey) != true;
 }

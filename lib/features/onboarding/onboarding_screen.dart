@@ -7,7 +7,9 @@ class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
 
   void _onIntroEnd(BuildContext context) {
-    Get.find<OnboardingController>().completeOnboarding();
+    final controller = Get.isRegistered<OnboardingController>()
+        ? Get.find<OnboardingController>()
+        : Get.put(OnboardingController());
   }
 
   @override

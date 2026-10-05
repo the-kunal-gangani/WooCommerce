@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_screen.dart';
+import 'package:magna_data_ai_ecommerce/features/onboarding/onboarding_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/onboarding/onboarding_screen.dart';
 
 import '../../core/network/api_exception.dart';
@@ -44,6 +45,8 @@ class SplashController extends GetxController {
   }
 
   void navigateToOnboarding() {
+    Get.put(OnboardingController());
+
     Flexify.goRemoveAll(
       const OnboardingScreen(),
       animation: FlexifyRouteAnimations.blur,

@@ -22,8 +22,6 @@ class LoginScreen extends GetView<LoginController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 32),
-
-                // Header Logo & Greeting
                 Center(
                   child: Container(
                     padding: const EdgeInsets.all(16),
@@ -41,7 +39,7 @@ class LoginScreen extends GetView<LoginController> {
                 const SizedBox(height: 24),
 
                 Text(
-                  "Welcome Back! 👋",
+                  "Welcome Back!!",
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -54,8 +52,6 @@ class LoginScreen extends GetView<LoginController> {
                   ),
                 ),
                 const SizedBox(height: 32),
-
-                // Email Field
                 TextFormField(
                   controller: controller.emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -77,8 +73,6 @@ class LoginScreen extends GetView<LoginController> {
                   },
                 ),
                 const SizedBox(height: 16),
-
-                // Password Field
                 Obx(
                   () => TextFormField(
                     controller: controller.passwordController,
@@ -110,8 +104,6 @@ class LoginScreen extends GetView<LoginController> {
                   ),
                 ),
                 const SizedBox(height: 12),
-
-                // Remember Me & Forgot Password
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -139,8 +131,6 @@ class LoginScreen extends GetView<LoginController> {
                   ],
                 ),
                 const SizedBox(height: 24),
-
-                // Login Button
                 Obx(
                   () => SizedBox(
                     width: double.infinity,
@@ -177,8 +167,6 @@ class LoginScreen extends GetView<LoginController> {
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // Sign Up Link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
