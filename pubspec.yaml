@@ -41,6 +41,7 @@ dependencies:
   injectable: ^3.0.0
   slang: ^4.19.2
   get_storage: ^2.1.1
+  dio: ^5.11.1
 
 dev_dependencies:
   flutter_test:
