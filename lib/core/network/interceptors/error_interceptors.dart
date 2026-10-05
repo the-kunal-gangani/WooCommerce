@@ -35,8 +35,6 @@ class ErrorInterceptor extends Interceptor {
           type: ApiErrorType.unknown,
           message: err.message ?? 'Something went wrong.',
         );
-      default:
-      
     }
   }
 
