@@ -10,6 +10,8 @@ class OnboardingScreen extends StatelessWidget {
     final controller = Get.isRegistered<OnboardingController>()
         ? Get.find<OnboardingController>()
         : Get.put(OnboardingController());
+
+    controller.completeOnboarding();
   }
 
   @override

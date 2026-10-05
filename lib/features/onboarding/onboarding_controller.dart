@@ -1,7 +1,9 @@
 import 'package:flutter/widgets.dart';
+import 'package:flexify/flexify.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
+import 'package:magna_data_ai_ecommerce/features/auth/login/login_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/auth/login/login_screen.dart';
 
 class OnboardingController extends GetxController {
   final GetStorage _storage = GetStorage();
@@ -9,8 +11,15 @@ class OnboardingController extends GetxController {
 
   void completeOnboarding() {
     _storage.write(_onboardingKey, true);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Get.offAllNamed(AppRoutes.login);
+      Get.put(LoginController());
+
+      Flexify.goRemoveAll(
+        const LoginScreen(),
+        animation: FlexifyRouteAnimations.blur,
+        duration: const Duration(milliseconds: 800),
+      );
     });
   }
 
