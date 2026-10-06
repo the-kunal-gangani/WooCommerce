@@ -7,6 +7,8 @@ import 'package:magna_data_ai_ecommerce/features/auth/forget-password/forget_pas
 import 'package:magna_data_ai_ecommerce/features/auth/login/login_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/login/login_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/register/register_screen.dart';
+import 'package:magna_data_ai_ecommerce/features/auth/reset-password/reset_password_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/auth/reset-password/reset_password_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/checkout/checkout_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/checkout/checkout_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/favourites/favourites_screen.dart';
@@ -52,6 +54,12 @@ class AppPages {
       name: AppRoutes.forgetPassword,
       page: () => const ForgotPasswordScreen(),
       binding: BindingsBuilder.put(() => ForgotPasswordController()),
+    ),
+    
+    GetPage(
+      name: AppRoutes.resetPassword,
+      page: () => const ResetPasswordScreen(),
+      binding: BindingsBuilder.put(() => ResetPasswordController()),
     ),
 
     GetPage(

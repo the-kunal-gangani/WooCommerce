@@ -44,16 +44,7 @@ class ForgotPasswordController extends GetxController {
     }
     isLoading.value = false;
 
-    Get.snackbar(
-      'Check your email',
-      'If an account exists for $email, a reset code has been sent.',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
-    );
-
-    await Future<void>.delayed(const Duration(seconds: 1));
-    Get.offAllNamed(AppRoutes.login);
+    Get.offNamed(AppRoutes.resetPassword, arguments: email);
   }
 
   @override

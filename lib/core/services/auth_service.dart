@@ -79,6 +79,27 @@ class AuthService extends GetxService {
     }
   }
 
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    final response = await _wp.put<dynamic>(
+      '/simple-jwt-login/v1/user/reset_password',
+      data: {'email': email, 'code': code, 'new_password': newPassword},
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+    final body = response.data;
+    if (body is Map && body['success'] == false) {
+      final nested = body['data'];
+      final message =
+          body['message'] ??
+          (nested is Map ? nested['message'] : null) ??
+          'Could not reset the password.';
+      throw ApiException(type: ApiErrorType.validation, message: '$message');
+    }
+  }
+
   Future<AuthUser> register({
     required String email,
     required String password,

@@ -27,6 +27,24 @@ class ApiClient {
     }
   }
 
+  Future<Response<T>> put<T>(
+    String path, {
+    Object? data,
+    Map<String, dynamic>? query,
+    Options? options,
+    CancelToken? cancelToken,
+  }) {
+    return _run(
+      () => dio.put<T>(
+        path,
+        data: data,
+        queryParameters: query,
+        options: options,
+        cancelToken: cancelToken,
+      ),
+    );
+  }
+
   final Dio dio;
 
   Future<Response<T>> get<T>(
