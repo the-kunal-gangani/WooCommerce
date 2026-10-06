@@ -28,12 +28,7 @@ class AppPages {
     GetPage(
       name: AppRoutes.splash,
       page: () => const SplashScreen(),
-      binding: BindingsBuilder.put(
-        () => SplashController(
-          Get.find<ProductService>(),
-          Get.find<CategoryService>(),
-        ),
-      ),
+      binding: BindingsBuilder.put(() => SplashController()),
     ),
     GetPage(
       name: AppRoutes.onboarding,
