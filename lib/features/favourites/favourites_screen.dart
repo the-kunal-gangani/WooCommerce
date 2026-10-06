@@ -17,7 +17,7 @@ class _FavouritesScreenState extends State<FavouritesScreen> {
   static const muted = Color(0xFF687386);
   static const primary = Color(0xFF2563EB);
   static const violet = Color(0xFF6D4AFF);
-  static const border = Color(0xFFE6EAF0);
+  // static const border = Color(0xFFE6EAF0);
 
   // Temporary local favourites.
   //
@@ -278,7 +278,7 @@ class _FavouriteProductCard extends StatelessWidget {
   final VoidCallback onRemove;
 
   static const navy = Color(0xFF111827);
-  static const muted = Color(0xFF687386);
+  // static const muted = Color(0xFF687386);
   static const primary = Color(0xFF2563EB);
   static const border = Color(0xFFE6EAF0);
 
