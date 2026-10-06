@@ -8,6 +8,7 @@ class AppRoutes {
   static const String register = '/register';
   static const String forgetPassword = '/forgetPassword';
   static const String productDetails = '/productDetails';
+  static const String productList = '/productList';
   static const String cart = '/cart';
   static const String checkout = '/checkout';
   static const String orderConfirmation = '/orderConfirmation';

@@ -6,108 +6,182 @@ import 'package:magna_data_ai_ecommerce/features/splash/splash_controller.dart';
 
 class SplashScreen extends GetView<SplashController> {
   const SplashScreen({super.key});
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    // Dynamic Spinkit loader matching theme colors and rounded shape
-    final spinkit = SpinKitChasingDots(
-      size: 32,
-      itemBuilder: (BuildContext context, int index) {
-        return DecoratedBox(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: index.isEven
-                ? theme.primaryColor
-                : theme.colorScheme.secondary.withOpacity(0.8),
-          ),
-        );
-      },
-    );
-
+    final colorScheme = theme.colorScheme;
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: const Color(0xFF070A10),
       body: Stack(
         children: [
-          // Background Gradient Accent
           Positioned(
-            top: -100,
-            right: -100,
+            top: -180,
+            right: -140,
+            child: _GlowOrb(
+              size: 420,
+              color: colorScheme.primary,
+              opacity: 0.10,
+            ),
+          ),
+          Positioned(
+            bottom: -220,
+            left: -180,
+            child: _GlowOrb(
+              size: 420,
+              color: colorScheme.secondary,
+              opacity: 0.07,
+            ),
+          ),
+          Center(
             child: Container(
-              width: 300,
-              height: 300,
+              width: 260,
+              height: 260,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: theme.primaryColor.withOpacity(0.15),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.primary.withValues(alpha: 0.08),
+                    blurRadius: 120,
+                    spreadRadius: 30,
+                  ),
+                ],
               ),
             ),
           ),
-
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // App Brand Icon/Logo Container
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: theme.primaryColor,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.primaryColor.withOpacity(0.4),
-                        blurRadius: 24,
-                        offset: const Offset(0, 8),
+          SafeArea(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Logo
+                  Container(
+                    width: 112,
+                    height: 112,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.04),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.10),
+                        width: 1,
                       ),
-                    ],
+                      boxShadow: [
+                        BoxShadow(
+                          color: colorScheme.primary.withValues(alpha: 0.18),
+                          blurRadius: 40,
+                          spreadRadius: 4,
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Container(
+                        width: 76,
+                        height: 76,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              colorScheme.primary,
+                              colorScheme.secondary,
+                            ],
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.shopping_bag_rounded,
+                          size: 36,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.shopping_bag_outlined,
-                    size: 48,
-                    color: Colors.white,
+                  const SizedBox(height: 30),
+                  Text(
+                    AppConfig.appName.toUpperCase(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 27,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 2.2,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
-
-                // App Title
-                Text(
-                  AppConfig.appName,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
+                  const SizedBox(height: 10),
+                  Text(
+                    'Smart shopping, simplified.',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.55),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      letterSpacing: 0.4,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-
-                // Subtitle / Tagline
-                Text(
-                  "Smart Shopping, Simplified",
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey,
+                  const SizedBox(height: 42),
+                  SpinKitThreeBounce(
+                    size: 18,
+                    itemBuilder: (context, index) {
+                      return DecoratedBox(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: index == 1
+                              ? colorScheme.secondary
+                              : colorScheme.primary,
+                        ),
+                      );
+                    },
                   ),
-                ),
-              ],
+                  const SizedBox(height: 18),
+                  Text(
+                    'Preparing your experience...',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.38),
+                      fontSize: 11,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-
-          // Bottom Loading Indicator & Version
           Positioned(
-            bottom: 48,
             left: 0,
             right: 0,
-            child: Column(
-              children: [
-                spinkit,
-                const SizedBox(height: 16),
-                const Text(
-                  "v1.0.0",
-                  style: TextStyle(color: Colors.grey, fontSize: 12),
-                ),
-              ],
+            bottom: 28,
+            child: Text(
+              'AI-powered commerce',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.25),
+                fontSize: 10,
+                letterSpacing: 1.2,
+              ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _GlowOrb extends StatelessWidget {
+  final double size;
+  final Color color;
+  final double opacity;
+
+  const _GlowOrb({
+    required this.size,
+    required this.color,
+    required this.opacity,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color.withValues(alpha: opacity),
       ),
     );
   }

@@ -1,22 +1,133 @@
-import 'package:flexify/flexify.dart';
 import 'package:get/get.dart';
-import 'package:magna_data_ai_ecommerce/features/add-to-cart/add_to_cart_screen.dart';
-import 'package:magna_data_ai_ecommerce/features/product-details/product_details_screen.dart';
+import 'package:magna_data_ai_ecommerce/core/network/api_exception.dart';
+import 'package:magna_data_ai_ecommerce/core/network/paged_result.dart';
+import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
+import 'package:magna_data_ai_ecommerce/core/services/category_service.dart';
+import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
+import 'package:magna_data_ai_ecommerce/data/models/product.dart';
+import 'package:magna_data_ai_ecommerce/data/models/product_category.dart';
+import 'package:magna_data_ai_ecommerce/features/product-list/product_list_controller.dart';
 
 class HomeController extends GetxController {
-  void navigateToRegisterScreen() {
-    Flexify.goRemoveAll(
-      const ProductDetailsScreen(),
-      animation: FlexifyRouteAnimations.blur,
-      duration: const Duration(milliseconds: 800),
+  HomeController(this._products, this._categories);
+
+  final ProductService _products;
+  final CategoryService _categories;
+
+  final selectedTab = 0.obs;
+  final categories = <ProductCategory>[].obs;
+  final selectedCategoryId = 0.obs;
+  final featured = <Product>[].obs;
+  final popular = <Product>[].obs;
+  final onSale = <Product>[].obs;
+  final isLoading = true.obs;
+  final isProductsLoading = false.obs;
+  final errorMessage = RxnString();
+
+  int _popularRequest = 0;
+
+  @override
+  void onInit() {
+    super.onInit();
+    loadHome();
+  }
+
+  List<Product> get bannerProducts {
+    final source = featured.isNotEmpty ? featured : popular;
+    return source.where((p) => p.imageUrl != null).take(3).toList();
+  }
+
+  String get popularTitle {
+    final id = selectedCategoryId.value;
+    if (id == 0) return 'Popular Products';
+    final match = categories.firstWhereOrNull((c) => c.id == id);
+    return match?.name ?? 'Popular Products';
+  }
+
+  Future<void> loadHome() async {
+    if (popular.isEmpty && categories.isEmpty) isLoading.value = true;
+    errorMessage.value = null;
+
+    final (categoryResult, popularResult, featuredResult, saleResult) = await (
+      _guard(_categories.fetchCategories(perPage: 50, parent: 0)),
+      _guard(_fetchPopular()),
+      _guard(_products.fetchProducts(perPage: 3, featured: true)),
+      _guard(_products.fetchProducts(perPage: 10, onSale: true)),
+    ).wait;
+
+    if (categoryResult != null) categories.assignAll(categoryResult.items);
+    if (popularResult != null) popular.assignAll(popularResult.items);
+    if (featuredResult != null) featured.assignAll(featuredResult.items);
+    if (saleResult != null) onSale.assignAll(saleResult.items);
+
+    if (categoryResult != null || popularResult != null) {
+      errorMessage.value = null;
+    }
+    isLoading.value = false;
+  }
+
+  Future<void> selectCategory(int id) async {
+    if (selectedCategoryId.value == id) return;
+    selectedCategoryId.value = id;
+    final request = ++_popularRequest;
+    isProductsLoading.value = true;
+    final result = await _guard(_fetchPopular());
+    if (request != _popularRequest) return;
+    if (result != null) popular.assignAll(result.items);
+    isProductsLoading.value = false;
+  }
+
+  void openProduct(Product product) {
+    Get.toNamed(AppRoutes.productDetails, arguments: product);
+  }
+
+  void openCart() {
+    Get.toNamed(AppRoutes.cart);
+  }
+
+  void openSearch() {
+    Get.toNamed(
+      AppRoutes.productList,
+      arguments: const ProductListArgs(title: 'Search', searchMode: true),
     );
   }
 
-  void navigateToCartPage() {
-    Flexify.goRemoveAll(
-      const CartScreen(),
-      animation: FlexifyRouteAnimations.blur,
-      duration: const Duration(milliseconds: 800),
+  void openPopular() {
+    final id = selectedCategoryId.value;
+    Get.toNamed(
+      AppRoutes.productList,
+      arguments: ProductListArgs(
+        title: popularTitle,
+        categoryId: id == 0 ? null : id,
+        orderBy: 'popularity',
+        order: 'desc',
+      ),
     );
+  }
+
+  void openOnSale() {
+    Get.toNamed(
+      AppRoutes.productList,
+      arguments: const ProductListArgs(title: 'On Sale', onSale: true),
+    );
+  }
+
+  Future<PagedResult<Product>> _fetchPopular() {
+    final id = selectedCategoryId.value;
+    return _products.fetchProducts(
+      perPage: 6,
+      category: id == 0 ? null : '$id',
+      orderBy: 'popularity',
+      order: 'desc',
+    );
+  }
+
+  Future<T?> _guard<T>(Future<T> future) async {
+    try {
+      return await future;
+    } on ApiException catch (e) {
+      errorMessage.value ??= e.message;
+      return null;
+    }
   }
 }
