@@ -27,6 +27,21 @@ class AuthService extends GetxService {
 
   Future<void> restore() => _restoring ??= _restore();
 
+  Future<T> _guardAuth<T>(Future<T> Function() call) async {
+    try {
+      return await call();
+    } on ApiException catch (e) {
+      if (e.type == ApiErrorType.notFound) {
+        throw const ApiException(
+          type: ApiErrorType.server,
+          message:
+              'Sign in is temporarily unavailable. Please try again later.',
+        );
+      }
+      rethrow;
+    }
+  }
+
   Future<void> _restore() async {
     _token = await _secure.read(_tokenKey);
     if (_token == null) return;
@@ -48,56 +63,64 @@ class AuthService extends GetxService {
     }
   }
 
-  Future<AuthUser> login({
-    required String email,
-    required String password,
-  }) async {
-    final response = await _wp.post<dynamic>(
-      '/simple-jwt-login/v1/auth',
-      data: {'email': email, 'password': password},
-      options: Options(contentType: Headers.formUrlEncodedContentType),
-    );
+  Future<AuthUser> login({required String email, required String password}) {
+    return _guardAuth(() async {
+      {
+        final response = await _wp.post<dynamic>(
+          '/simple-jwt-login/v1/auth',
+          data: {'email': email, 'password': password},
+          options: Options(contentType: Headers.formUrlEncodedContentType),
+        );
 
-    final jwt = _extractJwt(response.data);
-    if (jwt == null) {
-      throw const ApiException(
-        type: ApiErrorType.unauthorized,
-        message: 'Login failed. Please check your details.',
-      );
-    }
+        final jwt = _extractJwt(response.data);
+        if (jwt == null) {
+          throw const ApiException(
+            type: ApiErrorType.unauthorized,
+            message: 'Login failed. Please check your details.',
+          );
+        }
 
-    _token = jwt;
-    try {
-      final profile = await _fetchProfile();
-      await _secure.write(_tokenKey, jwt);
-      await _storage.write(_userKey, profile.toJson());
-      user.value = profile;
-      return profile;
-    } on ApiException {
-      _token = null;
-      rethrow;
-    }
+        _token = jwt;
+        try {
+          final profile = await _fetchProfile();
+          await _secure.write(_tokenKey, jwt);
+          await _storage.write(_userKey, profile.toJson());
+          user.value = profile;
+          return profile;
+        } on ApiException {
+          _token = null;
+          rethrow;
+        }
+      }
+    });
   }
 
   Future<void> resetPassword({
     required String email,
     required String code,
     required String newPassword,
-  }) async {
-    final response = await _wp.put<dynamic>(
-      '/simple-jwt-login/v1/user/reset_password',
-      data: {'email': email, 'code': code, 'new_password': newPassword},
-      options: Options(contentType: Headers.formUrlEncodedContentType),
-    );
-    final body = response.data;
-    if (body is Map && body['success'] == false) {
-      final nested = body['data'];
-      final message =
-          body['message'] ??
-          (nested is Map ? nested['message'] : null) ??
-          'Could not reset the password.';
-      throw ApiException(type: ApiErrorType.validation, message: '$message');
-    }
+  }) {
+    return _guardAuth(() async {
+      {
+        final response = await _wp.put<dynamic>(
+          '/simple-jwt-login/v1/user/reset_password',
+          data: {'email': email, 'code': code, 'new_password': newPassword},
+          options: Options(contentType: Headers.formUrlEncodedContentType),
+        );
+        final body = response.data;
+        if (body is Map && body['success'] == false) {
+          final nested = body['data'];
+          final message =
+              body['message'] ??
+              (nested is Map ? nested['message'] : null) ??
+              'Could not reset the password.';
+          throw ApiException(
+            type: ApiErrorType.validation,
+            message: '$message',
+          );
+        }
+      }
+    });
   }
 
   Future<AuthUser> register({
@@ -105,28 +128,36 @@ class AuthService extends GetxService {
     required String password,
     String firstName = '',
     String lastName = '',
-  }) async {
-    final displayName = '$firstName $lastName'.trim();
-    await _wp.post<dynamic>(
-      '/simple-jwt-login/v1/users',
-      data: {
-        'email': email,
-        'password': password,
-        if (firstName.isNotEmpty) 'first_name': firstName,
-        if (lastName.isNotEmpty) 'last_name': lastName,
-        if (displayName.isNotEmpty) 'display_name': displayName,
-      },
-      options: Options(contentType: Headers.formUrlEncodedContentType),
-    );
-    return login(email: email, password: password);
+  }) {
+    return _guardAuth(() async {
+      {
+        final displayName = '$firstName $lastName'.trim();
+        await _wp.post<dynamic>(
+          '/simple-jwt-login/v1/users',
+          data: {
+            'email': email,
+            'password': password,
+            if (firstName.isNotEmpty) 'first_name': firstName,
+            if (lastName.isNotEmpty) 'last_name': lastName,
+            if (displayName.isNotEmpty) 'display_name': displayName,
+          },
+          options: Options(contentType: Headers.formUrlEncodedContentType),
+        );
+        return login(email: email, password: password);
+      }
+    });
   }
 
-  Future<void> requestPasswordReset(String email) async {
-    await _wp.post<dynamic>(
-      '/simple-jwt-login/v1/user/reset_password',
-      data: {'email': email},
-      options: Options(contentType: Headers.formUrlEncodedContentType),
-    );
+  Future<void> requestPasswordReset(String email) {
+    return _guardAuth(() async {
+      {
+        await _wp.post<dynamic>(
+          '/simple-jwt-login/v1/user/reset_password',
+          data: {'email': email},
+          options: Options(contentType: Headers.formUrlEncodedContentType),
+        );
+      }
+    });
   }
 
   Future<void> logout() async {
