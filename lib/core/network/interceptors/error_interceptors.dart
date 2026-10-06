@@ -47,6 +47,11 @@ class ErrorInterceptor extends Interceptor {
     if (data is Map) {
       message = data['message']?.toString();
       code = data['code']?.toString();
+      final nested = data['data'];
+      if (nested is Map) {
+        message ??= nested['message']?.toString();
+        code ??= nested['errorCode']?.toString();
+      }
     }
     final type = switch (status) {
       401 => ApiErrorType.unauthorized,

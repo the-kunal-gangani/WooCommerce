@@ -1,0 +1,141 @@
+import 'package:dio/dio.dart';
+import 'package:get/get.dart';
+import 'package:magna_data_ai_ecommerce/core/network/api_client.dart';
+import 'package:magna_data_ai_ecommerce/core/network/api_exception.dart';
+import 'package:magna_data_ai_ecommerce/core/services/secure_storage_service.dart';
+import 'package:magna_data_ai_ecommerce/core/services/storage_services.dart';
+import 'package:magna_data_ai_ecommerce/core/utils/logger.dart';
+import 'package:magna_data_ai_ecommerce/data/models/auth_user.dart';
+
+class AuthService extends GetxService {
+  AuthService(this._wp, this._secure, this._storage);
+
+  final ApiClient _wp;
+  final SecureStorageService _secure;
+  final StorageService _storage;
+
+  static const String _tokenKey = 'auth_jwt';
+  static const String _userKey = 'auth_user';
+
+  final user = Rxn<AuthUser>();
+  String? _token;
+  Future<void>? _restoring;
+
+  String? get token => _token;
+
+  bool get isLoggedIn => _token != null && user.value != null;
+
+  Future<void> restore() => _restoring ??= _restore();
+
+  Future<void> _restore() async {
+    _token = await _secure.read(_tokenKey);
+    if (_token == null) return;
+
+    final stored = _storage.read<Map>(_userKey);
+    if (stored != null) {
+      user.value = AuthUser.fromJson(Map<String, dynamic>.from(stored));
+    }
+
+    try {
+      user.value = await _fetchProfile();
+      await _storage.write(_userKey, user.value!.toJson());
+    } on ApiException catch (e) {
+      printLog('session check failed: $e');
+      if (e.type == ApiErrorType.unauthorized ||
+          e.type == ApiErrorType.forbidden) {
+        await logout();
+      }
+    }
+  }
+
+  Future<AuthUser> login({
+    required String email,
+    required String password,
+  }) async {
+    final response = await _wp.post<dynamic>(
+      '/simple-jwt-login/v1/auth',
+      data: {'email': email, 'password': password},
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+
+    final jwt = _extractJwt(response.data);
+    if (jwt == null) {
+      throw const ApiException(
+        type: ApiErrorType.unauthorized,
+        message: 'Login failed. Please check your details.',
+      );
+    }
+
+    _token = jwt;
+    try {
+      final profile = await _fetchProfile();
+      await _secure.write(_tokenKey, jwt);
+      await _storage.write(_userKey, profile.toJson());
+      user.value = profile;
+      return profile;
+    } on ApiException {
+      _token = null;
+      rethrow;
+    }
+  }
+
+  Future<AuthUser> register({
+    required String email,
+    required String password,
+    String firstName = '',
+    String lastName = '',
+  }) async {
+    final displayName = '$firstName $lastName'.trim();
+    await _wp.post<dynamic>(
+      '/simple-jwt-login/v1/users',
+      data: {
+        'email': email,
+        'password': password,
+        if (firstName.isNotEmpty) 'first_name': firstName,
+        if (lastName.isNotEmpty) 'last_name': lastName,
+        if (displayName.isNotEmpty) 'display_name': displayName,
+      },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+    return login(email: email, password: password);
+  }
+
+  Future<void> requestPasswordReset(String email) async {
+    await _wp.post<dynamic>(
+      '/simple-jwt-login/v1/user/reset_password',
+      data: {'email': email},
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+  }
+
+  Future<void> logout() async {
+    _token = null;
+    user.value = null;
+    await _secure.delete(_tokenKey);
+    await _storage.remove(_userKey);
+  }
+
+  Future<AuthUser> _fetchProfile() async {
+    final response = await _wp.get<dynamic>(
+      '/wp/v2/users/me',
+      query: {'context': 'edit'},
+    );
+    final data = response.data;
+    if (data is! Map) {
+      throw const ApiException(
+        type: ApiErrorType.unknown,
+        message: 'Could not load your profile.',
+      );
+    }
+    return AuthUser.fromJson(Map<String, dynamic>.from(data));
+  }
+
+  String? _extractJwt(dynamic body) {
+    if (body is! Map) return null;
+    if (body['success'] == false) return null;
+    final data = body['data'];
+    if (data is Map && data['jwt'] != null) return '${data['jwt']}';
+    if (body['jwt'] != null) return '${body['jwt']}';
+    return null;
+  }
+}

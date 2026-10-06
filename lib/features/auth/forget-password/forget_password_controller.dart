@@ -1,16 +1,18 @@
-import 'package:flexify/flexify.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:magna_data_ai_ecommerce/features/auth/login/login_controller.dart';
-import 'package:magna_data_ai_ecommerce/features/auth/login/login_screen.dart';
+import 'package:magna_data_ai_ecommerce/core/network/api_exception.dart';
+import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
+import 'package:magna_data_ai_ecommerce/core/services/auth_service.dart';
+import 'package:magna_data_ai_ecommerce/core/utils/logger.dart';
 
 class ForgotPasswordController extends GetxController {
   final emailController = TextEditingController();
   final isLoading = false.obs;
 
-  void sendResetCode() {
+  final AuthService _auth = Get.find<AuthService>();
+
+  Future<void> sendResetCode() async {
     final email = emailController.text.trim();
-    Get.lazyPut<LoginController>(() => LoginController());
 
     if (email.isEmpty || !GetUtils.isEmail(email)) {
       Get.snackbar(
@@ -22,28 +24,36 @@ class ForgotPasswordController extends GetxController {
     }
 
     isLoading.value = true;
+    try {
+      await _auth.requestPasswordReset(email);
+    } on ApiException catch (e) {
+      printLog('reset request failed: $e');
+      final transient =
+          e.type == ApiErrorType.network ||
+          e.type == ApiErrorType.timeout ||
+          e.type == ApiErrorType.server;
+      if (transient) {
+        Get.snackbar(
+          'Something went wrong',
+          e.message,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        isLoading.value = false;
+        return;
+      }
+    }
+    isLoading.value = false;
 
-    Future.delayed(const Duration(seconds: 2), () {
-      isLoading.value = false;
+    Get.snackbar(
+      'Check your email',
+      'If an account exists for $email, a reset code has been sent.',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.green,
+      colorText: Colors.white,
+    );
 
-      Get.snackbar(
-        'Success',
-        'Password reset code sent to $email',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
-
-      Future.delayed(const Duration(seconds: 1), () {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          Flexify.goRemoveAll(
-            const LoginScreen(),
-            animation: FlexifyRouteAnimations.blur,
-            duration: const Duration(milliseconds: 600),
-          );
-        });
-      });
-    });
+    await Future<void>.delayed(const Duration(seconds: 1));
+    Get.offAllNamed(AppRoutes.login);
   }
 
   @override

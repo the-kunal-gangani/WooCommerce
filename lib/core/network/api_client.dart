@@ -1,13 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:magna_data_ai_ecommerce/core/configs/app_config.dart';
+import 'package:magna_data_ai_ecommerce/core/network/interceptors/auth_interceptors.dart';
 import 'package:magna_data_ai_ecommerce/core/network/interceptors/error_interceptors.dart';
 import 'package:magna_data_ai_ecommerce/core/network/interceptors/logging_interceptors.dart';
 
 import 'api_exception.dart';
 
 class ApiClient {
-  ApiClient({String? baseUrl})
+  ApiClient({String? baseUrl, String? Function()? tokenProvider})
     : dio = Dio(
         BaseOptions(
           baseUrl: baseUrl ?? '${AppConfig.baseUrl}${AppConfig.storeApiPath}',
@@ -17,6 +18,9 @@ class ApiClient {
           responseType: ResponseType.json,
         ),
       ) {
+    if (tokenProvider != null) {
+      dio.interceptors.add(AuthInterceptor(tokenProvider));
+    }
     dio.interceptors.add(ErrorInterceptor());
     if (kDebugMode) {
       dio.interceptors.add(LoggingInterceptor());

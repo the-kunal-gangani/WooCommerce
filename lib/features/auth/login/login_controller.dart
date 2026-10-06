@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flexify/flexify.dart';
+import 'package:magna_data_ai_ecommerce/core/network/api_exception.dart';
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
+import 'package:magna_data_ai_ecommerce/core/services/auth_service.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/forget-password/forget_password_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/register/register_screen.dart';
-import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
-import 'package:magna_data_ai_ecommerce/features/home/home_screen.dart';
 
 class LoginController extends GetxController {
   final formKey = GlobalKey<FormState>();
@@ -17,6 +17,8 @@ class LoginController extends GetxController {
   final RxBool rememberMe = false.obs;
   final RxBool isLoading = false.obs;
 
+  final AuthService _auth = Get.find<AuthService>();
+
   void togglePasswordVisibility() {
     isPasswordVisible.value = !isPasswordVisible.value;
   }
@@ -26,21 +28,28 @@ class LoginController extends GetxController {
   }
 
   Future<void> login() async {
-    if (!formKey.currentState!.validate()) return;
-    isLoading.value = true;
-
-    try {
-      await Future.delayed(const Duration(seconds: 2));
-
-      isLoading.value = false;
-      Get.offNamed(AppRoutes.home);
-    } catch (e) {
-      isLoading.value = false;
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+    if (email.isEmpty || password.isEmpty) {
       Get.snackbar(
         'Error',
-        'Failed to log in. Please check your credentials.',
+        'Please enter your email and password',
         snackPosition: SnackPosition.BOTTOM,
       );
+      return;
+    }
+    isLoading.value = true;
+    try {
+      await _auth.login(email: email, password: password);
+      Get.offAllNamed(AppRoutes.home);
+    } on ApiException catch (e) {
+      Get.snackbar(
+        'Login failed',
+        e.message,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isLoading.value = false;
     }
   }
 
