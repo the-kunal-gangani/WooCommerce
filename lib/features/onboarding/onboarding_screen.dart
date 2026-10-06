@@ -521,129 +521,1485 @@ class _OnboardingIllustrationState extends State<_OnboardingIllustration>
           return Stack(
             clipBehavior: Clip.none,
             children: [
-              // ============================================================
-              // BACKGROUND ATMOSPHERE
-              // ============================================================
-
               Positioned.fill(
                 child: CustomPaint(
                   painter: _AtmospherePainter(pulse: _pulseController.value),
                 ),
               ),
 
-              // ============================================================
-              // PARTICLES
-              // ============================================================
               Positioned.fill(
                 child: CustomPaint(
                   painter: _ParticlePainter(progress: _motionController.value),
                 ),
               ),
 
-              // ============================================================
-              // AI CONNECTION NETWORK
-              // ============================================================
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: _DiscoveryNetworkPainter(
-                    rotation: _rotationController.value,
-                    pulse: _pulseController.value,
-                  ),
-                ),
-              ),
-
-              // ============================================================
-              // SEARCH FLOATING CARD
-              // ============================================================
-              Positioned(
-                left: 12,
-                top: 50 + _float(0.5, 7),
-                child: const _SearchBubble(),
-              ),
-
-              // ============================================================
-              // FAVORITE FLOATING CARD
-              // ============================================================
-              Positioned(
-                right: 18,
-                top: 42 + _float(2.4, 6),
-                child: const _FavoriteBubble(),
-              ),
-
-              // ============================================================
-              // LEFT PRODUCT
-              // ============================================================
-              Positioned(
-                left: 4,
-                bottom: 55 + _float(1.2, 7),
-                child: const _AudioProductCard(),
-              ),
-
-              // ============================================================
-              // RIGHT PRODUCT
-              // ============================================================
-              Positioned(
-                right: 3,
-                bottom: 48 + _float(3.0, 8),
-                child: const _WatchProductCard(),
-              ),
-
-              // ============================================================
-              // SMALL FLOATING PRODUCT
-              // ============================================================
-              Positioned(
-                right: 55,
-                top: 128 + _float(4.0, 5),
-                child: const _MiniProductCard(),
-              ),
-
-              // ============================================================
-              // CENTRAL PRODUCT INTERFACE
-              // ============================================================
-              Positioned(
-                left: 0,
-                right: 0,
-                top: 65 + _float(0, 4),
-                child: const Center(child: _DiscoveryProductCard()),
-              ),
-
-              // ============================================================
-              // AI CORE
-              // ============================================================
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 15,
-                child: Center(
-                  child: _DiscoveryAiCore(
-                    pulse: _pulseController.value,
-                    rotation: _rotationController.value,
-                  ),
-                ),
-              ),
-
-              // ============================================================
-              // DECORATIVE SPARKLES
-              // ============================================================
-              Positioned(
-                left: 94,
-                top: 94 + _float(1.4, 5),
-                child: const _GlowSparkle(size: 17, color: Color(0xFF4F7CFF)),
-              ),
-
-              Positioned(
-                right: 91,
-                bottom: 103 + _float(2.1, 6),
-                child: const _GlowSparkle(size: 14, color: Color(0xFF8B5CF6)),
-              ),
+              _buildIllustration(),
             ],
           );
         },
       ),
     );
   }
+
+  Widget _buildIllustration() {
+    switch (widget.page) {
+      case 0:
+        return _buildDiscoveryIllustration();
+
+      case 1:
+        return _buildIntelligenceIllustration();
+
+      case 2:
+        return _buildSecurityIllustration();
+
+      case 3:
+        return _buildDeliveryIllustration();
+
+      default:
+        return _buildDiscoveryIllustration();
+    }
+  }
+
+  // ========================================================================
+  // PAGE 1 — DISCOVER
+  // ========================================================================
+
+  Widget _buildDiscoveryIllustration() {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned(
+          left: 8,
+          top: 53 + _float(0.5, 7),
+          child: const _SearchBubble(),
+        ),
+
+        Positioned(
+          right: 15,
+          top: 43 + _float(2.4, 6),
+          child: const _FavoriteBubble(),
+        ),
+
+        Positioned(
+          left: 4,
+          bottom: 56 + _float(1.2, 7),
+          child: const _AudioProductCard(),
+        ),
+
+        Positioned(
+          right: 3,
+          bottom: 48 + _float(3.0, 8),
+          child: const _WatchProductCard(),
+        ),
+
+        Positioned(
+          right: 55,
+          top: 128 + _float(4.0, 5),
+          child: const _MiniProductCard(),
+        ),
+
+        Positioned(
+          left: 0,
+          right: 0,
+          top: 65 + _float(0, 4),
+          child: const Center(child: _DiscoveryProductCard()),
+        ),
+
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 15,
+          child: Center(
+            child: _DiscoveryAiCore(
+              pulse: _pulseController.value,
+              rotation: _rotationController.value,
+            ),
+          ),
+        ),
+
+        Positioned(
+          left: 94,
+          top: 94 + _float(1.4, 5),
+          child: const _GlowSparkle(size: 17, color: Color(0xFF4F7CFF)),
+        ),
+
+        Positioned(
+          right: 91,
+          bottom: 103 + _float(2.1, 6),
+          child: const _GlowSparkle(size: 14, color: Color(0xFF8B5CF6)),
+        ),
+      ],
+    );
+  }
+
+  // ========================================================================
+  // PAGE 2 — INTELLIGENCE
+  // ========================================================================
+
+  Widget _buildIntelligenceIllustration() {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // Preference card
+        Positioned(
+          left: 5,
+          top: 76 + _float(0.7, 7),
+          child: const _PreferenceCard(),
+        ),
+
+        // AI recommendation card
+        Positioned(
+          left: 0,
+          right: 0,
+          top: 72 + _float(0, 4),
+          child: const Center(child: _RecommendationCard()),
+        ),
+
+        // Floating neural nodes
+        Positioned(
+          right: 10,
+          top: 53 + _float(2.1, 6),
+          child: _NeuralBubble(pulse: _pulseController.value),
+        ),
+
+        // Product match
+        Positioned(
+          right: 2,
+          bottom: 57 + _float(3.2, 8),
+          child: const _MatchCard(),
+        ),
+
+        // AI thinking core
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 20,
+          child: Center(
+            child: _ThinkingAiCore(
+              pulse: _pulseController.value,
+              rotation: _rotationController.value,
+            ),
+          ),
+        ),
+
+        Positioned(
+          left: 40,
+          bottom: 105 + _float(1.5, 5),
+          child: const _GlowSparkle(size: 15, color: Color(0xFF06B6D4)),
+        ),
+
+        Positioned(
+          right: 78,
+          top: 94 + _float(4.0, 5),
+          child: const _GlowSparkle(size: 13, color: Color(0xFF8B5CF6)),
+        ),
+      ],
+    );
+  }
+
+  // ========================================================================
+  // PAGE 3 — SECURITY
+  // ========================================================================
+
+  Widget _buildSecurityIllustration() {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // Payment card
+        Positioned(
+          left: 0,
+          right: 0,
+          top: 70 + _float(0, 4),
+          child: const Center(child: _SecurePaymentCard()),
+        ),
+
+        // Shield
+        Positioned(
+          left: 19,
+          top: 53 + _float(1.2, 6),
+          child: _SecurityShield(pulse: _pulseController.value),
+        ),
+
+        // Lock
+        Positioned(
+          right: 18,
+          top: 57 + _float(2.5, 6),
+          child: const _LockBubble(),
+        ),
+
+        // Verified badge
+        Positioned(
+          left: 9,
+          bottom: 56 + _float(3.1, 7),
+          child: const _VerifiedPaymentCard(),
+        ),
+
+        // Secure connection
+        Positioned(
+          right: 5,
+          bottom: 48 + _float(1.5, 8),
+          child: const _EncryptedBubble(),
+        ),
+
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 18,
+          child: Center(
+            child: _SecurityCore(
+              pulse: _pulseController.value,
+              rotation: _rotationController.value,
+            ),
+          ),
+        ),
+
+        Positioned(
+          left: 94,
+          top: 45 + _float(0.8, 5),
+          child: const _GlowSparkle(size: 14, color: Color(0xFF4F7CFF)),
+        ),
+
+        Positioned(
+          right: 87,
+          bottom: 105 + _float(2.5, 5),
+          child: const _GlowSparkle(size: 15, color: Color(0xFF06B6D4)),
+        ),
+      ],
+    );
+  }
+
+  // ========================================================================
+  // PAGE 4 — DELIVERY
+  // ========================================================================
+
+  Widget _buildDeliveryIllustration() {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // Delivery tracking card
+        Positioned(
+          left: 0,
+          right: 0,
+          top: 68 + _float(0, 4),
+          child: const Center(child: _DeliveryTrackingCard()),
+        ),
+
+        // Package
+        Positioned(
+          left: 10,
+          bottom: 60 + _float(1.2, 8),
+          child: const _PackageCard(),
+        ),
+
+        // Destination
+        Positioned(
+          right: 8,
+          bottom: 58 + _float(2.8, 7),
+          child: const _DestinationCard(),
+        ),
+
+        // Moving delivery dot
+        Positioned.fill(
+          child: CustomPaint(
+            painter: _DeliveryRoutePainter(progress: _motionController.value),
+          ),
+        ),
+
+        // Central delivery core
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 18,
+          child: Center(
+            child: _DeliveryCore(
+              pulse: _pulseController.value,
+              rotation: _rotationController.value,
+            ),
+          ),
+        ),
+
+        Positioned(
+          left: 73,
+          top: 48 + _float(1.0, 5),
+          child: const _GlowSparkle(size: 14, color: Color(0xFF4F7CFF)),
+        ),
+
+        Positioned(
+          right: 77,
+          top: 104 + _float(3.0, 5),
+          child: const _GlowSparkle(size: 15, color: Color(0xFF8B5CF6)),
+        ),
+      ],
+    );
+  }
 }
 
+class _ThinkingAiCore extends StatelessWidget {
+  const _ThinkingAiCore({required this.pulse, required this.rotation});
+
+  final double pulse;
+  final double rotation;
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = 1 + pulse * 0.07;
+
+    return Transform.scale(
+      scale: scale,
+      child: SizedBox(
+        width: 100,
+        height: 76,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Soft AI glow
+            Container(
+              width: 76 + pulse * 9,
+              height: 76 + pulse * 9,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF8B5CF6)
+                    .withValues(alpha: 0.05 + pulse * 0.035),
+              ),
+            ),
+
+            // Rotating neural orbit
+            Transform.rotate(
+              angle: rotation * math.pi * 2,
+              child: Container(
+                width: 72,
+                height: 38,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.28),
+                    width: 1.1,
+                  ),
+                  borderRadius: BorderRadius.circular(50),
+                ),
+              ),
+            ),
+
+            // Second orbit
+            Transform.rotate(
+              angle: -rotation * math.pi * 2,
+              child: Container(
+                width: 52,
+                height: 68,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: const Color(0xFF4F7CFF).withValues(alpha: 0.18),
+                    width: 1,
+                  ),
+                  borderRadius: BorderRadius.circular(50),
+                ),
+              ),
+            ),
+
+            // AI brain/core
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF8B5CF6),
+                    Color(0xFF6D4AFF),
+                    Color(0xFF4F7CFF),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.25),
+                    blurRadius: 22,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: CustomPaint(
+                painter: _ThinkingNetworkPainter(pulse: pulse),
+              ),
+            ),
+
+            // Orbiting data point
+            Positioned(
+              top: 9,
+              right: 9,
+              child: Container(
+                width: 7,
+                height: 7,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF8BE9FF),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+
+            // Small secondary data point
+            Positioned(
+              bottom: 10,
+              left: 10,
+              child: Container(
+                width: 5,
+                height: 5,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF8B5CF6),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ThinkingNetworkPainter extends CustomPainter {
+  const _ThinkingNetworkPainter({required this.pulse});
+
+  final double pulse;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+
+    final points = [
+      center.translate(-9, -7),
+      center.translate(0, -11),
+      center.translate(10, -4),
+      center.translate(7, 8),
+      center.translate(-7, 10),
+      center.translate(-12, 2),
+    ];
+
+    final linePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.72)
+      ..strokeWidth = 1.2
+      ..style = PaintingStyle.stroke;
+
+    // Neural connections
+    for (var i = 0; i < points.length; i++) {
+      final next = points[(i + 1) % points.length];
+
+      canvas.drawLine(points[i], next, linePaint);
+
+      // Connect selected nodes to center
+      if (i.isEven) {
+        canvas.drawLine(points[i], center, linePaint);
+      }
+    }
+
+    // Nodes
+    for (var i = 0; i < points.length; i++) {
+      canvas.drawCircle(
+        points[i],
+        2.2 + (i == 1 ? pulse * 0.7 : 0),
+        Paint()..color = Colors.white,
+      );
+    }
+
+    // Central AI node
+    canvas.drawCircle(
+      center,
+      3.2 + pulse * 0.8,
+      Paint()..color = const Color(0xFF8BE9FF),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _ThinkingNetworkPainter oldDelegate) {
+    return oldDelegate.pulse != pulse;
+  }
+}
+
+class _PreferenceCard extends StatelessWidget {
+  const _PreferenceCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return _ProductPanel(
+      width: 82,
+      height: 92,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.tune_rounded, color: Color(0xFF4F7CFF), size: 23),
+          const SizedBox(height: 7),
+          _smallLine(42),
+          const SizedBox(height: 5),
+          _smallLine(29),
+          const SizedBox(height: 5),
+          _smallLine(35),
+        ],
+      ),
+    );
+  }
+
+  Widget _smallLine(double width) {
+    return Container(
+      width: width,
+      height: 4,
+      decoration: BoxDecoration(
+        color: const Color(0xFFE5EBFF),
+        borderRadius: BorderRadius.circular(10),
+      ),
+    );
+  }
+}
+
+class _RecommendationCard extends StatelessWidget {
+  const _RecommendationCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 174,
+      height: 202,
+      padding: const EdgeInsets.all(13),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(27),
+        border: Border.all(color: const Color(0xFFE8ECFF)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6D4AFF).withValues(alpha: 0.12),
+            blurRadius: 35,
+            offset: const Offset(0, 17),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 18,
+            offset: const Offset(0, 7),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6D4AFF), Color(0xFF4F7CFF)],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.auto_awesome_rounded,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'AI RECOMMENDS',
+                  style: TextStyle(
+                    color: Color(0xFF111827),
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+              ),
+              const Icon(
+                Icons.more_horiz_rounded,
+                color: Color(0xFF9AA4B5),
+                size: 17,
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFF1F4FF), Color(0xFFF7F1FF)],
+                ),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Stack(
+                children: [
+                  const Center(child: _RecommendationProductVisual()),
+                  Positioned(
+                    top: 9,
+                    left: 9,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.88),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        '97% MATCH',
+                        style: TextStyle(
+                          color: Color(0xFF6D4AFF),
+                          fontSize: 7,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Perfect match',
+                  style: TextStyle(
+                    color: Color(0xFF111827),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.check_circle_rounded,
+                color: Color(0xFF22C55E),
+                size: 15,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecommendationProductVisual extends StatelessWidget {
+  const _RecommendationProductVisual();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 82,
+      height: 82,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: 66,
+            height: 66,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFF8B5CF6).withValues(alpha: 0.08),
+            ),
+          ),
+          Container(
+            width: 42,
+            height: 49,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF8B5CF6), Color(0xFF5B63E8)],
+              ),
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.25),
+                  blurRadius: 16,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            top: 21,
+            child: Container(
+              width: 13,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NeuralBubble extends StatelessWidget {
+  const _NeuralBubble({required this.pulse});
+
+  final double pulse;
+
+  @override
+  Widget build(BuildContext context) {
+    return _SmallFloatingPanel(
+      width: 67,
+      height: 62,
+      child: CustomPaint(painter: _NeuralPainter(pulse: pulse)),
+    );
+  }
+}
+
+class _NeuralPainter extends CustomPainter {
+  const _NeuralPainter({required this.pulse});
+
+  final double pulse;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+
+    final nodes = [
+      center.translate(-17, -10),
+      center.translate(15, -15),
+      center.translate(20, 14),
+      center.translate(-14, 17),
+      center,
+    ];
+
+    final linePaint = Paint()
+      ..color = const Color(0xFF6D4AFF).withValues(alpha: 0.20)
+      ..strokeWidth = 1.2;
+
+    for (final node in nodes.take(4)) {
+      canvas.drawLine(node, center, linePaint);
+    }
+
+    final colors = [
+      const Color(0xFF4F7CFF),
+      const Color(0xFF8B5CF6),
+      const Color(0xFF06B6D4),
+      const Color(0xFF4F7CFF),
+      const Color(0xFF8B5CF6),
+    ];
+
+    for (var i = 0; i < nodes.length; i++) {
+      canvas.drawCircle(
+        nodes[i],
+        i == 4 ? 5 + pulse * 1.5 : 3.2,
+        Paint()..color = colors[i],
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _NeuralPainter oldDelegate) {
+    return oldDelegate.pulse != pulse;
+  }
+}
+
+class _MatchCard extends StatelessWidget {
+  const _MatchCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: 0.06,
+      child: _ProductPanel(
+        width: 82,
+        height: 87,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.thumb_up_alt_rounded,
+              color: Color(0xFF8B5CF6),
+              size: 23,
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              '98%',
+              style: TextStyle(
+                color: Color(0xFF111827),
+                fontSize: 15,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const Text(
+              'MATCH',
+              style: TextStyle(
+                color: Color(0xFF8A94A6),
+                fontSize: 7,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SecurePaymentCard extends StatelessWidget {
+  const _SecurePaymentCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 178,
+      height: 190,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: const Color(0xFFE4EAFE)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF4F7CFF).withValues(alpha: 0.11),
+            blurRadius: 34,
+            offset: const Offset(0, 17),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF4FF),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.lock_outline_rounded,
+                  color: Color(0xFF4F7CFF),
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'SECURE CHECKOUT',
+                  style: TextStyle(
+                    color: Color(0xFF111827),
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+              ),
+              const Icon(
+                Icons.verified_rounded,
+                color: Color(0xFF22C55E),
+                size: 17,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            height: 78,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF4F7CFF), Color(0xFF6D4AFF)],
+              ),
+              borderRadius: BorderRadius.circular(17),
+            ),
+            child: Stack(
+              children: [
+                Positioned(
+                  top: 13,
+                  right: 14,
+                  child: Container(
+                    width: 22,
+                    height: 17,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                  ),
+                ),
+                const Positioned(
+                  left: 14,
+                  bottom: 13,
+                  child: Text(
+                    '••••  4281',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.3,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 11),
+          Row(
+            children: [
+              _securityLine(50),
+              const SizedBox(width: 7),
+              _securityLine(33),
+              const Spacer(),
+              const Text(
+                'Encrypted',
+                style: TextStyle(
+                  color: Color(0xFF22A45A),
+                  fontSize: 8,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _securityLine(double width) {
+    return Container(
+      width: width,
+      height: 4,
+      decoration: BoxDecoration(
+        color: const Color(0xFFE5EAF5),
+        borderRadius: BorderRadius.circular(10),
+      ),
+    );
+  }
+}
+
+class _SecurityShield extends StatelessWidget {
+  const _SecurityShield({required this.pulse});
+
+  final double pulse;
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.scale(
+      scale: 1 + pulse * 0.04,
+      child: Container(
+        width: 66,
+        height: 76,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFDDE7FF)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF4F7CFF).withValues(alpha: 0.10),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: const Center(
+          child: Icon(Icons.shield_rounded, color: Color(0xFF4F7CFF), size: 35),
+        ),
+      ),
+    );
+  }
+}
+
+class _LockBubble extends StatelessWidget {
+  const _LockBubble();
+
+  @override
+  Widget build(BuildContext context) {
+    return _SmallFloatingPanel(
+      width: 63,
+      height: 60,
+      child: const Center(
+        child: Icon(Icons.lock_rounded, color: Color(0xFF6D4AFF), size: 25),
+      ),
+    );
+  }
+}
+
+class _VerifiedPaymentCard extends StatelessWidget {
+  const _VerifiedPaymentCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: -0.06,
+      child: _ProductPanel(
+        width: 84,
+        height: 84,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.verified_rounded, color: Color(0xFF22C55E), size: 27),
+            SizedBox(height: 5),
+            Text(
+              'VERIFIED',
+              style: TextStyle(
+                color: Color(0xFF111827),
+                fontSize: 8,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.8,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EncryptedBubble extends StatelessWidget {
+  const _EncryptedBubble();
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: 0.07,
+      child: _ProductPanel(
+        width: 84,
+        height: 84,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.security_rounded, color: Color(0xFF06B6D4), size: 25),
+            SizedBox(height: 5),
+            Text(
+              'ENCRYPTED',
+              style: TextStyle(
+                color: Color(0xFF111827),
+                fontSize: 7,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.7,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SecurityCore extends StatelessWidget {
+  const _SecurityCore({required this.pulse, required this.rotation});
+
+  final double pulse;
+  final double rotation;
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.scale(
+      scale: 1 + pulse * 0.06,
+      child: SizedBox(
+        width: 100,
+        height: 74,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 76 + pulse * 8,
+              height: 76 + pulse * 8,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF22C55E)
+                    .withValues(alpha: 0.045 + pulse * 0.025),
+              ),
+            ),
+            Transform.rotate(
+              angle: rotation * math.pi * 2,
+              child: Container(
+                width: 69,
+                height: 36,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: const Color(0xFF22C55E).withValues(alpha: 0.25),
+                  ),
+                  borderRadius: BorderRadius.circular(50),
+                ),
+              ),
+            ),
+            Container(
+              width: 47,
+              height: 47,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [Color(0xFF22C55E), Color(0xFF06B6D4)],
+                ),
+              ),
+              child: const Icon(
+                Icons.lock_rounded,
+                color: Colors.white,
+                size: 23,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DeliveryTrackingCard extends StatelessWidget {
+  const _DeliveryTrackingCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 180,
+      height: 192,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: const Color(0xFFE7ECFF)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF4F7CFF).withValues(alpha: 0.11),
+            blurRadius: 34,
+            offset: const Offset(0, 17),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 31,
+                height: 31,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF4FF),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.local_shipping_rounded,
+                  color: Color(0xFF4F7CFF),
+                  size: 17,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'ORDER TRACKING',
+                  style: TextStyle(
+                    color: Color(0xFF111827),
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+              ),
+              Container(
+                width: 7,
+                height: 7,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF22C55E),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 13),
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFF0F5FF), Color(0xFFF7F3FF)],
+                ),
+                borderRadius: BorderRadius.circular(17),
+              ),
+              child: Stack(
+                children: [
+                  Positioned(
+                    left: 17,
+                    right: 17,
+                    top: 38,
+                    child: Container(
+                      height: 2,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF4F7CFF), Color(0xFF8B5CF6)],
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  const Positioned(
+                    left: 13,
+                    top: 31,
+                    child: _RouteNode(
+                      icon: Icons.storefront_rounded,
+                      active: true,
+                    ),
+                  ),
+                  const Positioned(
+                    left: 69,
+                    top: 31,
+                    child: _RouteNode(
+                      icon: Icons.local_shipping_rounded,
+                      active: true,
+                    ),
+                  ),
+                  const Positioned(
+                    right: 12,
+                    top: 31,
+                    child: _RouteNode(icon: Icons.home_rounded, active: false),
+                  ),
+                  const Positioned(
+                    left: 13,
+                    bottom: 12,
+                    child: Text(
+                      'Shipped',
+                      style: TextStyle(
+                        color: Color(0xFF687386),
+                        fontSize: 8,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const Positioned(
+                    right: 13,
+                    bottom: 12,
+                    child: Text(
+                      'Arriving',
+                      style: TextStyle(
+                        color: Color(0xFF687386),
+                        fontSize: 8,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RouteNode extends StatelessWidget {
+  const _RouteNode({required this.icon, required this.active});
+
+  final IconData icon;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        color: active ? const Color(0xFF4F7CFF) : Colors.white,
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: active ? const Color(0xFF4F7CFF) : const Color(0xFFDCE2EC),
+        ),
+      ),
+      child: Icon(
+        icon,
+        size: 13,
+        color: active ? Colors.white : const Color(0xFF9AA4B5),
+      ),
+    );
+  }
+}
+
+class _PackageCard extends StatelessWidget {
+  const _PackageCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: -0.06,
+      child: _ProductPanel(
+        width: 84,
+        height: 88,
+        child: CustomPaint(painter: _PackagePainter()),
+      ),
+    );
+  }
+}
+
+class _DestinationCard extends StatelessWidget {
+  const _DestinationCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: 0.06,
+      child: _ProductPanel(
+        width: 84,
+        height: 88,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.location_on_rounded, color: Color(0xFF8B5CF6), size: 28),
+            SizedBox(height: 5),
+            Text(
+              'DELIVERING',
+              style: TextStyle(
+                color: Color(0xFF111827),
+                fontSize: 7,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.7,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PackagePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2 + 2);
+
+    final box = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: center, width: 42, height: 38),
+      const Radius.circular(7),
+    );
+
+    final paint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF6F8FFF), Color(0xFF5B63E8)],
+      ).createShader(Rect.fromCenter(center: center, width: 42, height: 38));
+
+    canvas.drawRRect(box, paint);
+
+    final linePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.72)
+      ..strokeWidth = 2;
+
+    canvas.drawLine(
+      Offset(center.dx, center.dy - 19),
+      Offset(center.dx, center.dy + 19),
+      linePaint,
+    );
+
+    canvas.drawLine(
+      Offset(center.dx - 20, center.dy - 4),
+      Offset(center.dx + 20, center.dy - 4),
+      linePaint,
+    );
+
+    canvas.drawCircle(
+      center.translate(10, -10),
+      3,
+      Paint()..color = const Color(0xFF8BE9FF),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
+  }
+}
+
+class _DeliveryRoutePainter extends CustomPainter {
+  const _DeliveryRoutePainter({required this.progress});
+
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final start = Offset(78, 220);
+    final end = Offset(size.width - 78, 220);
+
+    final path = Path()
+      ..moveTo(start.dx, start.dy)
+      ..quadraticBezierTo(size.width / 2, 150, end.dx, end.dy);
+
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5
+      ..color = const Color(0xFF4F7CFF).withValues(alpha: 0.16);
+
+    canvas.drawPath(path, paint);
+
+    final metrics = path.computeMetrics().first;
+    final tangent = metrics.getTangentForOffset(metrics.length * progress);
+
+    if (tangent != null) {
+      canvas.drawCircle(
+        tangent.position,
+        3,
+        Paint()..color = const Color(0xFF06B6D4),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DeliveryRoutePainter oldDelegate) {
+    return oldDelegate.progress != progress;
+  }
+}
+
+class _DeliveryCore extends StatelessWidget {
+  const _DeliveryCore({required this.pulse, required this.rotation});
+
+  final double pulse;
+  final double rotation;
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.scale(
+      scale: 1 + pulse * 0.06,
+      child: SizedBox(
+        width: 100,
+        height: 74,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 74 + pulse * 8,
+              height: 74 + pulse * 8,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF4F7CFF)
+                    .withValues(alpha: 0.055 + pulse * 0.03),
+              ),
+            ),
+            Transform.rotate(
+              angle: rotation * math.pi * 2,
+              child: Container(
+                width: 69,
+                height: 36,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.24),
+                  ),
+                  borderRadius: BorderRadius.circular(50),
+                ),
+              ),
+            ),
+            Container(
+              width: 47,
+              height: 47,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [Color(0xFF4F7CFF), Color(0xFF8B5CF6)],
+                ),
+              ),
+              child: const Icon(
+                Icons.local_shipping_rounded,
+                color: Colors.white,
+                size: 23,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 // ============================================================================
 // ATMOSPHERE
 // ============================================================================
