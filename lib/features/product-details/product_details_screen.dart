@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/app_network_image.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/state_views.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product.dart';
@@ -34,6 +35,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: background,
+
       body: Obx(() {
         final product = controller.product.value;
 
@@ -49,6 +51,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 
         return _buildBody(context, product);
       }),
+
       bottomNavigationBar: Obx(() {
         final product = controller.product.value;
 
@@ -61,8 +64,13 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     );
   }
 
+  // ═══════════════════════════════════════════════════
+  // BODY
+  // ═══════════════════════════════════════════════════
+
   Widget _buildBody(BuildContext context, Product product) {
     final active = controller.activeProduct ?? product;
+
     final images = controller.images;
 
     final imageIndex = images.isEmpty
@@ -70,10 +78,13 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
         : controller.selectedImageIndex.value.clamp(0, images.length - 1);
 
     final selection = Map<String, String>.from(controller.selection);
+
     final quantity = controller.quantity.value;
+
     final attributes = controller.variationAttributes;
 
     final priceLabel = controller.unitPriceLabel;
+
     final stockLabel = controller.stockLabel;
 
     final description = product.plainDescription.isNotEmpty
@@ -84,14 +95,14 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
       physics: const BouncingScrollPhysics(),
       slivers: [
         // ─────────────────────────────────────────────
-        // PRODUCT HERO
+        // HERO
         // ─────────────────────────────────────────────
         SliverToBoxAdapter(
           child: _buildProductHero(product, images, imageIndex),
         ),
 
         // ─────────────────────────────────────────────
-        // BASIC PRODUCT INFORMATION
+        // PRODUCT INFO
         // ─────────────────────────────────────────────
         SliverToBoxAdapter(
           child: Padding(
@@ -131,7 +142,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 
         // ─────────────────────────────────────────────
         // QUANTITY
-        // Only show when purchasable/in stock
         // ─────────────────────────────────────────────
         if (controller.canBuy)
           SliverToBoxAdapter(
@@ -140,16 +150,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               child: _buildQuantity(quantity),
             ),
           ),
-
-        // ─────────────────────────────────────────────
-        // PRODUCT INFORMATION
-        // ─────────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
-            child: _buildProductInformation(product),
-          ),
-        ),
 
         // ─────────────────────────────────────────────
         // SPECIFICATIONS
@@ -183,15 +183,22 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               child: _buildReviews(product),
             ),
           ),
-
+        Obx(() {
+          final related = controller.relatedProducts;
+          if (related.isEmpty) {
+            return const SliverToBoxAdapter(child: SizedBox.shrink());
+          }
+          return SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 30, left: 20),
+              child: _buildRecommendedProducts(related),
+            ),
+          );
+        }),
         const SliverToBoxAdapter(child: SizedBox(height: 130)),
       ],
     );
   }
-
-  // ═══════════════════════════════════════════════════
-  // PRODUCT HERO
-  // ═══════════════════════════════════════════════════
 
   Widget _buildProductHero(
     Product product,
@@ -230,6 +237,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                   ),
                 ),
+
                 Positioned(
                   bottom: -100,
                   left: -80,
@@ -247,6 +255,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                   ),
                 ),
+
                 Center(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(30, 70, 30, 55),
@@ -255,50 +264,46 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                   ),
                 ),
-                Positioned(
-                  right: 18,
-                  bottom: images.length > 1 ? 82 : 20,
-                  child: IgnorePointer(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 9,
-                        vertical: 7,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.92),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: border),
-                        boxShadow: [
-                          BoxShadow(
-                            color: navy.withValues(alpha: 0.04),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.zoom_in_rounded, size: 15, color: muted),
-                          SizedBox(width: 5),
-                          Text(
-                            'Pinch to zoom',
-                            style: TextStyle(
-                              color: muted,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w700,
+
+                if (images.isNotEmpty)
+                  Positioned(
+                    right: 18,
+                    bottom: images.length > 1 ? 82 : 20,
+                    child: IgnorePointer(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 7,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.92),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: border),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.zoom_in_rounded, size: 15, color: muted),
+                            SizedBox(width: 5),
+                            Text(
+                              'Pinch to zoom',
+                              style: TextStyle(
+                                color: muted,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
         ),
 
+        // Back
         Positioned(
           left: 18,
           top: 50,
@@ -308,6 +313,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           ),
         ),
 
+        // Favorite
         Positioned(
           right: 18,
           top: 50,
@@ -324,6 +330,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           ),
         ),
 
+        // Thumbnails
         if (images.length > 1)
           Positioned(
             bottom: 18,
@@ -332,7 +339,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             child: SizedBox(
               height: 58,
               child: ListView.builder(
-                shrinkWrap: true,
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -357,13 +363,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           color: isSelected ? primary : border,
                           width: isSelected ? 2 : 1,
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: navy.withValues(alpha: 0.06),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(9),
@@ -383,7 +382,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   }
 
   // ═══════════════════════════════════════════════════
-  // PRODUCT INFO
+  // BASIC PRODUCT INFO
   // ═══════════════════════════════════════════════════
 
   Widget _buildProductInfo(
@@ -474,6 +473,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 
             if (active.hasDiscount) ...[
               const SizedBox(width: 10),
+
               Text(
                 active.prices.formattedRegular,
                 style: const TextStyle(
@@ -483,7 +483,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
+
               const SizedBox(width: 8),
+
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
                 decoration: BoxDecoration(
@@ -531,6 +533,10 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
       ],
     );
   }
+
+  // ═══════════════════════════════════════════════════
+  // STOCK
+  // ═══════════════════════════════════════════════════
 
   Widget _stockPill(String stockLabel) {
     final canBuy = controller.canBuy;
@@ -780,115 +786,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   }
 
   // ═══════════════════════════════════════════════════
-  // PRODUCT INFORMATION
-  // ═══════════════════════════════════════════════════
-
-  Widget _buildProductInformation(Product product) {
-    final stockText = _getStockText(product);
-
-    return _ProductSectionCard(
-      icon: Icons.info_outline_rounded,
-      title: 'Product Information',
-      child: Column(
-        children: [
-          _InfoRow(
-            icon: Icons.tag_rounded,
-            label: 'Product ID',
-            value: '#${product.id}',
-          ),
-
-          _InfoRow(
-            icon: Icons.category_outlined,
-            label: 'Category',
-            value: product.primaryCategory?.name ?? 'Uncategorized',
-          ),
-
-          _InfoRow(
-            icon: Icons.inventory_2_outlined,
-            label: 'Product Type',
-            value: _formatProductType(product.type),
-          ),
-
-          _InfoRow(
-            icon: Icons.inventory_outlined,
-            label: 'Availability',
-            value: stockText,
-            valueColor: product.isInStock
-                ? const Color(0xFF15803D)
-                : const Color(0xFFD92D20),
-          ),
-
-          if (product.lowStockRemaining != null &&
-              product.lowStockRemaining! > 0)
-            _InfoRow(
-              icon: Icons.warning_amber_rounded,
-              label: 'Stock Remaining',
-              value: '${product.lowStockRemaining}',
-              valueColor: const Color(0xFFD97706),
-            ),
-
-          _InfoRow(
-            icon: Icons.shopping_bag_outlined,
-            label: 'Purchasable',
-            value: product.isPurchasable ? 'Yes' : 'No',
-            valueColor: product.isPurchasable
-                ? const Color(0xFF15803D)
-                : const Color(0xFFD92D20),
-          ),
-
-          _InfoRow(
-            icon: Icons.local_shipping_outlined,
-            label: 'Backorder',
-            value: product.isOnBackorder ? 'Available' : 'Not available',
-          ),
-
-          _InfoRow(
-            icon: Icons.shopping_cart_outlined,
-            label: 'Purchase Rule',
-            value: product.soldIndividually
-                ? 'Sold individually'
-                : 'Multiple quantities allowed',
-            isLast: true,
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _getStockText(Product product) {
-    if (product.isOnBackorder) {
-      return 'Available on backorder';
-    }
-
-    if (!product.isInStock) {
-      return 'Out of stock';
-    }
-
-    if (product.lowStockRemaining != null && product.lowStockRemaining! > 0) {
-      return 'In stock';
-    }
-
-    return 'In stock';
-  }
-
-  String _formatProductType(String type) {
-    switch (type.toLowerCase()) {
-      case 'simple':
-        return 'Simple product';
-      case 'variable':
-        return 'Variable product';
-      case 'variation':
-        return 'Product variation';
-      case 'grouped':
-        return 'Grouped product';
-      case 'external':
-        return 'External product';
-      default:
-        return type.capitalizeFirst ?? type;
-    }
-  }
-
-  // ═══════════════════════════════════════════════════
   // SPECIFICATIONS
   // ═══════════════════════════════════════════════════
 
@@ -1053,6 +950,53 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   }
 
   // ═══════════════════════════════════════════════════
+  // YOU MIGHT ALSO LIKE
+  // ═══════════════════════════════════════════════════
+
+  Widget _buildRecommendedProducts(List<Product> products) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(right: 20),
+          child: _SectionTitle(
+            icon: Icons.auto_awesome_rounded,
+            title: 'You might also like',
+          ),
+        ),
+
+        const SizedBox(height: 14),
+
+        SizedBox(
+          height: 292,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.only(right: 20),
+            itemCount: products.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final product = products[index];
+
+              return SizedBox(
+                width: 185,
+                child: _RecommendedProductCard(
+                  product: product,
+                  onTap: () {
+                    Get.toNamed(
+                      AppRoutes.productDetails,
+                      arguments: product.id,
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+  // ═══════════════════════════════════════════════════
   // BOTTOM BAR
   // ═══════════════════════════════════════════════════
 
@@ -1167,6 +1111,119 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 }
 
 // ═══════════════════════════════════════════════════════
+// RECOMMENDED PRODUCT CARD
+// ═══════════════════════════════════════════════════════
+
+class _RecommendedProductCard extends StatelessWidget {
+  final Product product;
+  final VoidCallback onTap;
+
+  const _RecommendedProductCard({required this.product, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: _ProductDetailsScreenState.border),
+          boxShadow: [
+            BoxShadow(
+              color: _ProductDetailsScreenState.navy.withValues(alpha: 0.035),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF7F9FC),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: AppNetworkImage(
+                    url: product.imageUrl,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: _ProductDetailsScreenState.navy,
+                      fontSize: 12,
+                      height: 1.3,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+
+                  const SizedBox(height: 7),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          product.priceLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: _ProductDetailsScreenState.primary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+
+                      if (product.reviewCount > 0)
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.star_rounded,
+                              color: Color(0xFFF59E0B),
+                              size: 14,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              product.averageRating.toStringAsFixed(1),
+                              style: const TextStyle(
+                                color: _ProductDetailsScreenState.muted,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
 // PRODUCT SECTION CARD
 // ═══════════════════════════════════════════════════════
 
@@ -1204,84 +1261,6 @@ class _ProductSectionCard extends StatelessWidget {
           _SectionTitle(icon: icon, title: title),
           const SizedBox(height: 16),
           child,
-        ],
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-// INFORMATION ROW
-// ═══════════════════════════════════════════════════════
-
-class _InfoRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color? valueColor;
-  final bool isLast;
-
-  const _InfoRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-    this.valueColor,
-    this.isLast = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: isLast ? 0 : 13),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 29,
-                height: 29,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF4F7FB),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  icon,
-                  color: _ProductDetailsScreenState.muted,
-                  size: 15,
-                ),
-              ),
-
-              const SizedBox(width: 10),
-
-              Expanded(
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    color: _ProductDetailsScreenState.muted,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-
-              Flexible(
-                child: Text(
-                  value,
-                  textAlign: TextAlign.right,
-                  style: TextStyle(
-                    color: valueColor ?? _ProductDetailsScreenState.navy,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          if (!isLast) ...[
-            const SizedBox(height: 12),
-            const Divider(height: 1, color: _ProductDetailsScreenState.border),
-          ],
         ],
       ),
     );
@@ -1389,75 +1368,7 @@ class _SoftChip extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════
-// ZOOMABLE PRODUCT IMAGE
-// ═══════════════════════════════════════════════════════
-
-class _ZoomableProductImage extends StatefulWidget {
-  final String? url;
-
-  const _ZoomableProductImage({required this.url});
-
-  @override
-  State<_ZoomableProductImage> createState() => _ZoomableProductImageState();
-}
-
-class _ZoomableProductImageState extends State<_ZoomableProductImage> {
-  final TransformationController _transformationController =
-      TransformationController();
-
-  TapDownDetails? _doubleTapDetails;
-
-  @override
-  void dispose() {
-    _transformationController.dispose();
-    super.dispose();
-  }
-
-  void _handleDoubleTap() {
-    final currentScale = _transformationController.value.getMaxScaleOnAxis();
-
-    if (currentScale > 1.01) {
-      _transformationController.value = Matrix4.identity();
-      return;
-    }
-
-    final position = _doubleTapDetails?.localPosition;
-
-    if (position == null) {
-      _transformationController.value = Matrix4.identity()..scale(2.5);
-      return;
-    }
-
-    final zoomed = Matrix4.identity()
-      ..translate(-position.dx * 1.5, -position.dy * 1.5)
-      ..scale(2.5);
-
-    _transformationController.value = zoomed;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onDoubleTapDown: (details) {
-        _doubleTapDetails = details;
-      },
-      onDoubleTap: _handleDoubleTap,
-      child: InteractiveViewer(
-        transformationController: _transformationController,
-        minScale: 1,
-        maxScale: 4,
-        panEnabled: true,
-        scaleEnabled: true,
-        boundaryMargin: const EdgeInsets.all(100),
-        clipBehavior: Clip.none,
-        child: AppNetworkImage(url: widget.url, fit: BoxFit.contain),
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-// HERO ACTION BUTTON
+// HERO BUTTON
 // ═══════════════════════════════════════════════════════
 
 class _HeroActionButton extends StatelessWidget {
@@ -1476,7 +1387,6 @@ class _HeroActionButton extends StatelessWidget {
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(15),
-      elevation: 0,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(15),
@@ -1559,11 +1469,79 @@ class _QuantityButton extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
-        child: const SizedBox(
+        child: SizedBox(
           width: 38,
           height: 42,
-          child: Icon(Icons.remove_rounded, size: 17, color: Color(0xFF536075)),
+          child: Icon(icon, size: 17, color: const Color(0xFF536075)),
         ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// ZOOMABLE PRODUCT IMAGE
+// ═══════════════════════════════════════════════════════
+
+class _ZoomableProductImage extends StatefulWidget {
+  final String? url;
+
+  const _ZoomableProductImage({required this.url});
+
+  @override
+  State<_ZoomableProductImage> createState() => _ZoomableProductImageState();
+}
+
+class _ZoomableProductImageState extends State<_ZoomableProductImage> {
+  final TransformationController _transformationController =
+      TransformationController();
+
+  TapDownDetails? _doubleTapDetails;
+
+  @override
+  void dispose() {
+    _transformationController.dispose();
+    super.dispose();
+  }
+
+  void _handleDoubleTap() {
+    final currentScale = _transformationController.value.getMaxScaleOnAxis();
+
+    if (currentScale > 1.01) {
+      _transformationController.value = Matrix4.identity();
+      return;
+    }
+
+    final position = _doubleTapDetails?.localPosition;
+
+    if (position == null) {
+      _transformationController.value = Matrix4.identity()..scale(2.5);
+      return;
+    }
+
+    final zoomed = Matrix4.identity()
+      ..translate(-position.dx * 1.5, -position.dy * 1.5)
+      ..scale(2.5);
+
+    _transformationController.value = zoomed;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onDoubleTapDown: (details) {
+        _doubleTapDetails = details;
+      },
+      onDoubleTap: _handleDoubleTap,
+      child: InteractiveViewer(
+        transformationController: _transformationController,
+        minScale: 1,
+        maxScale: 4,
+        panEnabled: true,
+        scaleEnabled: true,
+        boundaryMargin: const EdgeInsets.all(100),
+        clipBehavior: Clip.none,
+        child: AppNetworkImage(url: widget.url, fit: BoxFit.contain),
       ),
     );
   }

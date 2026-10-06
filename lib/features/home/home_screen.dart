@@ -2,6 +2,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_snake_navigationbar/flutter_snake_navigationbar.dart';
 import 'package:get/get.dart';
+import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/app_network_image.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/product_card.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/state_views.dart';
@@ -38,7 +39,25 @@ class HomeScreen extends GetView<HomeController> {
             unselectedItemColor: const Color(0xFF8A94A6),
             currentIndex: controller.selectedTab.value,
             onTap: (index) {
-              controller.selectedTab.value = index;
+              switch (index) {
+                case 0:
+                  controller.selectedTab.value = 0;
+                  break;
+
+                case 1:
+                  controller.selectedTab.value = 1;
+                  // TODO: Navigate to categories
+                  break;
+
+                case 2:
+                  Get.toNamed(AppRoutes.favourites);
+                  break;
+
+                case 3:
+                  controller.selectedTab.value = 3;
+                  // TODO: Navigate to profile
+                  break;
+              }
             },
             items: const [
               BottomNavigationBarItem(

@@ -8,6 +8,8 @@ import 'package:magna_data_ai_ecommerce/features/auth/login/login_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/register/register_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/checkout/checkout_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/checkout/checkout_screen.dart';
+import 'package:magna_data_ai_ecommerce/features/favourites/favourites_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/favourites/favourites_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/onboarding/onboarding_controller.dart';
@@ -98,6 +100,19 @@ class AppPages {
     GetPage(
       name: AppRoutes.orderConfirmation,
       page: () => const OrderConfirmationScreen(),
+    ),
+
+    GetPage(
+      name: AppRoutes.favourites,
+      page: () => const FavouritesScreen(),
+      binding: BindingsBuilder(
+        () => Get.lazyPut(
+          () => GetPage(
+            name: AppRoutes.orderConfirmation,
+            page: () => const OrderConfirmationScreen(),
+          ),
+        ),
+      ),
     ),
   ];
 }
