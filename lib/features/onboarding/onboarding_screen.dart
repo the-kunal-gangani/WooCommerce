@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/login/login_controller.dart';
 
 import 'package:magna_data_ai_ecommerce/features/auth/login/login_screen.dart';
-import 'package:magna_data_ai_ecommerce/features/onboarding/onboarding_controller.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -97,8 +96,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
-
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
       body: SafeArea(
@@ -529,7 +526,7 @@ class _OnboardingData {
 }
 
 class _OnboardingIllustration extends StatefulWidget {
-  const _OnboardingIllustration({super.key, this.page = 0});
+  const _OnboardingIllustration({this.page = 0});
 
   final int page;
 
