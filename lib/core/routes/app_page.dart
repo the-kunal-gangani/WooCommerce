@@ -9,6 +9,7 @@ import 'package:magna_data_ai_ecommerce/features/auth/login/login_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/register/register_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/reset-password/reset_password_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/reset-password/reset_password_screen.dart';
+import 'package:magna_data_ai_ecommerce/features/categories/categories_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/checkout/checkout_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/checkout/checkout_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/favourites/favourites_screen.dart';
@@ -21,6 +22,7 @@ import 'package:magna_data_ai_ecommerce/features/product-details/product_details
 import 'package:magna_data_ai_ecommerce/features/product-details/product_details_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/product-list/product_list_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/product-list/product_list_screen.dart';
+import 'package:magna_data_ai_ecommerce/features/users-profile/user_profile_screen.dart';
 
 import '../../features/splash/splash_controller.dart';
 import '../../features/splash/splash_screen.dart';
@@ -55,7 +57,7 @@ class AppPages {
       page: () => const ForgotPasswordScreen(),
       binding: BindingsBuilder.put(() => ForgotPasswordController()),
     ),
-    
+
     GetPage(
       name: AppRoutes.resetPassword,
       page: () => const ResetPasswordScreen(),
@@ -123,5 +125,9 @@ class AppPages {
         ),
       ),
     ),
+
+    GetPage(name: AppRoutes.categories, page: () => const CategoriesScreen()),
+
+    GetPage(name: AppRoutes.profile, page: () => const ProfileScreen()),
   ];
 }

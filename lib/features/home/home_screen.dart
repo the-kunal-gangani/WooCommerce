@@ -45,8 +45,7 @@ class HomeScreen extends GetView<HomeController> {
                   break;
 
                 case 1:
-                  controller.selectedTab.value = 1;
-                  // TODO: Navigate to categories
+                  Get.toNamed(AppRoutes.categories);
                   break;
 
                 case 2:
@@ -54,8 +53,7 @@ class HomeScreen extends GetView<HomeController> {
                   break;
 
                 case 3:
-                  controller.selectedTab.value = 3;
-                  // TODO: Navigate to profile
+                  Get.toNamed(AppRoutes.profile);
                   break;
               }
             },
