@@ -1,9 +1,535 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:magna_data_ai_ecommerce/features/auth/login/login_controller.dart';
+
+import 'package:magna_data_ai_ecommerce/features/auth/login/login_screen.dart';
+import 'package:magna_data_ai_ecommerce/features/onboarding/onboarding_controller.dart';
+
+class OnboardingScreen extends StatefulWidget {
+  const OnboardingScreen({super.key});
+
+  @override
+  State<OnboardingScreen> createState() => _OnboardingScreenState();
+}
+
+class _OnboardingScreenState extends State<OnboardingScreen>
+    with TickerProviderStateMixin {
+  late final PageController _pageController;
+
+  late final AnimationController _contentController;
+
+  int _currentPage = 0;
+
+  final List<_OnboardingData> _pages = const [
+    _OnboardingData(
+      title: 'Discover Smarter Shopping',
+      description: 'Explore products intelligently and discover what feels right for you.',
+      label: 'DISCOVER',
+    ),
+    _OnboardingData(
+      title: 'Recommendations That Think',
+      description: 'Our AI understands your preferences and finds products worth your attention.',
+      label: 'INTELLIGENCE',
+    ),
+    _OnboardingData(
+      title: 'Safe. Simple. Seamless.',
+      description: 'Enjoy a secure shopping experience from product discovery to checkout.',
+      label: 'SECURITY',
+    ),
+    _OnboardingData(
+      title: 'From Store to Your Door',
+      description: 'Track your order and stay connected with every step of your delivery.',
+      label: 'DELIVERY',
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    _pageController = PageController();
+
+    _contentController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    _contentController.dispose();
+    super.dispose();
+  }
+
+  void _nextPage() {
+    if (_currentPage < _pages.length - 1) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 550),
+        curve: Curves.easeOutCubic,
+      );
+    } else {
+      _finishOnboarding();
+    }
+  }
+
+  void _skip() {
+    _finishOnboarding();
+  }
+
+  void _finishOnboarding() {
+    Get.lazyPut<LoginController>(() => LoginController());
+
+    Get.offAll(() => const LoginScreen());
+  }
+
+  void _onPageChanged(int page) {
+    setState(() {
+      _currentPage = page;
+    });
+
+    _contentController
+      ..reset()
+      ..forward();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF7F9FC),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // ================================================================
+            // AMBIENT BACKGROUND
+            // ================================================================
+
+            const Positioned.fill(child: _OnboardingBackground()),
+
+            // ================================================================
+            // MAIN CONTENT
+            // ================================================================
+            Column(
+              children: [
+                // ------------------------------------------------------------
+                // TOP BAR
+                // ------------------------------------------------------------
+
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _BrandMiniMark(),
+
+                      GestureDetector(
+                        onTap: _skip,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 15,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.72),
+                            borderRadius: BorderRadius.circular(30),
+                            border: Border.all(color: const Color(0xFFE7EBF3)),
+                          ),
+                          child: const Text(
+                            'Skip',
+                            style: TextStyle(
+                              color: Color(0xFF687386),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ------------------------------------------------------------
+                // PAGE VIEW
+                // ------------------------------------------------------------
+                Expanded(
+                  child: PageView.builder(
+                    controller: _pageController,
+                    itemCount: _pages.length,
+                    onPageChanged: _onPageChanged,
+                    itemBuilder: (context, index) {
+                      return AnimatedBuilder(
+                        animation: _contentController,
+                        builder: (context, child) {
+                          final curved = CurvedAnimation(
+                            parent: _contentController,
+                            curve: Curves.easeOutCubic,
+                          );
+
+                          return Opacity(
+                            opacity: curved.value,
+                            child: Transform.translate(
+                              offset: Offset(0, 20 * (1 - curved.value)),
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: _OnboardingPage(
+                          pageIndex: index,
+                          data: _pages[index],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                // ------------------------------------------------------------
+                // BOTTOM CONTROLS
+                // ------------------------------------------------------------
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                  child: Column(
+                    children: [
+                      _PageIndicator(
+                        currentPage: _currentPage,
+                        count: _pages.length,
+                      ),
+
+                      const SizedBox(height: 22),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: SizedBox(
+                              height: 56,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    begin: Alignment.centerLeft,
+                                    end: Alignment.centerRight,
+                                    colors: [
+                                      Color(0xFF4F7CFF),
+                                      Color(0xFF7657E8),
+                                      Color(0xFF8B5CF6),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(18),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFF4F7CFF)
+                                          .withValues(alpha: 0.22),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 9),
+                                    ),
+                                  ],
+                                ),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(18),
+                                    onTap: _nextPage,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          _currentPage == _pages.length - 1
+                                              ? 'Get Started'
+                                              : 'Continue',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        const Icon(
+                                          Icons.arrow_forward_rounded,
+                                          color: Colors.white,
+                                          size: 19,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 13),
+
+                      Text(
+                        'MAGNADATA AI • AI COMMERCE',
+                        style: TextStyle(
+                          color: const Color(0xFF9AA4B5)
+                              .withValues(alpha: 0.85),
+                          fontSize: 8.5,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// ONBOARDING PAGE
+// ============================================================================
+
+class _OnboardingPage extends StatelessWidget {
+  const _OnboardingPage({required this.pageIndex, required this.data});
+
+  final int pageIndex;
+  final _OnboardingData data;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      child: Column(
+        children: [
+          const SizedBox(height: 8),
+
+          // Scene
+          Expanded(flex: 6, child: _OnboardingIllustration(page: pageIndex)),
+
+          const SizedBox(height: 4),
+
+          // Small category label
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEEF3FF),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Text(
+              data.label,
+              style: const TextStyle(
+                color: Color(0xFF5968D8),
+                fontSize: 9,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.4,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          // Title
+          Text(
+            data.title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Color(0xFF111827),
+              fontSize: 28,
+              height: 1.12,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.7,
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Description
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 330),
+            child: Text(
+              data.description,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Color(0xFF687386),
+                fontSize: 14,
+                height: 1.55,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 10),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// BACKGROUND
+// ============================================================================
+
+class _OnboardingBackground extends StatelessWidget {
+  const _OnboardingBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(painter: _BackgroundPainter());
+  }
+}
+
+class _BackgroundPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final blueCenter = Offset(size.width * 0.15, size.height * 0.30);
+
+    final violetCenter = Offset(size.width * 0.90, size.height * 0.65);
+
+    final bluePaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          const Color(0xFF4F7CFF).withValues(alpha: 0.055),
+          const Color(0xFF4F7CFF).withValues(alpha: 0),
+        ],
+      ).createShader(Rect.fromCircle(center: blueCenter, radius: 230));
+
+    canvas.drawCircle(blueCenter, 230, bluePaint);
+
+    final violetPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          const Color(0xFF8B5CF6).withValues(alpha: 0.045),
+          const Color(0xFF8B5CF6).withValues(alpha: 0),
+        ],
+      ).createShader(Rect.fromCircle(center: violetCenter, radius: 250));
+
+    canvas.drawCircle(violetCenter, 250, violetPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
+  }
+}
+
+// ============================================================================
+// BRAND MARK
+// ============================================================================
+
+class _BrandMiniMark extends StatelessWidget {
+  const _BrandMiniMark();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 35,
+      height: 35,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF4F7CFF), Color(0xFF8B5CF6)],
+        ),
+        borderRadius: BorderRadius.circular(11),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF4F7CFF).withValues(alpha: 0.18),
+            blurRadius: 13,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: const CustomPaint(painter: _BrandMarkPainter()),
+    );
+  }
+}
+
+class _BrandMarkPainter extends CustomPainter {
+  const _BrandMarkPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawCircle(center, 6, paint);
+
+    canvas.drawLine(center.translate(-11, 0), center.translate(-6, 0), paint);
+
+    canvas.drawLine(center.translate(6, 0), center.translate(11, 0), paint);
+
+    canvas.drawLine(center.translate(0, -11), center.translate(0, -6), paint);
+
+    canvas.drawLine(center.translate(0, 6), center.translate(0, 11), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
+  }
+}
+
+// ============================================================================
+// PAGE INDICATOR
+// ============================================================================
+
+class _PageIndicator extends StatelessWidget {
+  const _PageIndicator({required this.currentPage, required this.count});
+
+  final int currentPage;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(count, (index) {
+        final active = index == currentPage;
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          width: active ? 25 : 7,
+          height: 7,
+          decoration: BoxDecoration(
+            gradient: active
+                ? const LinearGradient(
+                    colors: [Color(0xFF4F7CFF), Color(0xFF8B5CF6)],
+                  )
+                : null,
+            color: active ? null : const Color(0xFFDCE2EC),
+            borderRadius: BorderRadius.circular(20),
+          ),
+        );
+      }),
+    );
+  }
+}
+
+// ============================================================================
+// DATA
+// ============================================================================
+
+class _OnboardingData {
+  const _OnboardingData({
+    required this.title,
+    required this.description,
+    required this.label,
+  });
+
+  final String title;
+  final String description;
+  final String label;
+}
 
 class _OnboardingIllustration extends StatefulWidget {
-  const _OnboardingIllustration({required this.page});
+  const _OnboardingIllustration({super.key, this.page = 0});
 
   final int page;
 
@@ -14,18 +540,17 @@ class _OnboardingIllustration extends StatefulWidget {
 
 class _OnboardingIllustrationState extends State<_OnboardingIllustration>
     with TickerProviderStateMixin {
-  late final AnimationController _floatController;
+  late final AnimationController _motionController;
   late final AnimationController _pulseController;
-  late final AnimationController _rotateController;
-  late final AnimationController _particleController;
+  late final AnimationController _rotationController;
 
   @override
   void initState() {
     super.initState();
 
-    _floatController = AnimationController(
+    _motionController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 4),
+      duration: const Duration(seconds: 5),
     )..repeat();
 
     _pulseController = AnimationController(
@@ -33,195 +558,153 @@ class _OnboardingIllustrationState extends State<_OnboardingIllustration>
       duration: const Duration(milliseconds: 1800),
     )..repeat(reverse: true);
 
-    _rotateController = AnimationController(
+    _rotationController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 18),
-    )..repeat();
-
-    _particleController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 6),
+      duration: const Duration(seconds: 20),
     )..repeat();
   }
 
   @override
   void dispose() {
-    _floatController.dispose();
+    _motionController.dispose();
     _pulseController.dispose();
-    _rotateController.dispose();
-    _particleController.dispose();
-
+    _rotationController.dispose();
     super.dispose();
   }
 
-  double _float(double offset) {
-    return math.sin((_floatController.value * math.pi * 2) + offset) * 6;
+  double _float(double phase, double amount) {
+    return math.sin((_motionController.value * math.pi * 2) + phase) * amount;
   }
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 350,
+      height: 380,
       width: double.infinity,
       child: AnimatedBuilder(
         animation: Listenable.merge([
-          _floatController,
+          _motionController,
           _pulseController,
-          _rotateController,
-          _particleController,
+          _rotationController,
         ]),
         builder: (context, child) {
           return Stack(
             clipBehavior: Clip.none,
-            alignment: Alignment.center,
             children: [
-              // ------------------------------------------------------------
-              // Ambient glow
-              // ------------------------------------------------------------
-              Positioned(
-                top: 35,
-                left: 35,
-                child: _GlowOrb(
-                  size: 150,
-                  color: const Color(0xFF4F7CFF),
-                  opacity: 0.11,
-                ),
-              ),
+              // ============================================================
+              // BACKGROUND ATMOSPHERE
+              // ============================================================
 
-              Positioned(
-                bottom: 25,
-                right: 25,
-                child: _GlowOrb(
-                  size: 170,
-                  color: const Color(0xFF8B5CF6),
-                  opacity: 0.10,
-                ),
-              ),
-
-              // ------------------------------------------------------------
-              // Decorative particles
-              // ------------------------------------------------------------
               Positioned.fill(
                 child: CustomPaint(
-                  painter: _ParticlesPainter(
-                    progress: _particleController.value,
+                  painter: _AtmospherePainter(pulse: _pulseController.value),
+                ),
+              ),
+
+              // ============================================================
+              // PARTICLES
+              // ============================================================
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: _ParticlePainter(progress: _motionController.value),
+                ),
+              ),
+
+              // ============================================================
+              // AI CONNECTION NETWORK
+              // ============================================================
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: _DiscoveryNetworkPainter(
+                    rotation: _rotationController.value,
+                    pulse: _pulseController.value,
                   ),
                 ),
               ),
 
-              // ------------------------------------------------------------
-              // Rotating network / connection lines
-              // ------------------------------------------------------------
-              Positioned.fill(
-                child: Transform.rotate(
-                  angle: _rotateController.value * math.pi * 2,
-                  child: CustomPaint(painter: _ConnectionPainter()),
+              // ============================================================
+              // SEARCH FLOATING CARD
+              // ============================================================
+              Positioned(
+                left: 12,
+                top: 50 + _float(0.5, 7),
+                child: const _SearchBubble(),
+              ),
+
+              // ============================================================
+              // FAVORITE FLOATING CARD
+              // ============================================================
+              Positioned(
+                right: 18,
+                top: 42 + _float(2.4, 6),
+                child: const _FavoriteBubble(),
+              ),
+
+              // ============================================================
+              // LEFT PRODUCT
+              // ============================================================
+              Positioned(
+                left: 4,
+                bottom: 55 + _float(1.2, 7),
+                child: const _AudioProductCard(),
+              ),
+
+              // ============================================================
+              // RIGHT PRODUCT
+              // ============================================================
+              Positioned(
+                right: 3,
+                bottom: 48 + _float(3.0, 8),
+                child: const _WatchProductCard(),
+              ),
+
+              // ============================================================
+              // SMALL FLOATING PRODUCT
+              // ============================================================
+              Positioned(
+                right: 55,
+                top: 128 + _float(4.0, 5),
+                child: const _MiniProductCard(),
+              ),
+
+              // ============================================================
+              // CENTRAL PRODUCT INTERFACE
+              // ============================================================
+              Positioned(
+                left: 0,
+                right: 0,
+                top: 65 + _float(0, 4),
+                child: const Center(child: _DiscoveryProductCard()),
+              ),
+
+              // ============================================================
+              // AI CORE
+              // ============================================================
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 15,
+                child: Center(
+                  child: _DiscoveryAiCore(
+                    pulse: _pulseController.value,
+                    rotation: _rotationController.value,
+                  ),
                 ),
               ),
 
-              // ------------------------------------------------------------
-              // Search floating element
-              // ------------------------------------------------------------
+              // ============================================================
+              // DECORATIVE SPARKLES
+              // ============================================================
               Positioned(
-                top: 42 + _float(0.3),
-                left: 18,
-                child: _FloatingMiniCard(
-                  icon: Icons.search_rounded,
-                  iconColor: const Color(0xFF4F7CFF),
-                  backgroundColor: const Color(0xFFEFF4FF),
-                  size: 52,
-                ),
-              ),
-
-              // ------------------------------------------------------------
-              // Favorite floating element
-              // ------------------------------------------------------------
-              Positioned(
-                top: 25 + _float(1.7),
-                right: 20,
-                child: _FloatingMiniCard(
-                  icon: Icons.favorite_rounded,
-                  iconColor: const Color(0xFFEC4899),
-                  backgroundColor: const Color(0xFFFFF0F7),
-                  size: 48,
-                ),
-              ),
-
-              // ------------------------------------------------------------
-              // Headphones product
-              // ------------------------------------------------------------
-              Positioned(
-                left: 10,
-                bottom: 48 + _float(1.2),
-                child: _ProductCard(
-                  icon: Icons.headphones_rounded,
-                  title: 'Audio',
-                  iconColor: const Color(0xFF6366F1),
-                  backgroundColor: const Color(0xFFF1F0FF),
-                  rotation: -0.08,
-                ),
-              ),
-
-              // ------------------------------------------------------------
-              // Watch product
-              // ------------------------------------------------------------
-              Positioned(
-                right: 8,
-                bottom: 43 + _float(3.0),
-                child: _ProductCard(
-                  icon: Icons.watch_rounded,
-                  title: 'Watch',
-                  iconColor: const Color(0xFF06B6D4),
-                  backgroundColor: const Color(0xFFEAFBFF),
-                  rotation: 0.08,
-                ),
-              ),
-
-              // ------------------------------------------------------------
-              // Shoes product
-              // ------------------------------------------------------------
-              Positioned(
-                right: 45,
-                top: 118 + _float(2.3),
-                child: _ProductCard(
-                  icon: Icons.directions_run_rounded,
-                  title: 'Style',
-                  iconColor: const Color(0xFF8B5CF6),
-                  backgroundColor: const Color(0xFFF5EEFF),
-                  rotation: 0.06,
-                  small: true,
-                ),
-              ),
-
-              // ------------------------------------------------------------
-              // CENTRAL SHOPPING CARD
-              // ------------------------------------------------------------
-              Transform.translate(
-                offset: Offset(0, _float(0)),
-                child: _MainShoppingCard(pulse: _pulseController.value),
-              ),
-
-              // ------------------------------------------------------------
-              // AI NODE
-              // ------------------------------------------------------------
-              Positioned(
-                bottom: 23,
-                child: _AiNode(pulse: _pulseController.value),
-              ),
-
-              // ------------------------------------------------------------
-              // Tiny sparkle decorations
-              // ------------------------------------------------------------
-              Positioned(
-                top: 94 + _float(2.0),
-                left: 92,
-                child: _Sparkle(size: 17, color: const Color(0xFF4F7CFF)),
+                left: 94,
+                top: 94 + _float(1.4, 5),
+                child: const _GlowSparkle(size: 17, color: Color(0xFF4F7CFF)),
               ),
 
               Positioned(
-                bottom: 98 + _float(1.0),
-                right: 93,
-                child: _Sparkle(size: 13, color: const Color(0xFF8B5CF6)),
+                right: 91,
+                bottom: 103 + _float(2.1, 6),
+                child: const _GlowSparkle(size: 14, color: Color(0xFF8B5CF6)),
               ),
             ],
           );
@@ -232,310 +715,468 @@ class _OnboardingIllustrationState extends State<_OnboardingIllustration>
 }
 
 // ============================================================================
-// MAIN SHOPPING CARD
+// ATMOSPHERE
 // ============================================================================
 
-class _MainShoppingCard extends StatelessWidget {
-  const _MainShoppingCard({required this.pulse});
+class _AtmospherePainter extends CustomPainter {
+  const _AtmospherePainter({required this.pulse});
 
   final double pulse;
 
   @override
-  Widget build(BuildContext context) {
-    final scale = 1 + (pulse * 0.018);
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
 
-    return Transform.scale(
-      scale: scale,
-      child: Container(
-        width: 155,
-        height: 185,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF4F7CFF).withValues(alpha: 0.10),
-              blurRadius: 35,
-              spreadRadius: 2,
-              offset: const Offset(0, 18),
+    final blueRadius = 150 + (pulse * 10);
+    final violetRadius = 135 + (pulse * 8);
+
+    final bluePaint = Paint()
+      ..shader =
+          RadialGradient(
+            colors: [
+              const Color(0xFF4F7CFF).withValues(alpha: 0.12),
+              const Color(0xFF4F7CFF).withValues(alpha: 0),
+            ],
+          ).createShader(
+            Rect.fromCircle(
+              center: center.translate(-70, -35),
+              radius: blueRadius,
             ),
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.045),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+          );
+
+    canvas.drawCircle(center.translate(-70, -35), blueRadius, bluePaint);
+
+    final violetPaint = Paint()
+      ..shader =
+          RadialGradient(
+            colors: [
+              const Color(0xFF8B5CF6).withValues(alpha: 0.10),
+              const Color(0xFF8B5CF6).withValues(alpha: 0),
+            ],
+          ).createShader(
+            Rect.fromCircle(
+              center: center.translate(75, 80),
+              radius: violetRadius,
             ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          );
+
+    canvas.drawCircle(center.translate(75, 80), violetRadius, violetPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _AtmospherePainter oldDelegate) {
+    return oldDelegate.pulse != pulse;
+  }
+}
+
+// ============================================================================
+// PARTICLES
+// ============================================================================
+
+class _ParticlePainter extends CustomPainter {
+  const _ParticlePainter({required this.progress});
+
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final particles = [
+      const _ParticleData(0.12, 0.18, 2.0, 0.0, Color(0xFF4F7CFF)),
+      const _ParticleData(0.87, 0.20, 1.6, 1.4, Color(0xFF8B5CF6)),
+      const _ParticleData(0.08, 0.65, 1.4, 2.2, Color(0xFF06B6D4)),
+      const _ParticleData(0.91, 0.67, 1.8, 3.0, Color(0xFF4F7CFF)),
+      const _ParticleData(0.23, 0.86, 1.2, 4.0, Color(0xFF8B5CF6)),
+      const _ParticleData(0.78, 0.87, 1.4, 5.1, Color(0xFF06B6D4)),
+      const _ParticleData(0.17, 0.40, 1.1, 2.7, Color(0xFF4F7CFF)),
+      const _ParticleData(0.84, 0.43, 1.2, 4.5, Color(0xFF8B5CF6)),
+    ];
+
+    for (final particle in particles) {
+      final wave = math.sin(progress * math.pi * 2 + particle.phase);
+
+      final opacity = 0.18 + ((wave + 1) / 2) * 0.45;
+
+      final paint = Paint()..color = particle.color.withValues(alpha: opacity);
+
+      final position = Offset(
+        size.width * particle.x,
+        size.height * particle.y + wave * 5,
+      );
+
+      canvas.drawCircle(position, particle.radius, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ParticlePainter oldDelegate) {
+    return oldDelegate.progress != progress;
+  }
+}
+
+class _ParticleData {
+  const _ParticleData(this.x, this.y, this.radius, this.phase, this.color);
+
+  final double x;
+  final double y;
+  final double radius;
+  final double phase;
+  final Color color;
+}
+
+// ============================================================================
+// DISCOVERY NETWORK
+// ============================================================================
+
+class _DiscoveryNetworkPainter extends CustomPainter {
+  const _DiscoveryNetworkPainter({required this.rotation, required this.pulse});
+
+  final double rotation;
+  final double pulse;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2 - 5);
+
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.1
+      ..strokeCap = StrokeCap.round;
+
+    final leftNode = Offset(center.dx - 112, center.dy - 45);
+
+    final rightNode = Offset(center.dx + 112, center.dy - 38);
+
+    final leftBottom = Offset(center.dx - 100, center.dy + 83);
+
+    final rightBottom = Offset(center.dx + 104, center.dy + 83);
+
+    _drawConnection(canvas, center, leftNode, paint, const Color(0xFF4F7CFF));
+
+    _drawConnection(canvas, center, rightNode, paint, const Color(0xFF8B5CF6));
+
+    _drawConnection(canvas, center, leftBottom, paint, const Color(0xFF06B6D4));
+
+    _drawConnection(
+      canvas,
+      center,
+      rightBottom,
+      paint,
+      const Color(0xFF4F7CFF),
+    );
+
+    final nodes = [
+      (leftNode, const Color(0xFF4F7CFF)),
+      (rightNode, const Color(0xFF8B5CF6)),
+      (leftBottom, const Color(0xFF06B6D4)),
+      (rightBottom, const Color(0xFF4F7CFF)),
+    ];
+
+    for (final node in nodes) {
+      final glowPaint = Paint()
+        ..color = node.$2.withValues(alpha: 0.08 + pulse * 0.08);
+
+      canvas.drawCircle(node.$1, 9 + pulse * 3, glowPaint);
+
+      final dotPaint = Paint()..color = node.$2.withValues(alpha: 0.6);
+
+      canvas.drawCircle(node.$1, 2.8, dotPaint);
+    }
+
+    // Tiny moving data point.
+    final movingAngle = rotation * math.pi * 2;
+
+    final dataPoint = Offset(
+      center.dx + math.cos(movingAngle) * 92,
+      center.dy + math.sin(movingAngle) * 55,
+    );
+
+    canvas.drawCircle(
+      dataPoint,
+      2,
+      Paint()
+        ..color = const Color(0xFF06B6D4)
+        ..style = PaintingStyle.fill,
+    );
+  }
+
+  void _drawConnection(
+    Canvas canvas,
+    Offset center,
+    Offset destination,
+    Paint paint,
+    Color color,
+  ) {
+    paint.color = color.withValues(alpha: 0.17);
+
+    final control = Offset(
+      (center.dx + destination.dx) / 2,
+      destination.dy - 12,
+    );
+
+    final path = Path()
+      ..moveTo(center.dx, center.dy)
+      ..quadraticBezierTo(
+        control.dx,
+        control.dy,
+        destination.dx,
+        destination.dy,
+      );
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _DiscoveryNetworkPainter oldDelegate) {
+    return oldDelegate.rotation != rotation || oldDelegate.pulse != pulse;
+  }
+}
+
+// ============================================================================
+// CENTRAL DISCOVERY CARD
+// ============================================================================
+
+class _DiscoveryProductCard extends StatelessWidget {
+  const _DiscoveryProductCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 168,
+      height: 205,
+      padding: const EdgeInsets.all(13),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(27),
+        border: Border.all(color: const Color(0xFFE9EEFF), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF4F7CFF).withValues(alpha: 0.12),
+            blurRadius: 38,
+            spreadRadius: 2,
+            offset: const Offset(0, 18),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 18,
+            offset: const Offset(0, 7),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
             children: [
-              // Header
-              Row(
-                children: [
-                  Container(
-                    height: 30,
-                    width: 30,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF4F7CFF), Color(0xFF8B5CF6)],
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.auto_awesome_rounded,
-                      size: 17,
-                      color: Colors.white,
-                    ),
+              // AI badge
+              Container(
+                width: 31,
+                height: 31,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF4F7CFF), Color(0xFF8B5CF6)],
                   ),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      'For You',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF111827),
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    Icons.more_horiz_rounded,
-                    size: 18,
-                    color: const Color(0xFF687386).withValues(alpha: 0.65),
-                  ),
-                ],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: CustomPaint(painter: _MiniAiMarkPainter()),
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(width: 8),
 
-              // Product image area
-              Expanded(
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFFF1F5FF), Color(0xFFF7F2FF)],
-                    ),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Positioned(
-                        top: 10,
-                        right: 10,
-                        child: Container(
-                          padding: const EdgeInsets.all(5),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.85),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.favorite_border_rounded,
-                            size: 14,
-                            color: Color(0xFF687386),
-                          ),
-                        ),
-                      ),
-                      const Icon(
-                        Icons.shopping_bag_rounded,
-                        size: 48,
-                        color: Color(0xFF4F7CFF),
-                      ),
-                    ],
+              const Expanded(
+                child: Text(
+                  'AI PICK',
+                  style: TextStyle(
+                    fontSize: 10,
+                    letterSpacing: 0.6,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF111827),
                   ),
                 ),
               ),
 
-              const SizedBox(height: 10),
-
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Smart Pick',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF111827),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEFF4FF),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      '98%',
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF4F7CFF),
-                      ),
-                    ),
-                  ),
-                ],
+              Container(
+                width: 7,
+                height: 7,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF22C55E),
+                  shape: BoxShape.circle,
+                ),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
 
-// ============================================================================
-// PRODUCT CARD
-// ============================================================================
+          const SizedBox(height: 11),
 
-class _ProductCard extends StatelessWidget {
-  const _ProductCard({
-    required this.icon,
-    required this.title,
-    required this.iconColor,
-    required this.backgroundColor,
-    required this.rotation,
-    this.small = false,
-  });
-
-  final IconData icon;
-  final String title;
-  final Color iconColor;
-  final Color backgroundColor;
-  final double rotation;
-  final bool small;
-
-  @override
-  Widget build(BuildContext context) {
-    final width = small ? 72.0 : 82.0;
-    final height = small ? 78.0 : 88.0;
-
-    return Transform.rotate(
-      angle: rotation,
-      child: Container(
-        width: width,
-        height: height,
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.055),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: small ? 34 : 39,
-              height: small ? 34 : 39,
+          // Product visual
+          Expanded(
+            child: Container(
+              width: double.infinity,
               decoration: BoxDecoration(
-                color: backgroundColor,
-                borderRadius: BorderRadius.circular(12),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFF0F5FF), Color(0xFFF8F2FF)],
+                ),
+                borderRadius: BorderRadius.circular(19),
               ),
-              child: Icon(icon, color: iconColor, size: small ? 18 : 21),
-            ),
-            const SizedBox(height: 7),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: small ? 8 : 9,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF111827),
+              child: Stack(
+                children: [
+                  Positioned(
+                    top: 10,
+                    left: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.82),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        '98% MATCH',
+                        style: TextStyle(
+                          fontSize: 7,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF4F7CFF),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const Center(child: _PremiumProductVisual()),
+
+                  Positioned(
+                    right: 9,
+                    top: 9,
+                    child: Container(
+                      width: 27,
+                      height: 27,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.85),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.favorite_border_rounded,
+                        size: 14,
+                        color: Color(0xFF687386),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+
+          const SizedBox(height: 9),
+
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Smart choice',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF111827),
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0F4FF),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'For You',
+                  style: TextStyle(
+                    fontSize: 7,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF5968D8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
 
 // ============================================================================
-// AI NODE
+// PREMIUM PRODUCT VISUAL
 // ============================================================================
 
-class _AiNode extends StatelessWidget {
-  const _AiNode({required this.pulse});
-
-  final double pulse;
+class _PremiumProductVisual extends StatelessWidget {
+  const _PremiumProductVisual();
 
   @override
   Widget build(BuildContext context) {
-    final scale = 1 + (pulse * 0.12);
-
-    return Transform.scale(
-      scale: scale,
+    return SizedBox(
+      width: 82,
+      height: 82,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Outer glow
           Container(
-            width: 76,
-            height: 76,
+            width: 70,
+            height: 70,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFF4F7CFF)
-                  .withValues(alpha: 0.055 + (pulse * 0.04)),
+              gradient: RadialGradient(
+                colors: [
+                  const Color(0xFF4F7CFF).withValues(alpha: 0.14),
+                  const Color(0xFF8B5CF6).withValues(alpha: 0.02),
+                ],
+              ),
             ),
           ),
 
-          // Outer ring
+          // Product body
           Container(
-            width: 58,
-            height: 58,
-            padding: const EdgeInsets.all(2),
+            width: 43,
+            height: 52,
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
               gradient: const LinearGradient(
-                colors: [
-                  Color(0xFF4F7CFF),
-                  Color(0xFF8B5CF6),
-                  Color(0xFF06B6D4),
-                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF6C8DFF), Color(0xFF5B63E8)],
               ),
+              borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF4F7CFF).withValues(alpha: 0.20),
+                  color: const Color(0xFF4F7CFF).withValues(alpha: 0.24),
                   blurRadius: 18,
+                  offset: const Offset(0, 8),
                 ),
               ],
             ),
+          ),
+
+          // Product highlight
+          Positioned(
+            top: 20,
+            left: 28,
             child: Container(
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
-              ),
-              child: const Icon(
-                Icons.auto_awesome_rounded,
-                color: Color(0xFF5B63E8),
-                size: 23,
+              width: 12,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.55),
+                borderRadius: BorderRadius.circular(4),
               ),
             ),
           ),
 
-          // Small orbiting dot
+          // Product shine
           Positioned(
-            top: 4,
-            right: 7,
+            right: 20,
+            bottom: 21,
             child: Container(
-              width: 7,
-              height: 7,
-              decoration: const BoxDecoration(
-                color: Color(0xFF06B6D4),
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: const Color(0xFF9FEAFF).withValues(alpha: 0.8),
                 shape: BoxShape.circle,
               ),
             ),
@@ -547,203 +1188,582 @@ class _AiNode extends StatelessWidget {
 }
 
 // ============================================================================
-// FLOATING MINI CARD
+// AI CORE
 // ============================================================================
 
-class _FloatingMiniCard extends StatelessWidget {
-  const _FloatingMiniCard({
-    required this.icon,
-    required this.iconColor,
-    required this.backgroundColor,
-    required this.size,
+class _DiscoveryAiCore extends StatelessWidget {
+  const _DiscoveryAiCore({required this.pulse, required this.rotation});
+
+  final double pulse;
+  final double rotation;
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = 1 + pulse * 0.08;
+
+    return Transform.scale(
+      scale: scale,
+      child: SizedBox(
+        width: 96,
+        height: 72,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Glow
+            Container(
+              width: 74 + pulse * 8,
+              height: 74 + pulse * 8,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF4F7CFF)
+                    .withValues(alpha: 0.055 + pulse * 0.035),
+              ),
+            ),
+
+            // Orbit ring
+            Transform.rotate(
+              angle: rotation * math.pi * 2,
+              child: Container(
+                width: 69,
+                height: 35,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: const Color(0xFF4F7CFF).withValues(alpha: 0.28),
+                    width: 1,
+                  ),
+                  borderRadius: BorderRadius.circular(50),
+                ),
+              ),
+            ),
+
+            // Core
+            Container(
+              width: 47,
+              height: 47,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF4F7CFF),
+                    Color(0xFF7657E8),
+                    Color(0xFF8B5CF6),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF4F7CFF).withValues(alpha: 0.25),
+                    blurRadius: 22,
+                  ),
+                ],
+              ),
+              child: CustomPaint(painter: _AiNetworkMarkPainter()),
+            ),
+
+            // Orbiting dot
+            Positioned(
+              top: 14,
+              right: 12,
+              child: Container(
+                width: 7,
+                height: 7,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF8BE9FF),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// SEARCH BUBBLE
+// ============================================================================
+
+class _SearchBubble extends StatelessWidget {
+  const _SearchBubble();
+
+  @override
+  Widget build(BuildContext context) {
+    return _SmallFloatingPanel(
+      width: 62,
+      height: 54,
+      child: CustomPaint(painter: _SearchIllustrationPainter()),
+    );
+  }
+}
+
+// ============================================================================
+// FAVORITE BUBBLE
+// ============================================================================
+
+class _FavoriteBubble extends StatelessWidget {
+  const _FavoriteBubble();
+
+  @override
+  Widget build(BuildContext context) {
+    return _SmallFloatingPanel(
+      width: 56,
+      height: 50,
+      child: CustomPaint(painter: _FavoriteIllustrationPainter()),
+    );
+  }
+}
+
+// ============================================================================
+// AUDIO PRODUCT
+// ============================================================================
+
+class _AudioProductCard extends StatelessWidget {
+  const _AudioProductCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: -0.07,
+      child: _ProductPanel(
+        width: 82,
+        height: 91,
+        child: CustomPaint(painter: _HeadphonePainter()),
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// WATCH PRODUCT
+// ============================================================================
+
+class _WatchProductCard extends StatelessWidget {
+  const _WatchProductCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: 0.07,
+      child: _ProductPanel(
+        width: 82,
+        height: 91,
+        child: CustomPaint(painter: _WatchPainter()),
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// MINI PRODUCT
+// ============================================================================
+
+class _MiniProductCard extends StatelessWidget {
+  const _MiniProductCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: 0.05,
+      child: _ProductPanel(
+        width: 68,
+        height: 72,
+        child: CustomPaint(painter: _ShoePainter()),
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// COMMON PRODUCT PANEL
+// ============================================================================
+
+class _ProductPanel extends StatelessWidget {
+  const _ProductPanel({
+    required this.width,
+    required this.height,
+    required this.child,
   });
 
-  final IconData icon;
-  final Color iconColor;
-  final Color backgroundColor;
-  final double size;
+  final double width;
+  final double height;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: size,
-      height: size,
+      width: width,
+      height: height,
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(19),
+        border: Border.all(color: const Color(0xFFECEFFF)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.045),
+            blurRadius: 18,
+            offset: const Offset(0, 9),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+}
+
+// ============================================================================
+// SMALL FLOATING PANEL
+// ============================================================================
+
+class _SmallFloatingPanel extends StatelessWidget {
+  const _SmallFloatingPanel({
+    required this.width,
+    required this.height,
+    required this.child,
+  });
+
+  final double width;
+  final double height;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(17),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.045),
-            blurRadius: 16,
-            offset: const Offset(0, 7),
+            blurRadius: 17,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Center(
-        child: Container(
-          width: size * 0.60,
-          height: size * 0.60,
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, size: size * 0.30, color: iconColor),
-        ),
-      ),
+      child: child,
     );
   }
 }
 
 // ============================================================================
-// SPARKLE
+// SEARCH ILLUSTRATION
 // ============================================================================
 
-class _Sparkle extends StatelessWidget {
-  const _Sparkle({required this.size, required this.color});
-
-  final double size;
-  final Color color;
-
+class _SearchIllustrationPainter extends CustomPainter {
   @override
-  Widget build(BuildContext context) {
-    return Icon(Icons.auto_awesome_rounded, size: size, color: color);
-  }
-}
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2 - 5, size.height / 2 - 3);
 
-// ============================================================================
-// GLOW ORB
-// ============================================================================
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round
+      ..color = const Color(0xFF4F7CFF);
 
-class _GlowOrb extends StatelessWidget {
-  const _GlowOrb({
-    required this.size,
-    required this.color,
-    required this.opacity,
-  });
+    canvas.drawCircle(center, 10, paint);
 
-  final double size;
-  final Color color;
-  final double opacity;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(
-          colors: [
-            color.withValues(alpha: opacity),
-            color.withValues(alpha: 0),
-          ],
-        ),
-      ),
+    canvas.drawLine(
+      Offset(center.dx + 7, center.dy + 7),
+      Offset(center.dx + 15, center.dy + 15),
+      paint,
     );
+
+    final sparklePaint = Paint()..color = const Color(0xFF8B5CF6);
+
+    canvas.drawCircle(Offset(size.width - 13, 12), 3, sparklePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
   }
 }
 
 // ============================================================================
-// CONNECTION LINES
+// FAVORITE ILLUSTRATION
 // ============================================================================
 
-class _ConnectionPainter extends CustomPainter {
+class _FavoriteIllustrationPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path();
+
+    final centerX = size.width / 2;
+    final top = size.height / 2 - 9;
+
+    path.moveTo(centerX, size.height - 13);
+
+    path.cubicTo(
+      centerX - 24,
+      size.height - 28,
+      centerX - 22,
+      top - 8,
+      centerX - 10,
+      top - 8,
+    );
+
+    path.cubicTo(centerX - 4, top - 8, centerX, top - 2, centerX, top + 3);
+
+    path.cubicTo(centerX, top - 2, centerX + 4, top - 8, centerX + 10, top - 8);
+
+    path.cubicTo(
+      centerX + 22,
+      top - 8,
+      centerX + 24,
+      size.height - 28,
+      centerX,
+      size.height - 13,
+    );
+
+    final paint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = const Color(0xFFFFEEF6);
+
+    canvas.drawPath(path, paint);
+
+    final stroke = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.7
+      ..color = const Color(0xFFEC4899);
+
+    canvas.drawPath(path, stroke);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
+  }
+}
+
+// ============================================================================
+// HEADPHONES
+// ============================================================================
+
+class _HeadphonePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
 
     final paint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2
+      ..strokeWidth = 5
+      ..strokeCap = StrokeCap.round
+      ..color = const Color(0xFF6366F1);
+
+    final arcRect = Rect.fromCenter(
+      center: center.translate(0, 2),
+      width: 42,
+      height: 43,
+    );
+
+    canvas.drawArc(arcRect, math.pi, math.pi, false, paint);
+
+    final leftCup = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: center.translate(-20, 10), width: 12, height: 22),
+      const Radius.circular(6),
+    );
+
+    final rightCup = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: center.translate(20, 10), width: 12, height: 22),
+      const Radius.circular(6),
+    );
+
+    final cupPaint = Paint()..color = const Color(0xFF7C7FEA);
+
+    canvas.drawRRect(leftCup, cupPaint);
+    canvas.drawRRect(rightCup, cupPaint);
+
+    final highlightPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.45);
+
+    canvas.drawCircle(center.translate(-20, 8), 2.5, highlightPaint);
+
+    canvas.drawCircle(center.translate(20, 8), 2.5, highlightPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
+  }
+}
+
+// ============================================================================
+// WATCH
+// ============================================================================
+
+class _WatchPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+
+    final strapPaint = Paint()..color = const Color(0xFF263A72);
+
+    final strap = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: center, width: 21, height: 65),
+      const Radius.circular(10),
+    );
+
+    canvas.drawRRect(strap, strapPaint);
+
+    final bodyPaint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF6F8FFF), Color(0xFF5861DD)],
+      ).createShader(Rect.fromCenter(center: center, width: 43, height: 45));
+
+    final body = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: center, width: 43, height: 45),
+      const Radius.circular(13),
+    );
+
+    canvas.drawRRect(body, bodyPaint);
+
+    final screen = RRect.fromRectAndRadius(
+      Rect.fromCenter(center: center, width: 31, height: 33),
+      const Radius.circular(9),
+    );
+
+    canvas.drawRRect(screen, Paint()..color = const Color(0xFF111C3D));
+
+    final ringPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5
+      ..color = const Color(0xFF8BE9FF);
+
+    canvas.drawCircle(center, 8, ringPaint);
+
+    canvas.drawLine(center, center.translate(0, -5), ringPaint);
+
+    canvas.drawLine(center, center.translate(4, 2), ringPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
+  }
+}
+
+// ============================================================================
+// SHOE
+// ============================================================================
+
+class _ShoePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path();
+
+    path.moveTo(12, 38);
+    path.cubicTo(18, 35, 22, 26, 27, 23);
+
+    path.cubicTo(31, 20, 35, 25, 39, 29);
+
+    path.cubicTo(44, 34, 53, 35, 58, 40);
+
+    path.cubicTo(63, 45, 57, 50, 48, 50);
+
+    path.lineTo(17, 50);
+
+    path.cubicTo(8, 50, 6, 43, 12, 38);
+
+    final paint = Paint()
+      ..shader = const LinearGradient(
+        colors: [Color(0xFF8B5CF6), Color(0xFF5F6BE7)],
+      ).createShader(Rect.fromLTWH(5, 20, 58, 32));
+
+    canvas.drawPath(path, paint);
+
+    final solePaint = Paint()..color = const Color(0xFFE9ECFF);
+
+    final sole = Path()
+      ..moveTo(9, 44)
+      ..quadraticBezierTo(32, 49, 59, 43)
+      ..lineTo(61, 49)
+      ..quadraticBezierTo(34, 57, 9, 50)
+      ..close();
+
+    canvas.drawPath(sole, solePaint);
+
+    final lacePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.7)
+      ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round;
 
-    // ------------------------------------------------------------
-    // Left connection
-    // ------------------------------------------------------------
+    canvas.drawLine(const Offset(29, 30), const Offset(40, 34), lacePaint);
 
-    paint.color = const Color(0xFF4F7CFF).withValues(alpha: 0.18);
+    canvas.drawLine(const Offset(27, 34), const Offset(39, 38), lacePaint);
+  }
 
-    final leftPath = Path()
-      ..moveTo(center.dx - 35, center.dy + 10)
-      ..quadraticBezierTo(
-        center.dx - 95,
-        center.dy - 5,
-        center.dx - 125,
-        center.dy - 55,
-      );
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
+  }
+}
 
-    canvas.drawPath(leftPath, paint);
+// ============================================================================
+// AI MARK
+// ============================================================================
 
-    // ------------------------------------------------------------
-    // Right connection
-    // ------------------------------------------------------------
+class _MiniAiMarkPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 1.4
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
 
-    paint.color = const Color(0xFF8B5CF6).withValues(alpha: 0.17);
+    final center = Offset(size.width / 2, size.height / 2);
 
-    final rightPath = Path()
-      ..moveTo(center.dx + 35, center.dy + 10)
-      ..quadraticBezierTo(
-        center.dx + 95,
-        center.dy - 10,
-        center.dx + 125,
-        center.dy - 55,
-      );
+    canvas.drawCircle(center, 5, paint);
 
-    canvas.drawPath(rightPath, paint);
+    canvas.drawLine(center.translate(-10, 0), center.translate(-5, 0), paint);
 
-    // ------------------------------------------------------------
-    // Bottom-left connection
-    // ------------------------------------------------------------
+    canvas.drawLine(center.translate(5, 0), center.translate(10, 0), paint);
 
-    paint.color = const Color(0xFF06B6D4).withValues(alpha: 0.15);
+    canvas.drawLine(center.translate(0, -10), center.translate(0, -5), paint);
 
-    final bottomLeft = Path()
-      ..moveTo(center.dx - 20, center.dy + 55)
-      ..quadraticBezierTo(
-        center.dx - 85,
-        center.dy + 85,
-        center.dx - 115,
-        center.dy + 55,
-      );
+    canvas.drawLine(center.translate(0, 5), center.translate(0, 10), paint);
+  }
 
-    canvas.drawPath(bottomLeft, paint);
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
+  }
+}
 
-    // ------------------------------------------------------------
-    // Bottom-right connection
-    // ------------------------------------------------------------
+// ============================================================================
+// AI NETWORK MARK
+// ============================================================================
 
-    final bottomRight = Path()
-      ..moveTo(center.dx + 20, center.dy + 55)
-      ..quadraticBezierTo(
-        center.dx + 85,
-        center.dy + 85,
-        center.dx + 115,
-        center.dy + 55,
-      );
+class _AiNetworkMarkPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
 
-    canvas.drawPath(bottomRight, paint);
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.9)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.3;
 
-    // ------------------------------------------------------------
-    // Connection nodes
-    // ------------------------------------------------------------
-
-    final nodes = [
-      Offset(center.dx - 125, center.dy - 55),
-      Offset(center.dx + 125, center.dy - 55),
-      Offset(center.dx - 115, center.dy + 55),
-      Offset(center.dx + 115, center.dy + 55),
+    final points = [
+      center.translate(-9, -4),
+      center.translate(0, -10),
+      center.translate(9, -2),
+      center.translate(5, 9),
+      center.translate(-6, 8),
     ];
 
-    for (var i = 0; i < nodes.length; i++) {
-      final nodePaint = Paint()
-        ..color = [
-          const Color(0xFF4F7CFF),
-          const Color(0xFF8B5CF6),
-          const Color(0xFF06B6D4),
-          const Color(0xFF4F7CFF),
-        ][i].withValues(alpha: 0.55);
+    for (var i = 0; i < points.length; i++) {
+      canvas.drawLine(points[i], points[(i + 1) % points.length], paint);
+    }
 
-      canvas.drawCircle(nodes[i], 3, nodePaint);
+    for (final point in points) {
+      canvas.drawCircle(point, 2.2, Paint()..color = Colors.white);
     }
   }
 
@@ -754,95 +1774,51 @@ class _ConnectionPainter extends CustomPainter {
 }
 
 // ============================================================================
-// PARTICLES
+// SPARKLE
 // ============================================================================
 
-class _ParticlesPainter extends CustomPainter {
-  const _ParticlesPainter({required this.progress});
+class _GlowSparkle extends StatelessWidget {
+  const _GlowSparkle({required this.size, required this.color});
 
-  final double progress;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final particles = [
-      _Particle(
-        x: 0.17,
-        y: 0.23,
-        radius: 2.0,
-        color: const Color(0xFF4F7CFF),
-        phase: 0,
-      ),
-      _Particle(
-        x: 0.82,
-        y: 0.29,
-        radius: 1.7,
-        color: const Color(0xFF8B5CF6),
-        phase: 1.5,
-      ),
-      _Particle(
-        x: 0.27,
-        y: 0.78,
-        radius: 1.5,
-        color: const Color(0xFF06B6D4),
-        phase: 3,
-      ),
-      _Particle(
-        x: 0.76,
-        y: 0.72,
-        radius: 2.1,
-        color: const Color(0xFF4F7CFF),
-        phase: 4,
-      ),
-      _Particle(
-        x: 0.10,
-        y: 0.48,
-        radius: 1.2,
-        color: const Color(0xFF8B5CF6),
-        phase: 2,
-      ),
-      _Particle(
-        x: 0.91,
-        y: 0.50,
-        radius: 1.3,
-        color: const Color(0xFF06B6D4),
-        phase: 5,
-      ),
-    ];
-
-    for (final particle in particles) {
-      final movement = math.sin(progress * math.pi * 2 + particle.phase);
-
-      final position = Offset(
-        size.width * particle.x,
-        size.height * particle.y + movement * 5,
-      );
-
-      final opacity = 0.25 + ((movement + 1) / 2) * 0.45;
-
-      final paint = Paint()..color = particle.color.withValues(alpha: opacity);
-
-      canvas.drawCircle(position, particle.radius, paint);
-    }
-  }
+  final double size;
+  final Color color;
 
   @override
-  bool shouldRepaint(covariant _ParticlesPainter oldDelegate) {
-    return oldDelegate.progress != progress;
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: Size.square(size),
+      painter: _SparklePainter(color: color),
+    );
   }
 }
 
-class _Particle {
-  const _Particle({
-    required this.x,
-    required this.y,
-    required this.radius,
-    required this.color,
-    required this.phase,
-  });
+class _SparklePainter extends CustomPainter {
+  const _SparklePainter({required this.color});
 
-  final double x;
-  final double y;
-  final double radius;
   final Color color;
-  final double phase;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+
+    final path = Path();
+
+    path.moveTo(center.dx, 0);
+    path.quadraticBezierTo(center.dx + 2, center.dy - 2, size.width, center.dy);
+    path.quadraticBezierTo(
+      center.dx + 2,
+      center.dy + 2,
+      center.dx,
+      size.height,
+    );
+    path.quadraticBezierTo(center.dx - 2, center.dy + 2, 0, center.dy);
+    path.quadraticBezierTo(center.dx - 2, center.dy - 2, center.dx, 0);
+
+    canvas.drawPath(path, Paint()..color = color.withValues(alpha: 0.72));
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
+  }
 }

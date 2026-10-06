@@ -32,7 +32,7 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.onboarding,
-      page: () => const OnboardingScreen(),
+      page: () => OnboardingScreen(),
       binding: BindingsBuilder.put(() => OnboardingController()),
     ),
     GetPage(

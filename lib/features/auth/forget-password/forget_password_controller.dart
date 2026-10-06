@@ -1,6 +1,7 @@
 import 'package:flexify/flexify.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:magna_data_ai_ecommerce/features/auth/login/login_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/login/login_screen.dart';
 
 class ForgotPasswordController extends GetxController {
@@ -9,6 +10,7 @@ class ForgotPasswordController extends GetxController {
 
   void sendResetCode() {
     final email = emailController.text.trim();
+    Get.lazyPut<LoginController>(() => LoginController());
 
     if (email.isEmpty || !GetUtils.isEmail(email)) {
       Get.snackbar(

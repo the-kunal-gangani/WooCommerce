@@ -1,7 +1,6 @@
-import 'package:flexify/flexify.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:magna_data_ai_ecommerce/features/home/home_screen.dart';
+import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 
 class RegisterController extends GetxController {
   final nameController = TextEditingController();
@@ -21,7 +20,7 @@ class RegisterController extends GetxController {
     isConfirmPasswordVisible.value = !isConfirmPasswordVisible.value;
   }
 
-  void register() {
+  Future<void> register() async {
     if (nameController.text.trim().isEmpty ||
         emailController.text.trim().isEmpty ||
         passwordController.text.isEmpty) {
@@ -43,18 +42,10 @@ class RegisterController extends GetxController {
     }
 
     isLoading.value = true;
+    await Future<void>.delayed(const Duration(seconds: 2));
+    isLoading.value = false;
 
-    Future.delayed(const Duration(seconds: 2), () {
-      isLoading.value = false;
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Flexify.goRemoveAll(
-          const HomeScreen(),
-          animation: FlexifyRouteAnimations.blur,
-          duration: const Duration(milliseconds: 800),
-        );
-      });
-    });
+    Get.offAllNamed(AppRoutes.home);
   }
 
   @override
