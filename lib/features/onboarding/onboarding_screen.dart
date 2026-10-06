@@ -101,28 +101,15 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       body: SafeArea(
         child: Stack(
           children: [
-            // ================================================================
-            // AMBIENT BACKGROUND
-            // ================================================================
-
             const Positioned.fill(child: _OnboardingBackground()),
-
-            // ================================================================
-            // MAIN CONTENT
-            // ================================================================
             Column(
               children: [
-                // ------------------------------------------------------------
-                // TOP BAR
-                // ------------------------------------------------------------
-
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _BrandMiniMark(),
-
                       GestureDetector(
                         onTap: _skip,
                         child: Container(
@@ -148,10 +135,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     ],
                   ),
                 ),
-
-                // ------------------------------------------------------------
-                // PAGE VIEW
-                // ------------------------------------------------------------
                 Expanded(
                   child: PageView.builder(
                     controller: _pageController,
@@ -165,7 +148,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                             parent: _contentController,
                             curve: Curves.easeOutCubic,
                           );
-
                           return Opacity(
                             opacity: curved.value,
                             child: Transform.translate(
@@ -182,10 +164,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     },
                   ),
                 ),
-
-                // ------------------------------------------------------------
-                // BOTTOM CONTROLS
-                // ------------------------------------------------------------
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                   child: Column(
@@ -194,9 +172,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         currentPage: _currentPage,
                         count: _pages.length,
                       ),
-
                       const SizedBox(height: 22),
-
                       Row(
                         children: [
                           Expanded(
@@ -257,9 +233,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 13),
-
                       Text(
                         'MAGNADATA AI • AI COMMERCE',
                         style: TextStyle(
@@ -282,16 +256,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 }
 
-// ============================================================================
-// ONBOARDING PAGE
-// ============================================================================
-
 class _OnboardingPage extends StatelessWidget {
   const _OnboardingPage({required this.pageIndex, required this.data});
 
   final int pageIndex;
   final _OnboardingData data;
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -299,13 +268,8 @@ class _OnboardingPage extends StatelessWidget {
       child: Column(
         children: [
           const SizedBox(height: 8),
-
-          // Scene
           Expanded(flex: 6, child: _OnboardingIllustration(page: pageIndex)),
-
           const SizedBox(height: 4),
-
-          // Small category label
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
             decoration: BoxDecoration(
@@ -322,10 +286,7 @@ class _OnboardingPage extends StatelessWidget {
               ),
             ),
           ),
-
           const SizedBox(height: 14),
-
-          // Title
           Text(
             data.title,
             textAlign: TextAlign.center,
@@ -337,10 +298,7 @@ class _OnboardingPage extends StatelessWidget {
               letterSpacing: -0.7,
             ),
           ),
-
           const SizedBox(height: 12),
-
-          // Description
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 330),
             child: Text(
@@ -354,17 +312,12 @@ class _OnboardingPage extends StatelessWidget {
               ),
             ),
           ),
-
           const SizedBox(height: 10),
         ],
       ),
     );
   }
 }
-
-// ============================================================================
-// BACKGROUND
-// ============================================================================
 
 class _OnboardingBackground extends StatelessWidget {
   const _OnboardingBackground();
@@ -379,9 +332,7 @@ class _BackgroundPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final blueCenter = Offset(size.width * 0.15, size.height * 0.30);
-
     final violetCenter = Offset(size.width * 0.90, size.height * 0.65);
-
     final bluePaint = Paint()
       ..shader = RadialGradient(
         colors: [
@@ -389,9 +340,7 @@ class _BackgroundPainter extends CustomPainter {
           const Color(0xFF4F7CFF).withValues(alpha: 0),
         ],
       ).createShader(Rect.fromCircle(center: blueCenter, radius: 230));
-
     canvas.drawCircle(blueCenter, 230, bluePaint);
-
     final violetPaint = Paint()
       ..shader = RadialGradient(
         colors: [
@@ -399,7 +348,6 @@ class _BackgroundPainter extends CustomPainter {
           const Color(0xFF8B5CF6).withValues(alpha: 0),
         ],
       ).createShader(Rect.fromCircle(center: violetCenter, radius: 250));
-
     canvas.drawCircle(violetCenter, 250, violetPaint);
   }
 
@@ -408,10 +356,6 @@ class _BackgroundPainter extends CustomPainter {
     return false;
   }
 }
-
-// ============================================================================
-// BRAND MARK
-// ============================================================================
 
 class _BrandMiniMark extends StatelessWidget {
   const _BrandMiniMark();
@@ -443,25 +387,18 @@ class _BrandMiniMark extends StatelessWidget {
 
 class _BrandMarkPainter extends CustomPainter {
   const _BrandMarkPainter();
-
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-
     final paint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.4
       ..strokeCap = StrokeCap.round;
-
     canvas.drawCircle(center, 6, paint);
-
     canvas.drawLine(center.translate(-11, 0), center.translate(-6, 0), paint);
-
     canvas.drawLine(center.translate(6, 0), center.translate(11, 0), paint);
-
     canvas.drawLine(center.translate(0, -11), center.translate(0, -6), paint);
-
     canvas.drawLine(center.translate(0, 6), center.translate(0, 11), paint);
   }
 
@@ -470,10 +407,6 @@ class _BrandMarkPainter extends CustomPainter {
     return false;
   }
 }
-
-// ============================================================================
-// PAGE INDICATOR
-// ============================================================================
 
 class _PageIndicator extends StatelessWidget {
   const _PageIndicator({required this.currentPage, required this.count});

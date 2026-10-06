@@ -6,6 +6,7 @@ import 'package:magna_data_ai_ecommerce/features/auth/forget-password/forget_pas
 import 'package:magna_data_ai_ecommerce/features/auth/login/login_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/login/login_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/register/register_screen.dart';
+import 'package:magna_data_ai_ecommerce/features/checkout/checkout_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/checkout/checkout_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_screen.dart';
@@ -30,21 +31,26 @@ class AppPages {
       page: () => const SplashScreen(),
       binding: BindingsBuilder.put(() => SplashController()),
     ),
+
     GetPage(
       name: AppRoutes.onboarding,
       page: () => OnboardingScreen(),
       binding: BindingsBuilder.put(() => OnboardingController()),
     ),
+
     GetPage(
       name: AppRoutes.login,
       page: () => const LoginScreen(),
       binding: BindingsBuilder.put(() => LoginController()),
     ),
+
     GetPage(name: AppRoutes.register, page: () => const RegisterScreen()),
+
     GetPage(
       name: AppRoutes.forgetPassword,
       page: () => const ForgotPasswordScreen(),
     ),
+
     GetPage(
       name: AppRoutes.home,
       page: () => const HomeScreen(),
@@ -57,6 +63,7 @@ class AppPages {
         );
       }),
     ),
+
     GetPage(
       name: AppRoutes.productDetails,
       page: () => const ProductDetailsScreen(),
@@ -64,6 +71,7 @@ class AppPages {
         Get.lazyPut(() => ProductDetailsController(Get.find<ProductService>()));
       }),
     ),
+
     GetPage(
       name: AppRoutes.productList,
       page: () => const ProductListScreen(),
@@ -76,8 +84,17 @@ class AppPages {
         );
       }),
     ),
+
     GetPage(name: AppRoutes.cart, page: () => const CartScreen()),
-    GetPage(name: AppRoutes.checkout, page: () => const CheckoutScreen()),
+
+    GetPage(
+      name: AppRoutes.checkout,
+      page: () => const CheckoutScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<CheckoutController>(() => CheckoutController());
+      }),
+    ),
+
     GetPage(
       name: AppRoutes.orderConfirmation,
       page: () => const OrderConfirmationScreen(),

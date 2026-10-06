@@ -273,10 +273,6 @@ class LoginScreen extends GetView<LoginController> {
                               ),
 
                               const SizedBox(height: 18),
-
-                              // ─────────────────────────
-                              // SIGN IN BUTTON
-                              // ─────────────────────────
                               Obx(
                                 () => SizedBox(
                                   width: double.infinity,

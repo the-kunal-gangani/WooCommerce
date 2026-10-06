@@ -1,6 +1,7 @@
-import 'package:flexify/flexify.dart';
 import 'package:flutter/material.dart';
-import 'package:magna_data_ai_ecommerce/features/checkout/checkout_screen.dart';
+import 'package:get/get.dart';
+import 'package:get/route_manager.dart';
+import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -15,7 +16,7 @@ class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     void goToCheckout() {
-      Flexify.go(const CheckoutScreen());
+      Get.toNamed(AppRoutes.checkout);
     }
 
     final List<Map<String, dynamic>> cartItems = [
