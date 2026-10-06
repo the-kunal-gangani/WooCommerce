@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:introduction_screen/introduction_screen.dart';
@@ -7,157 +9,571 @@ class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
 
   void _onIntroEnd(BuildContext context) {
-    final controller = Get.isRegistered<OnboardingController>()
-        ? Get.find<OnboardingController>()
-        : Get.put(OnboardingController());
-
-    controller.completeOnboarding();
+    Get.find<OnboardingController>().completeOnboarding();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final primaryColor = theme.primaryColor;
+
+    const background = Color(0xFFF7F9FC);
+    const textColor = Color(0xFF111827);
+    const mutedColor = Color(0xFF687386);
+
+    final primary = theme.colorScheme.primary;
+    final secondary = theme.colorScheme.secondary;
 
     final pageDecoration = PageDecoration(
-      titleTextStyle: theme.textTheme.headlineMedium!.copyWith(
-        fontWeight: FontWeight.bold,
-        color: theme.textTheme.titleLarge?.color,
+      pageColor: background,
+      titleTextStyle: const TextStyle(
+        color: textColor,
+        fontSize: 27,
+        fontWeight: FontWeight.w800,
+        height: 1.15,
+        letterSpacing: -0.5,
       ),
-      bodyTextStyle: theme.textTheme.bodyMedium!.copyWith(
-        color: Colors.grey[600],
-        height: 1.5,
+      bodyTextStyle: const TextStyle(
+        color: mutedColor,
+        fontSize: 15,
+        fontWeight: FontWeight.w400,
+        height: 1.6,
       ),
-      bodyPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      pageColor: theme.scaffoldBackgroundColor,
-      imagePadding: const EdgeInsets.only(top: 40),
-      imageFlex: 2,
-      bodyFlex: 1,
+      titlePadding: const EdgeInsets.only(top: 32, left: 28, right: 28),
+      bodyPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
+      imagePadding: const EdgeInsets.only(top: 20, left: 20, right: 20),
+      imageFlex: 5,
+      bodyFlex: 3,
     );
 
     return Scaffold(
+      backgroundColor: background,
       body: SafeArea(
         child: IntroductionScreen(
-          globalBackgroundColor: theme.scaffoldBackgroundColor,
+          globalBackgroundColor: background,
           allowImplicitScrolling: true,
-          autoScrollDuration: 3000,
           infiniteAutoScroll: false,
+
+          // ─────────────────────────────────────────
+          // PAGES
+          // ─────────────────────────────────────────
           pages: [
             PageViewModel(
-              title: "Discover Smart Products",
-              body: "Explore thousands of curated items tailored to your lifestyle with our intelligent recommendation engine.",
-              image: _buildIllustration(
-                context,
+              title: 'Discover Smarter Shopping',
+              body: 'Explore products that match your needs, preferences, and lifestyle — all in one intelligent marketplace.',
+              image: _OnboardingIllustration(
+                primary: primary,
+                secondary: secondary,
                 icon: Icons.search_rounded,
-                bgColor: primaryColor.withValues(alpha: 0.2),
-                iconColor: primaryColor,
+                number: '01',
+                label: 'DISCOVER',
+                variant: _IllustrationVariant.search,
               ),
               decoration: pageDecoration,
             ),
+
             PageViewModel(
-              title: "AI-Powered Recommendations",
-              body: "Our AI assistant analyzes your preferences to bring you personalized deals and personalized product picks.",
-              image: _buildIllustration(
-                context,
+              title: 'Shopping That Understands You',
+              body: 'Our AI learns what matters to you and helps you discover products and deals that actually make sense.',
+              image: _OnboardingIllustration(
+                primary: primary,
+                secondary: secondary,
                 icon: Icons.auto_awesome_rounded,
-                bgColor: Colors.amber.withValues(alpha: 0.15),
-                iconColor: Colors.amber[800]!,
+                number: '02',
+                label: 'INTELLIGENCE',
+                variant: _IllustrationVariant.ai,
               ),
               decoration: pageDecoration,
             ),
+
             PageViewModel(
-              title: "Seamless & Secure Checkout",
-              body: "Enjoy lightning-fast payments with end-to-end encryption and flexible digital wallet support.",
-              image: _buildIllustration(
-                context,
-                icon: Icons.shield_outlined,
-                bgColor: Colors.green.withValues(alpha: 0.15),
-                iconColor: Colors.green[700]!,
+              title: 'Safe. Simple. Seamless.',
+              body: 'A smooth checkout experience with secure payments designed to keep your shopping journey effortless.',
+              image: _OnboardingIllustration(
+                primary: primary,
+                secondary: secondary,
+                icon: Icons.verified_user_rounded,
+                number: '03',
+                label: 'SECURITY',
+                variant: _IllustrationVariant.security,
               ),
               decoration: pageDecoration,
             ),
+
             PageViewModel(
-              title: "Fast Doorstep Delivery",
-              body: "Track your package in real-time from the warehouse directly to your home with live notifications.",
-              image: _buildIllustration(
-                context,
-                icon: Icons.local_shipping_outlined,
-                bgColor: Colors.blue.withValues(alpha: 0.15),
-                iconColor: Colors.blue[700]!,
+              title: 'From Our Store to Your Door',
+              body: 'Stay connected with your order from dispatch to doorstep with real-time delivery updates.',
+              image: _OnboardingIllustration(
+                primary: primary,
+                secondary: secondary,
+                icon: Icons.local_shipping_rounded,
+                number: '04',
+                label: 'DELIVERY',
+                variant: _IllustrationVariant.delivery,
               ),
               decoration: pageDecoration,
             ),
           ],
 
-          // Navigation callbacks
+          // ─────────────────────────────────────────
+          // NAVIGATION
+          // ─────────────────────────────────────────
           onDone: () => _onIntroEnd(context),
           onSkip: () => _onIntroEnd(context),
+
           showSkipButton: true,
           skipOrBackFlex: 0,
           nextFlex: 0,
 
-          // Customizing Controls / Buttons
-          skip: Text(
-            "Skip",
+          skip: const Text(
+            'Skip',
             style: TextStyle(
+              color: mutedColor,
+              fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[600],
+              letterSpacing: 0.2,
             ),
           ),
+
           next: Container(
-            padding: const EdgeInsets.all(12),
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              color: primaryColor,
               shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [primary, secondary],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: primary.withValues(alpha: 0.22),
+                  blurRadius: 18,
+                  offset: const Offset(0, 7),
+                ),
+              ],
             ),
             child: const Icon(
               Icons.arrow_forward_rounded,
               color: Colors.white,
-              size: 20,
-            ),
-          ),
-          done: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(
-              color: primaryColor,
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: const Text(
-              "Get Started",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+              size: 21,
             ),
           ),
 
-          // Customizing Page Indicators (Dots)
+          done: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 13),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [primary, secondary],
+              ),
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: primary.withValues(alpha: 0.22),
+                  blurRadius: 18,
+                  offset: const Offset(0, 7),
+                ),
+              ],
+            ),
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Get Started',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                SizedBox(width: 7),
+                Icon(
+                  Icons.arrow_forward_rounded,
+                  color: Colors.white,
+                  size: 17,
+                ),
+              ],
+            ),
+          ),
+
+          // ─────────────────────────────────────────
+          // INDICATORS
+          // ─────────────────────────────────────────
           dotsDecorator: DotsDecorator(
-            size: const Size(10.0, 10.0),
-            color: Colors.grey.shade300,
-            activeSize: const Size(22.0, 10.0),
-            activeColor: primaryColor,
-            activeShape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(25.0)),
+            size: const Size(7, 7),
+            spacing: const EdgeInsets.symmetric(horizontal: 4),
+            color: const Color(0xFFD8DEE9),
+            activeSize: const Size(25, 7),
+            activeColor: primary,
+            activeShape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
           ),
         ),
       ),
     );
   }
+}
 
-  // Reusable Graphic Placeholder Widget
-  Widget _buildIllustration(
-    BuildContext context, {
-    required IconData icon,
-    required Color bgColor,
-    required Color iconColor,
-  }) {
+// ═══════════════════════════════════════════════════════════
+// ILLUSTRATION TYPES
+// ═══════════════════════════════════════════════════════════
+
+enum _IllustrationVariant { search, ai, security, delivery }
+
+// ═══════════════════════════════════════════════════════════
+// ONBOARDING ILLUSTRATION
+// ═══════════════════════════════════════════════════════════
+
+class _OnboardingIllustration extends StatefulWidget {
+  final Color primary;
+  final Color secondary;
+  final IconData icon;
+  final String number;
+  final String label;
+  final _IllustrationVariant variant;
+
+  const _OnboardingIllustration({
+    required this.primary,
+    required this.secondary,
+    required this.icon,
+    required this.number,
+    required this.label,
+    required this.variant,
+  });
+
+  @override
+  State<_OnboardingIllustration> createState() =>
+      _OnboardingIllustrationState();
+}
+
+class _OnboardingIllustrationState extends State<_OnboardingIllustration>
+    with TickerProviderStateMixin {
+  late final AnimationController _floatController;
+  late final AnimationController _rotateController;
+  late final AnimationController _pulseController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _floatController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+
+    _rotateController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 18),
+    )..repeat();
+
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _floatController.dispose();
+    _rotateController.dispose();
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: Listenable.merge([
+        _floatController,
+        _rotateController,
+        _pulseController,
+      ]),
+      builder: (context, child) {
+        final floatOffset = math.sin(_floatController.value * math.pi) * 7;
+
+        final pulse = 1 + (_pulseController.value * 0.025);
+
+        return Transform.translate(
+          offset: Offset(0, -floatOffset),
+          child: Transform.scale(
+            scale: pulse,
+            child: SizedBox(
+              width: 320,
+              height: 280,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // ───────────────────────────────────
+                  // AMBIENT GLOW
+                  // ───────────────────────────────────
+
+                  Container(
+                    width: 190,
+                    height: 190,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: widget.primary.withValues(alpha: 0.13),
+                          blurRadius: 80,
+                          spreadRadius: 20,
+                        ),
+                        BoxShadow(
+                          color: widget.secondary.withValues(alpha: 0.10),
+                          blurRadius: 100,
+                          spreadRadius: 10,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // ───────────────────────────────────
+                  // DECORATIVE ORBITS
+                  // ───────────────────────────────────
+                  Transform.rotate(
+                    angle: _rotateController.value * math.pi * 2,
+                    child: CustomPaint(
+                      size: const Size(265, 265),
+                      painter: _OnboardingOrbitPainter(
+                        primary: widget.primary,
+                        secondary: widget.secondary,
+                      ),
+                    ),
+                  ),
+
+                  // ───────────────────────────────────
+                  // CENTRAL CARD
+                  // ───────────────────────────────────
+                  Container(
+                    width: 150,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(42),
+                      color: Colors.white.withValues(alpha: 0.92),
+                      border: Border.all(color: Colors.white, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: widget.primary.withValues(alpha: 0.12),
+                          blurRadius: 35,
+                          offset: const Offset(0, 15),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Container(
+                        width: 88,
+                        height: 88,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [widget.primary, widget.secondary],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: widget.primary.withValues(alpha: 0.28),
+                              blurRadius: 25,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: Icon(widget.icon, color: Colors.white, size: 40),
+                      ),
+                    ),
+                  ),
+
+                  // ───────────────────────────────────
+                  // NUMBER
+                  // ───────────────────────────────────
+                  Positioned(
+                    top: 22,
+                    left: 38,
+                    child: _SmallBadge(
+                      text: widget.number,
+                      color: widget.primary,
+                    ),
+                  ),
+
+                  // ───────────────────────────────────
+                  // LABEL
+                  // ───────────────────────────────────
+                  Positioned(
+                    bottom: 16,
+                    right: 28,
+                    child: _SmallLabel(
+                      text: widget.label,
+                      color: widget.secondary,
+                    ),
+                  ),
+
+                  // ───────────────────────────────────
+                  // FLOATING ELEMENTS
+                  // ───────────────────────────────────
+                  Positioned(
+                    top: 58,
+                    right: 35,
+                    child: _Particle(color: widget.secondary, size: 8),
+                  ),
+
+                  Positioned(
+                    bottom: 62,
+                    left: 40,
+                    child: _Particle(color: widget.primary, size: 6),
+                  ),
+
+                  Positioned(
+                    top: 105,
+                    left: 18,
+                    child: _Particle(color: const Color(0xFF20B8D8), size: 4),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// ORBIT PAINTER
+// ═══════════════════════════════════════════════════════════
+
+class _OnboardingOrbitPainter extends CustomPainter {
+  final Color primary;
+  final Color secondary;
+
+  _OnboardingOrbitPainter({required this.primary, required this.secondary});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2
+      ..shader = SweepGradient(
+        colors: [
+          primary.withValues(alpha: 0.0),
+          primary.withValues(alpha: 0.45),
+          secondary.withValues(alpha: 0.45),
+          secondary.withValues(alpha: 0.0),
+        ],
+      ).createShader(Rect.fromCircle(center: center, radius: size.width / 2));
+
+    canvas.drawOval(
+      Rect.fromCenter(center: center, width: 250, height: 105),
+      paint,
+    );
+
+    canvas.drawOval(
+      Rect.fromCenter(center: center, width: 105, height: 250),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _OnboardingOrbitPainter oldDelegate) {
+    return false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// SMALL BADGE
+// ═══════════════════════════════════════════════════════════
+
+class _SmallBadge extends StatelessWidget {
+  final String text;
+  final Color color;
+
+  const _SmallBadge({required this.text, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      width: 220,
-      height: 220,
-      decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
-      child: Icon(icon, size: 100, color: iconColor),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.12)),
+        boxShadow: [
+          BoxShadow(color: color.withValues(alpha: 0.10), blurRadius: 12),
+        ],
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1,
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// SMALL LABEL
+// ═══════════════════════════════════════════════════════════
+
+class _SmallLabel extends StatelessWidget {
+  final String text;
+  final Color color;
+
+  const _SmallLabel({required this.text, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 8,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// PARTICLE
+// ═══════════════════════════════════════════════════════════
+
+class _Particle extends StatelessWidget {
+  final Color color;
+  final double size;
+
+  const _Particle({required this.color, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.35),
+            blurRadius: 10,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
     );
   }
 }
