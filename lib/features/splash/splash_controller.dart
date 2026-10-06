@@ -1,6 +1,7 @@
 import 'package:flexify/flexify.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:magna_data_ai_ecommerce/core/services/category_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/onboarding/onboarding_controller.dart';
@@ -10,7 +11,7 @@ import '../../core/network/api_exception.dart';
 import '../../core/utils/logger.dart';
 
 class SplashController extends GetxController {
-  SplashController(this._products);
+  SplashController(this._products, CategoryService find);
 
   final ProductService _products;
   final GetStorage _storage = GetStorage();
@@ -30,10 +31,7 @@ class SplashController extends GetxController {
       printLog(e);
     }
 
-    // Delay briefly to allow splash animations to finish
     await Future.delayed(const Duration(seconds: 2));
-
-    // Check if user has already seen onboarding
     final bool hasCompletedOnboarding =
         _storage.read<bool>(onboardingKey) ?? false;
 
@@ -62,7 +60,6 @@ class SplashController extends GetxController {
     );
   }
 
-  /// Called when user finishes onboarding on OnboardingScreen
   void completeOnboarding() {
     _storage.write(onboardingKey, true);
     navigateToHomeScreen();

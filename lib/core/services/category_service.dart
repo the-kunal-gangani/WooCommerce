@@ -1,11 +1,14 @@
-import 'package:magna_data_ai_ecommerce/core/network/api_client.dart';
-import 'package:magna_data_ai_ecommerce/core/network/paged_result.dart';
+import 'package:magna_data_ai_ecommerce/data/models/product_category.dart';
+
+import '../../core/network/api_client.dart';
+import '../../core/network/paged_result.dart';
 
 class CategoryService {
   CategoryService(this._client);
+
   final ApiClient _client;
 
-  Future<PagedResult<Map<String, dynamic>>> fetchCategories({
+  Future<PagedResult<ProductCategory>> fetchCategories({
     int page = 1,
     int perPage = 100,
     int? parent,
@@ -18,21 +21,21 @@ class CategoryService {
         'page': page,
         'per_page': perPage,
         'hide_empty': hideEmpty,
-        'parent': ?parent,
+        if (parent != null) 'parent': parent,
         if (search != null && search.isNotEmpty) 'search': search,
       },
     );
     return PagedResult.fromResponse(
       response,
       page: page,
-      parse: (json) => json,
+      parse: ProductCategory.fromJson,
     );
   }
 
-  Future<List<Map<String, dynamic>>> fetchAllCategories({
+  Future<List<ProductCategory>> fetchAllCategories({
     bool hideEmpty = true,
   }) async {
-    final all = <Map<String, dynamic>>[];
+    final all = <ProductCategory>[];
     var page = 1;
     while (true) {
       final result = await fetchCategories(page: page, hideEmpty: hideEmpty);

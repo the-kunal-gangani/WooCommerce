@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:magna_data_ai_ecommerce/core/services/category_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
 import 'package:magna_data_ai_ecommerce/features/add-to-cart/add_to_cart_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/forget-password/forget_password_screen.dart';
@@ -24,10 +25,12 @@ class AppPages {
       name: AppRoutes.splash,
       page: () => const SplashScreen(),
       binding: BindingsBuilder.put(
-        () => SplashController(Get.find<ProductService>()),
+        () => SplashController(
+          Get.find<ProductService>(),
+          Get.find<CategoryService>(),
+        ),
       ),
     ),
-
     GetPage(
       name: AppRoutes.onboarding,
       page: () => const OnboardingScreen(),

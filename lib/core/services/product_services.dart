@@ -1,6 +1,5 @@
-// ignore_for_file: use_null_aware_elements
-
 import 'package:dio/dio.dart';
+import 'package:magna_data_ai_ecommerce/data/models/product.dart';
 
 import '../../core/network/api_client.dart';
 import '../../core/network/paged_result.dart';
@@ -10,7 +9,7 @@ class ProductService {
 
   final ApiClient _client;
 
-  Future<PagedResult<Map<String, dynamic>>> fetchProducts({
+  Future<PagedResult<Product>> fetchProducts({
     int page = 1,
     int perPage = 20,
     String? search,
@@ -46,16 +45,16 @@ class ProductService {
     return PagedResult.fromResponse(
       response,
       page: page,
-      parse: (json) => json,
+      parse: Product.fromJson,
     );
   }
 
-  Future<Map<String, dynamic>> fetchProduct(int id) async {
+  Future<Product> fetchProduct(int id) async {
     final response = await _client.get<dynamic>('/products/$id');
-    return Map<String, dynamic>.from(response.data as Map);
+    return Product.fromJson(Map<String, dynamic>.from(response.data as Map));
   }
 
-  Future<List<Map<String, dynamic>>> fetchVariations(int parentId) async {
+  Future<List<Product>> fetchVariations(int parentId) async {
     final response = await _client.get<dynamic>(
       '/products',
       query: {'type': 'variation', 'parent': parentId, 'per_page': 100},
@@ -64,7 +63,7 @@ class ProductService {
     if (data is! List) return const [];
     return data
         .whereType<Map>()
-        .map((e) => Map<String, dynamic>.from(e))
+        .map((e) => Product.fromJson(Map<String, dynamic>.from(e)))
         .toList();
   }
 }
