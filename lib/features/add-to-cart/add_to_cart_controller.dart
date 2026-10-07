@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/data/models/cart_item.dart';
+
 import '../../core/services/cart_service.dart';
 import '../../data/models/product.dart';
 
@@ -34,25 +35,13 @@ class AddToCartController extends GetxController {
     if (!product.canBuy) {
       return false;
     }
-
     isAdding.value = true;
-
     try {
-      final cartItem = CartItem(
-        productId: product.id,
-        variationId: variationId,
-        name: product.name,
-        price: product.prices.price,
+      return await _cart.addProduct(
+        product,
         quantity: quantity.value,
-        imageUrl: product.imageUrl,
-        sku: product.sku,
-        currencySymbol: product.prices.currencySymbol,
-        minorUnit: product.prices.minorUnit,
+        variationId: variationId,
       );
-
-      await _cart.addItem(item: cartItem);
-
-      return true;
     } finally {
       isAdding.value = false;
     }

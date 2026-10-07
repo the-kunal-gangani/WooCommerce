@@ -1,8 +1,8 @@
 import 'package:get/get.dart';
-import 'package:magna_data_ai_ecommerce/core/services/cart_service.dart';
 
 import '../network/api_client.dart';
 import '../services/auth_service.dart';
+import '../services/cart_service.dart';
 import '../services/category_service.dart';
 import '../services/product_services.dart';
 import '../services/secure_storage_service.dart';
@@ -11,34 +11,38 @@ import '../services/storage_services.dart';
 class InitialBinding extends Bindings {
   @override
   void dependencies() {
-    Get.put<SecureStorageService>(SecureStorageService(), permanent: true);
+    // ---------------------------------------------------------
+    // Core services
+    // ---------------------------------------------------------
 
-    Get.put<StorageService>(StorageService(), permanent: true);
+    final apiClient = ApiClient();
+    final secureStorage = SecureStorageService();
+    final storage = StorageService();
 
-    Get.put<CartService>(
-      CartService(Get.find<StorageService>()),
-      permanent: true,
-    );
+    Get.put<SecureStorageService>(secureStorage, permanent: true);
 
-    Get.put<ApiClient>(ApiClient(), permanent: true);
+    Get.put<StorageService>(storage, permanent: true);
 
-    Get.put<AuthService>(
-      AuthService(
-        Get.find<ApiClient>(),
-        Get.find<SecureStorageService>(),
-        Get.find<StorageService>(),
-      ),
-      permanent: true,
-    );
+    Get.put<ApiClient>(apiClient, permanent: true);
 
-    Get.put<ProductService>(
-      ProductService(Get.find<ApiClient>()),
-      permanent: true,
-    );
+    // ---------------------------------------------------------
+    // Application services
+    // ---------------------------------------------------------
 
-    Get.put<CategoryService>(
-      CategoryService(Get.find<ApiClient>()),
-      permanent: true,
-    );
+    final authService = AuthService(apiClient, secureStorage, storage);
+
+    final productService = ProductService(apiClient);
+
+    final categoryService = CategoryService(apiClient);
+
+    final cartService = CartService(storage, productService);
+
+    Get.put<AuthService>(authService, permanent: true);
+
+    Get.put<ProductService>(productService, permanent: true);
+
+    Get.put<CategoryService>(categoryService, permanent: true);
+
+    Get.put<CartService>(cartService, permanent: true);
   }
 }
