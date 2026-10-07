@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/core/services/cart_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/category_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/checkout_services.dart';
+import 'package:magna_data_ai_ecommerce/core/services/favourites_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
 import 'package:magna_data_ai_ecommerce/features/add-to-cart/add_to_cart_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/add-to-cart/add_to_cart_screen.dart';
@@ -16,6 +17,7 @@ import 'package:magna_data_ai_ecommerce/features/auth/reset-password/reset_passw
 import 'package:magna_data_ai_ecommerce/features/categories/categories_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/checkout/checkout_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/checkout/checkout_screen.dart';
+import 'package:magna_data_ai_ecommerce/features/favourites/favourites_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/favourites/favourites_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_screen.dart';
@@ -136,15 +138,12 @@ class AppPages {
 
     GetPage(
       name: AppRoutes.favourites,
-      page: () => const FavouritesScreen(),
-      binding: BindingsBuilder(
-        () => Get.lazyPut(
-          () => GetPage(
-            name: AppRoutes.orderConfirmation,
-            page: () => const OrderConfirmationScreen(),
-          ),
-        ),
-      ),
+      page: () => const FavouriteScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<FavouriteController>(
+          () => FavouriteController(Get.find<FavouriteService>()),
+        );
+      }),
     ),
 
     GetPage(name: AppRoutes.categories, page: () => const CategoriesScreen()),
