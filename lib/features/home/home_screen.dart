@@ -346,14 +346,21 @@ class HomeScreen extends GetView<HomeController> {
                   ),
                 ),
               ),
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5FF),
-                  borderRadius: BorderRadius.circular(10),
+              GestureDetector(
+                onTap: controller.openFilters,
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5FF),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.tune_rounded,
+                    size: 17,
+                    color: primary,
+                  ),
                 ),
-                child: const Icon(Icons.tune_rounded, size: 17, color: primary),
               ),
             ],
           ),
@@ -361,6 +368,7 @@ class HomeScreen extends GetView<HomeController> {
       ),
     );
   }
+  
 
   Widget _buildBanner(Product product) {
     final subtitle = product.hasDiscount

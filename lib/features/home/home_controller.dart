@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/core/network/api_exception.dart';
 import 'package:magna_data_ai_ecommerce/core/network/paged_result.dart';
@@ -6,6 +7,7 @@ import 'package:magna_data_ai_ecommerce/core/services/category_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product_category.dart';
+import 'package:magna_data_ai_ecommerce/features/home/widgets/home_filter_sheet.dart';
 import 'package:magna_data_ai_ecommerce/features/product-list/product_list_controller.dart';
 
 class HomeController extends GetxController {
@@ -24,12 +26,51 @@ class HomeController extends GetxController {
   final isProductsLoading = false.obs;
   final errorMessage = RxnString();
 
+  final selectedSort = 'popularity'.obs;
+  final selectedOrder = 'desc'.obs;
+  final saleOnly = false.obs;
+  final inStockOnly = false.obs;
+
+  final minPrice = 0.0.obs;
+  final maxPrice = 100000.0.obs;
+
+  void resetFilters() {
+    selectedSort.value = 'popularity';
+    selectedOrder.value = 'desc';
+    saleOnly.value = false;
+    inStockOnly.value = false;
+    minPrice.value = 0;
+    maxPrice.value = 100000;
+  }
+
   int _popularRequest = 0;
 
   @override
   void onInit() {
     super.onInit();
     loadHome();
+  }
+
+  void openFilters() {
+    Get.bottomSheet(
+      HomeFilterSheet(controller: this),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+    );
+  }
+
+  Future<void> applyFilters() async {
+    final request = ++_popularRequest;
+    isProductsLoading.value = true;
+    errorMessage.value = null;
+    final result = await _guard(_fetchPopular());
+    if (request != _popularRequest) {
+      return;
+    }
+    if (result != null) {
+      popular.assignAll(result.items);
+    }
+    isProductsLoading.value = false;
   }
 
   List<Product> get bannerProducts {
@@ -140,8 +181,11 @@ class HomeController extends GetxController {
     return _products.fetchProducts(
       perPage: 6,
       category: id == 0 ? null : '$id',
-      orderBy: 'popularity',
-      order: 'desc',
+      orderBy: selectedSort.value,
+      order: selectedOrder.value,
+      onSale: saleOnly.value ? true : null,
+      minPrice: minPrice.value > 0 ? minPrice.value.toInt() : null,
+      maxPrice: maxPrice.value < 100000 ? maxPrice.value.toInt() : null,
     );
   }
 
