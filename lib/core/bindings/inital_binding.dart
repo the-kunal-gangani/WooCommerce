@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:magna_data_ai_ecommerce/core/services/cart_service.dart';
 
 import '../network/api_client.dart';
 import '../services/auth_service.dart';
@@ -13,6 +14,11 @@ class InitialBinding extends Bindings {
     Get.put<SecureStorageService>(SecureStorageService(), permanent: true);
 
     Get.put<StorageService>(StorageService(), permanent: true);
+
+    Get.put<CartService>(
+      CartService(Get.find<StorageService>()),
+      permanent: true,
+    );
 
     Get.put<ApiClient>(ApiClient(), permanent: true);
 

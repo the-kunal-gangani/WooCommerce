@@ -5,11 +5,7 @@ import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 import 'package:magna_data_ai_ecommerce/core/services/category_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
-import 'package:magna_data_ai_ecommerce/features/auth/login/login_controller.dart';
-
-import 'package:magna_data_ai_ecommerce/features/auth/login/login_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
-import 'package:magna_data_ai_ecommerce/features/home/home_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -2543,10 +2539,6 @@ class _SmallFloatingPanel extends StatelessWidget {
     );
   }
 }
-
-// ============================================================================
-// SEARCH ILLUSTRATION
-// ============================================================================
 
 class _SearchIllustrationPainter extends CustomPainter {
   @override

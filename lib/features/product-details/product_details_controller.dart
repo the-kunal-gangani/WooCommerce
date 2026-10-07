@@ -1,15 +1,18 @@
 import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/core/network/api_exception.dart';
+import 'package:magna_data_ai_ecommerce/core/services/cart_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
 import 'package:magna_data_ai_ecommerce/core/utils/logger.dart';
+import 'package:magna_data_ai_ecommerce/data/models/cart_item.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product_attribute.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product_image.dart';
 
 class ProductDetailsController extends GetxController {
-  ProductDetailsController(this._service);
+  ProductDetailsController(this._service, this._cart);
 
   final ProductService _service;
+  final CartService _cart;
 
   final product = Rxn<Product>();
   final variations = <int, Product>{}.obs;
@@ -19,7 +22,6 @@ class ProductDetailsController extends GetxController {
   final isFavorite = false.obs;
   final errorMessage = RxnString();
 
-  /// Products shown in "You might also like".
   final relatedProducts = <Product>[].obs;
 
   int _productId = 0;
@@ -58,8 +60,6 @@ class ProductDetailsController extends GetxController {
       if (quantity.value < fresh.addToCart.minimum) {
         quantity.value = fresh.addToCart.minimum;
       }
-
-      // Load products belonging to the same category.
       await loadRelatedProducts(fresh);
     } on ApiException catch (e) {
       if (product.value == null) {
@@ -80,14 +80,11 @@ class ProductDetailsController extends GetxController {
   /// Maximum 6 products are displayed.
   Future<void> loadRelatedProducts(Product current) async {
     relatedProducts.clear();
-
     if (current.categories.isEmpty) {
       return;
     }
-
     try {
       final categoryId = current.categories.first.id;
-
       final result = await _service.fetchProducts(
         page: 1,
         perPage: 7,
@@ -98,20 +95,16 @@ class ProductDetailsController extends GetxController {
           .where((item) => item.id != current.id)
           .take(6)
           .toList();
-
       relatedProducts.assignAll(products);
-
       printLog(
         'related products loaded for category '
         '$categoryId: ${relatedProducts.length}',
       );
     } on ApiException catch (e) {
       printLog('related products failed: $e');
-
       relatedProducts.clear();
     } catch (e) {
       printLog('related products unexpected error: $e');
-
       relatedProducts.clear();
     }
   }
@@ -130,34 +123,27 @@ class ProductDetailsController extends GetxController {
 
   List<ProductAttribute> get variationAttributes {
     final p = product.value;
-
     if (p == null) {
       return const [];
     }
-
     return p.attributes.where((a) => a.hasVariations).toList();
   }
 
   bool get isSelectionComplete {
     final attributes = variationAttributes;
-
     return attributes.isNotEmpty &&
         attributes.every((a) => selection.containsKey(a.name));
   }
 
   Product? get selectedVariation {
     final p = product.value;
-
     if (p == null || !p.isVariable || !isSelectionComplete) {
       return null;
     }
-
     final ref = p.variations.firstWhereOrNull((v) => v.matches(selection));
-
     if (ref == null) {
       return null;
     }
-
     return variations[ref.id];
   }
 
@@ -165,11 +151,9 @@ class ProductDetailsController extends GetxController {
 
   List<ProductImage> get images {
     final variation = selectedVariation;
-
     if (variation != null && variation.images.isNotEmpty) {
       return variation.images;
     }
-
     return product.value?.images ?? const [];
   }
 
@@ -177,21 +161,17 @@ class ProductDetailsController extends GetxController {
 
   int get unitPriceMinor {
     final active = activeProduct;
-
     if (active == null) {
       return 0;
     }
-
     return active.prices.range?.min ?? active.prices.price;
   }
 
   String get totalLabel {
     final p = product.value;
-
     if (p == null) {
       return '';
     }
-
     return p.prices.format(unitPriceMinor * quantity.value);
   }
 
@@ -199,23 +179,18 @@ class ProductDetailsController extends GetxController {
 
   String get stockLabel {
     final active = activeProduct;
-
     if (active == null) {
       return '';
     }
-
     if (active.isOnBackorder) {
       return 'Available on backorder';
     }
-
     if (!active.isInStock) {
       return 'Out of stock';
     }
-
     if (active.isLowStock) {
       return 'Only ${active.lowStockRemaining} left';
     }
-
     return 'In stock';
   }
 
@@ -230,7 +205,6 @@ class ProductDetailsController extends GetxController {
 
   void incrementQuantity() {
     final max = product.value?.addToCart.maximum ?? 9999;
-
     if (quantity.value < max) {
       quantity.value++;
     }
@@ -238,7 +212,6 @@ class ProductDetailsController extends GetxController {
 
   void decrementQuantity() {
     final min = product.value?.addToCart.minimum ?? 1;
-
     if (quantity.value > min) {
       quantity.value--;
     }
@@ -248,35 +221,71 @@ class ProductDetailsController extends GetxController {
     isFavorite.value = !isFavorite.value;
   }
 
-  void addToCart() {
+  Future<void> addToCart() async {
     final p = product.value;
-
     if (p == null) {
+      return;
+    }
+    final active = activeProduct;
+    if (active == null) {
       return;
     }
 
     if (p.isVariable) {
       final missing = variationAttributes.firstWhereOrNull(
-        (a) => !selection.containsKey(a.name),
+        (attribute) => !selection.containsKey(attribute.name),
       );
 
       if (missing != null) {
-        Get.snackbar('Select an option', 'Please choose ${missing.name}');
+        Get.snackbar(
+          'Select an option',
+          'Please choose ${missing.name}',
+          snackPosition: SnackPosition.BOTTOM,
+        );
         return;
       }
 
       if (selectedVariation == null) {
-        Get.snackbar('Unavailable', 'This combination is not available');
+        Get.snackbar(
+          'Unavailable',
+          'This combination is not available',
+          snackPosition: SnackPosition.BOTTOM,
+        );
         return;
       }
     }
 
+    if (!active.canBuy) {
+      Get.snackbar(
+        'Unavailable',
+        'This product is currently unavailable.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    final cartItem = CartItem(
+      productId: p.id,
+      variationId: selectedVariation?.id,
+      name: p.name,
+      price: unitPriceMinor,
+      quantity: quantity.value,
+      imageUrl: active.imageUrl ?? p.imageUrl,
+      sku: active.sku.isNotEmpty ? active.sku : p.sku,
+      variationSelections: Map<String, String>.from(selection),
+      currencySymbol: active.prices.currencySymbol,
+      minorUnit: active.prices.minorUnit,
+    );
+
+    await _cart.addItem(item: cartItem);
+
     Get.snackbar(
       'Added to Cart',
-      'Item successfully added to your shopping cart',
+      '${p.name} has been added to your cart.',
       snackPosition: SnackPosition.BOTTOM,
       backgroundColor: Get.theme.colorScheme.primary,
       colorText: Get.theme.colorScheme.onPrimary,
+      duration: const Duration(seconds: 2),
     );
   }
 }

@@ -1,48 +1,64 @@
-import 'package:flexify/flexify.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:magna_data_ai_ecommerce/features/checkout/checkout_screen.dart';
+import 'package:magna_data_ai_ecommerce/data/models/cart_item.dart';
+import '../../core/services/cart_service.dart';
+import '../../data/models/product.dart';
 
 class AddToCartController extends GetxController {
-  final String productName = 'Premium Wireless Headphones';
-  final double basePrice = 199.99;
-  final List<String> availableColors = ['Black', 'Silver', 'Navy Blue'];
-  var selectedColor = 'Black'.obs;
-  var quantity = 1.obs;
+  AddToCartController(this._cart);
+  final CartService _cart;
+  final quantity = 1.obs;
+  final isAdding = false.obs;
 
-  double get totalPrice => basePrice * quantity.value;
-
-  void selectColor(String color) {
-    selectedColor.value = color;
+  void setQuantity(int value) {
+    if (value < 1) return;
+    quantity.value = value;
   }
 
-  void incrementQuantity() {
+  void increase(Product product) {
+    final maximum = product.addToCart.maximum;
+    if (quantity.value >= maximum) {
+      return;
+    }
     quantity.value++;
   }
 
-  void decrementQuantity() {
-    if (quantity.value > 1) {
-      quantity.value--;
+  void decrease(Product product) {
+    final minimum = product.addToCart.minimum;
+    if (quantity.value <= minimum) {
+      return;
+    }
+    quantity.value--;
+  }
+
+  Future<bool> addToCart(Product product, {int? variationId}) async {
+    if (!product.canBuy) {
+      return false;
+    }
+
+    isAdding.value = true;
+
+    try {
+      final cartItem = CartItem(
+        productId: product.id,
+        variationId: variationId,
+        name: product.name,
+        price: product.prices.price,
+        quantity: quantity.value,
+        imageUrl: product.imageUrl,
+        sku: product.sku,
+        currencySymbol: product.prices.currencySymbol,
+        minorUnit: product.prices.minorUnit,
+      );
+
+      await _cart.addItem(item: cartItem);
+
+      return true;
+    } finally {
+      isAdding.value = false;
     }
   }
 
-  void addToCart() {
-    Get.snackbar(
-      'Added to Cart',
-      '${quantity.value}x $productName (${selectedColor.value}) added.',
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 2),
-      backgroundColor: Colors.black87,
-      colorText: Colors.white,
-      margin: const EdgeInsets.all(16),
-    );
-  }
-
-  void navigateToCheckout() {
-    Flexify.goRemoveAll(
-      const CheckoutScreen(),
-      animation: FlexifyRouteAnimations.blur,
-      duration: const Duration(milliseconds: 800),
-    );
+  void reset() {
+    quantity.value = 1;
   }
 }

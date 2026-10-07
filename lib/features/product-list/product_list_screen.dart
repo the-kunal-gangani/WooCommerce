@@ -286,11 +286,7 @@ class ProductListScreen extends GetView<ProductListController> {
                   color: const Color(0xFFF1F5FF),
                   borderRadius: BorderRadius.circular(9),
                 ),
-                child: Icon(
-                  Icons.north_west_rounded,
-                  color: primary,
-                  size: 16,
-                ),
+                child: Icon(Icons.north_west_rounded, color: primary, size: 16),
               ),
             ],
           ),
@@ -319,7 +315,7 @@ class ProductListScreen extends GetView<ProductListController> {
       children: [
         Text(
           product.name,
-          maxLines: 2,
+          maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
             color: navy,
@@ -382,11 +378,7 @@ class ProductListScreen extends GetView<ProductListController> {
                 color: const Color(0xFFEFF4FF),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.search_off_rounded,
-                color: primary,
-                size: 28,
-              ),
+              child: Icon(Icons.search_off_rounded, color: primary, size: 28),
             ),
             SizedBox(height: 14),
             Text(
@@ -477,11 +469,7 @@ class ProductListScreen extends GetView<ProductListController> {
                 color: const Color(0xFFEFF4FF),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.search_off_rounded,
-                color: primary,
-                size: 32,
-              ),
+              child: Icon(Icons.search_off_rounded, color: primary, size: 32),
             ),
             SizedBox(height: 18),
             Text(
