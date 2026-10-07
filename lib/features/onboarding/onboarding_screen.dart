@@ -47,9 +47,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   @override
   void initState() {
     super.initState();
-
     _pageController = PageController();
-
     _contentController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 700),
@@ -80,7 +78,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   void _finishOnboarding() {
     Get.lazyPut<LoginController>(() => LoginController());
-
     Get.offAll(() => const LoginScreen());
   }
 
@@ -442,10 +439,6 @@ class _PageIndicator extends StatelessWidget {
   }
 }
 
-// ============================================================================
-// DATA
-// ============================================================================
-
 class _OnboardingData {
   const _OnboardingData({
     required this.title,
@@ -526,13 +519,11 @@ class _OnboardingIllustrationState extends State<_OnboardingIllustration>
                   painter: _AtmospherePainter(pulse: _pulseController.value),
                 ),
               ),
-
               Positioned.fill(
                 child: CustomPaint(
                   painter: _ParticlePainter(progress: _motionController.value),
                 ),
               ),
-
               _buildIllustration(),
             ],
           );
@@ -545,24 +536,16 @@ class _OnboardingIllustrationState extends State<_OnboardingIllustration>
     switch (widget.page) {
       case 0:
         return _buildDiscoveryIllustration();
-
       case 1:
         return _buildIntelligenceIllustration();
-
       case 2:
         return _buildSecurityIllustration();
-
       case 3:
         return _buildDeliveryIllustration();
-
       default:
         return _buildDiscoveryIllustration();
     }
   }
-
-  // ========================================================================
-  // PAGE 1 — DISCOVER
-  // ========================================================================
 
   Widget _buildDiscoveryIllustration() {
     return Stack(
@@ -573,38 +556,32 @@ class _OnboardingIllustrationState extends State<_OnboardingIllustration>
           top: 53 + _float(0.5, 7),
           child: const _SearchBubble(),
         ),
-
         Positioned(
           right: 15,
           top: 43 + _float(2.4, 6),
           child: const _FavoriteBubble(),
         ),
-
         Positioned(
           left: 4,
           bottom: 56 + _float(1.2, 7),
           child: const _AudioProductCard(),
         ),
-
         Positioned(
           right: 3,
           bottom: 48 + _float(3.0, 8),
           child: const _WatchProductCard(),
         ),
-
         Positioned(
           right: 55,
           top: 128 + _float(4.0, 5),
           child: const _MiniProductCard(),
         ),
-
         Positioned(
           left: 0,
           right: 0,
           top: 65 + _float(0, 4),
           child: const Center(child: _DiscoveryProductCard()),
         ),
-
         Positioned(
           left: 0,
           right: 0,
@@ -616,13 +593,11 @@ class _OnboardingIllustrationState extends State<_OnboardingIllustration>
             ),
           ),
         ),
-
         Positioned(
           left: 94,
           top: 94 + _float(1.4, 5),
           child: const _GlowSparkle(size: 17, color: Color(0xFF4F7CFF)),
         ),
-
         Positioned(
           right: 91,
           bottom: 103 + _float(2.1, 6),
@@ -632,44 +607,31 @@ class _OnboardingIllustrationState extends State<_OnboardingIllustration>
     );
   }
 
-  // ========================================================================
-  // PAGE 2 — INTELLIGENCE
-  // ========================================================================
-
   Widget _buildIntelligenceIllustration() {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // Preference card
         Positioned(
           left: 5,
           top: 76 + _float(0.7, 7),
           child: const _PreferenceCard(),
         ),
-
-        // AI recommendation card
         Positioned(
           left: 0,
           right: 0,
           top: 72 + _float(0, 4),
           child: const Center(child: _RecommendationCard()),
         ),
-
-        // Floating neural nodes
         Positioned(
           right: 10,
           top: 53 + _float(2.1, 6),
           child: _NeuralBubble(pulse: _pulseController.value),
         ),
-
-        // Product match
         Positioned(
           right: 2,
           bottom: 57 + _float(3.2, 8),
           child: const _MatchCard(),
         ),
-
-        // AI thinking core
         Positioned(
           left: 0,
           right: 0,
@@ -681,13 +643,11 @@ class _OnboardingIllustrationState extends State<_OnboardingIllustration>
             ),
           ),
         ),
-
         Positioned(
           left: 40,
           bottom: 105 + _float(1.5, 5),
           child: const _GlowSparkle(size: 15, color: Color(0xFF06B6D4)),
         ),
-
         Positioned(
           right: 78,
           top: 94 + _float(4.0, 5),
@@ -697,50 +657,36 @@ class _OnboardingIllustrationState extends State<_OnboardingIllustration>
     );
   }
 
-  // ========================================================================
-  // PAGE 3 — SECURITY
-  // ========================================================================
-
   Widget _buildSecurityIllustration() {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // Payment card
         Positioned(
           left: 0,
           right: 0,
           top: 70 + _float(0, 4),
           child: const Center(child: _SecurePaymentCard()),
         ),
-
-        // Shield
         Positioned(
           left: 19,
           top: 53 + _float(1.2, 6),
           child: _SecurityShield(pulse: _pulseController.value),
         ),
-
-        // Lock
         Positioned(
           right: 18,
           top: 57 + _float(2.5, 6),
           child: const _LockBubble(),
         ),
-
-        // Verified badge
         Positioned(
           left: 9,
           bottom: 56 + _float(3.1, 7),
           child: const _VerifiedPaymentCard(),
         ),
-
-        // Secure connection
         Positioned(
           right: 5,
           bottom: 48 + _float(1.5, 8),
           child: const _EncryptedBubble(),
         ),
-
         Positioned(
           left: 0,
           right: 0,
@@ -752,13 +698,11 @@ class _OnboardingIllustrationState extends State<_OnboardingIllustration>
             ),
           ),
         ),
-
         Positioned(
           left: 94,
           top: 45 + _float(0.8, 5),
           child: const _GlowSparkle(size: 14, color: Color(0xFF4F7CFF)),
         ),
-
         Positioned(
           right: 87,
           bottom: 105 + _float(2.5, 5),
@@ -768,44 +712,31 @@ class _OnboardingIllustrationState extends State<_OnboardingIllustration>
     );
   }
 
-  // ========================================================================
-  // PAGE 4 — DELIVERY
-  // ========================================================================
-
   Widget _buildDeliveryIllustration() {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // Delivery tracking card
         Positioned(
           left: 0,
           right: 0,
           top: 68 + _float(0, 4),
           child: const Center(child: _DeliveryTrackingCard()),
         ),
-
-        // Package
         Positioned(
           left: 10,
           bottom: 60 + _float(1.2, 8),
           child: const _PackageCard(),
         ),
-
-        // Destination
         Positioned(
           right: 8,
           bottom: 58 + _float(2.8, 7),
           child: const _DestinationCard(),
         ),
-
-        // Moving delivery dot
         Positioned.fill(
           child: CustomPaint(
             painter: _DeliveryRoutePainter(progress: _motionController.value),
           ),
         ),
-
-        // Central delivery core
         Positioned(
           left: 0,
           right: 0,
@@ -817,13 +748,11 @@ class _OnboardingIllustrationState extends State<_OnboardingIllustration>
             ),
           ),
         ),
-
         Positioned(
           left: 73,
           top: 48 + _float(1.0, 5),
           child: const _GlowSparkle(size: 14, color: Color(0xFF4F7CFF)),
         ),
-
         Positioned(
           right: 77,
           top: 104 + _float(3.0, 5),
@@ -852,7 +781,6 @@ class _ThinkingAiCore extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            // Soft AI glow
             Container(
               width: 76 + pulse * 9,
               height: 76 + pulse * 9,
@@ -862,8 +790,6 @@ class _ThinkingAiCore extends StatelessWidget {
                     .withValues(alpha: 0.05 + pulse * 0.035),
               ),
             ),
-
-            // Rotating neural orbit
             Transform.rotate(
               angle: rotation * math.pi * 2,
               child: Container(
@@ -878,8 +804,6 @@ class _ThinkingAiCore extends StatelessWidget {
                 ),
               ),
             ),
-
-            // Second orbit
             Transform.rotate(
               angle: -rotation * math.pi * 2,
               child: Container(
@@ -894,8 +818,6 @@ class _ThinkingAiCore extends StatelessWidget {
                 ),
               ),
             ),
-
-            // AI brain/core
             Container(
               width: 48,
               height: 48,
@@ -922,8 +844,6 @@ class _ThinkingAiCore extends StatelessWidget {
                 painter: _ThinkingNetworkPainter(pulse: pulse),
               ),
             ),
-
-            // Orbiting data point
             Positioned(
               top: 9,
               right: 9,
@@ -936,8 +856,6 @@ class _ThinkingAiCore extends StatelessWidget {
                 ),
               ),
             ),
-
-            // Small secondary data point
             Positioned(
               bottom: 10,
               left: 10,
@@ -979,20 +897,14 @@ class _ThinkingNetworkPainter extends CustomPainter {
       ..color = Colors.white.withValues(alpha: 0.72)
       ..strokeWidth = 1.2
       ..style = PaintingStyle.stroke;
-
-    // Neural connections
     for (var i = 0; i < points.length; i++) {
       final next = points[(i + 1) % points.length];
-
       canvas.drawLine(points[i], next, linePaint);
-
-      // Connect selected nodes to center
       if (i.isEven) {
         canvas.drawLine(points[i], center, linePaint);
       }
     }
 
-    // Nodes
     for (var i = 0; i < points.length; i++) {
       canvas.drawCircle(
         points[i],
@@ -1000,8 +912,6 @@ class _ThinkingNetworkPainter extends CustomPainter {
         Paint()..color = Colors.white,
       );
     }
-
-    // Central AI node
     canvas.drawCircle(
       center,
       3.2 + pulse * 0.8,
