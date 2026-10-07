@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/core/services/cart_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/category_service.dart';
+import 'package:magna_data_ai_ecommerce/core/services/checkout_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
 import 'package:magna_data_ai_ecommerce/features/add-to-cart/add_to_cart_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/add-to-cart/add_to_cart_screen.dart';
@@ -119,7 +120,12 @@ class AppPages {
       name: AppRoutes.checkout,
       page: () => const CheckoutScreen(),
       binding: BindingsBuilder(() {
-        Get.lazyPut<CheckoutController>(() => CheckoutController());
+        Get.lazyPut<CheckoutController>(
+          () => CheckoutController(
+            Get.find<CartService>(),
+            Get.find<CheckoutService>(),
+          ),
+        );
       }),
     ),
 

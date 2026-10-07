@@ -876,33 +876,34 @@ class CheckoutScreen extends GetView<CheckoutController> {
   Widget _buildSummaryCard() {
     return _card(
       child: Obx(() {
-        final subtotal = controller.subtotal.value;
-        final tax = controller.tax.value;
+        final subtotal = controller.subtotal;
         final shipping = controller.shippingFee;
         final discount = controller.discount;
         final couponApplied = controller.couponApplied.value;
         final total = controller.total;
+        final currency = controller.currencySymbol;
 
         return Column(
           children: [
-            _buildSummaryRow('Subtotal', '\$${subtotal.toStringAsFixed(2)}'),
+            _buildSummaryRow(
+              'Subtotal',
+              '$currency${subtotal.toStringAsFixed(controller.minorUnit)}',
+            ),
 
             const SizedBox(height: 11),
 
             _buildSummaryRow(
               'Shipping',
-              shipping == 0 ? 'Free' : '\$${shipping.toStringAsFixed(2)}',
+              shipping == 0
+                  ? 'Free'
+                  : '$currency${shipping.toStringAsFixed(controller.minorUnit)}',
             ),
-
-            const SizedBox(height: 11),
-
-            _buildSummaryRow('Tax', '\$${tax.toStringAsFixed(2)}'),
 
             if (couponApplied) ...[
               const SizedBox(height: 11),
               _buildSummaryRow(
                 'Discount',
-                '-\$${discount.toStringAsFixed(2)}',
+                '-$currency${discount.toStringAsFixed(controller.minorUnit)}',
                 valueColor: const Color(0xFF16A34A),
               ),
             ],
@@ -926,7 +927,7 @@ class CheckoutScreen extends GetView<CheckoutController> {
                 ),
 
                 Text(
-                  '\$${total.toStringAsFixed(2)}',
+                  '$currency${total.toStringAsFixed(controller.minorUnit)}',
                   style: const TextStyle(
                     color: primary,
                     fontSize: 19,
@@ -1001,10 +1002,6 @@ class CheckoutScreen extends GetView<CheckoutController> {
     );
   }
 
-  // ===========================================================================
-  // BOTTOM BAR
-  // ===========================================================================
-
   Widget _buildBottomBar() {
     return SafeArea(
       top: false,
@@ -1039,9 +1036,12 @@ class CheckoutScreen extends GetView<CheckoutController> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+
                     const SizedBox(height: 2),
+
                     Text(
-                      '\$${total.toStringAsFixed(2)}',
+                      '${controller.currencySymbol}'
+                      '${total.toStringAsFixed(controller.minorUnit)}',
                       style: const TextStyle(
                         color: navy,
                         fontSize: 17,
@@ -1120,10 +1120,6 @@ class CheckoutScreen extends GetView<CheckoutController> {
       ),
     );
   }
-
-  // ===========================================================================
-  // TEXT FIELD
-  // ===========================================================================
 
   Widget _buildTextField({
     required TextEditingController controller,

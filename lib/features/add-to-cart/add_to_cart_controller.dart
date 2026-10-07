@@ -1,6 +1,4 @@
 import 'package:get/get.dart';
-import 'package:magna_data_ai_ecommerce/data/models/cart_item.dart';
-
 import '../../core/services/cart_service.dart';
 import '../../data/models/product.dart';
 
