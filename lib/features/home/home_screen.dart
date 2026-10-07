@@ -118,7 +118,7 @@ class HomeScreen extends GetView<HomeController> {
                         autoPlayCurve: Curves.fastOutSlowIn,
                         autoPlayInterval: const Duration(seconds: 4),
                       ),
-                      items: banners.map(_buildBanner).toList(),
+                      items: banners.map(_buildBannerCard).toList(),
                     ),
                   ),
                 ),
@@ -368,119 +368,75 @@ class HomeScreen extends GetView<HomeController> {
       ),
     );
   }
-  
 
-  Widget _buildBanner(Product product) {
-    final subtitle = product.hasDiscount
-        ? '${product.prices.discountPercent}% OFF'
-        : product.priceLabel;
-
-    return GestureDetector(
-      onTap: () => controller.openProduct(product),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
-          boxShadow: [
-            BoxShadow(
-              color: navy.withValues(alpha: 0.10),
-              blurRadius: 22,
-              offset: const Offset(0, 9),
-            ),
-          ],
+  Widget _buildBannerCard(Product product) {
+    return Container(
+      width: double.infinity,
+      height: 178,
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF2563EB), Color(0xFF6D4AFF)],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(22),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              AppNetworkImage(url: product.imageUrl),
-
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: [
-                      const Color(0xFF111827).withValues(alpha: 0.82),
-                      const Color(0xFF111827).withValues(alpha: 0.15),
-                      Colors.transparent,
-                    ],
-                    stops: const [0.0, 0.58, 1.0],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Featured',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-              ),
-
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 110, 18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 9,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.16),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        'FEATURED',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 8,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      product.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        height: 1.15,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        color: Color(0xFFBFD4FF),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 9),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 7,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: const Text(
-                        'Shop Now',
-                        style: TextStyle(
-                          color: navy,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 5),
+                Text(
+                  product.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    height: 1.15,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 7),
+                Text(
+                  product.prices.formatted,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+
+          const SizedBox(width: 8),
+
+          if (product.imageUrl != null)
+            SizedBox(
+              width: 100,
+              height: 120,
+              child: AppNetworkImage(
+                url: product.imageUrl!,
+                fit: BoxFit.contain,
+              ),
+            ),
+        ],
       ),
     );
   }
