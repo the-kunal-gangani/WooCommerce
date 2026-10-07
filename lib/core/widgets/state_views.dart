@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class LoadingView extends StatelessWidget {
   const LoadingView({super.key});
@@ -21,23 +20,23 @@ class ErrorView extends StatelessWidget {
     final theme = Theme.of(context);
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(24.w),
+        padding: EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.cloud_off_outlined,
-              size: 48.sp,
+              size: 48,
               color: theme.colorScheme.outline,
             ),
-            SizedBox(height: 12.h),
+            SizedBox(height: 12),
             Text(
               message,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
             ),
             if (onRetry != null) ...[
-              SizedBox(height: 16.h),
+              SizedBox(height: 16),
               FilledButton(onPressed: onRetry, child: const Text('Try again')),
             ],
           ],
@@ -62,12 +61,12 @@ class EmptyView extends StatelessWidget {
     final theme = Theme.of(context);
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(24.w),
+        padding: EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 48.sp, color: theme.colorScheme.outline),
-            SizedBox(height: 12.h),
+            Icon(icon, size: 48, color: theme.colorScheme.outline),
+            SizedBox(height: 12),
             Text(
               message,
               textAlign: TextAlign.center,

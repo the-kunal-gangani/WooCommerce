@@ -2,9 +2,14 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
+import 'package:magna_data_ai_ecommerce/core/services/category_service.dart';
+import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/login/login_controller.dart';
 
 import 'package:magna_data_ai_ecommerce/features/auth/login/login_screen.dart';
+import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/home/home_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -77,8 +82,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   void _finishOnboarding() {
-    Get.lazyPut<LoginController>(() => LoginController());
-    Get.offAll(() => const LoginScreen());
+    Get.lazyPut<HomeController>(
+      () => HomeController(
+        Get.find<ProductService>(),
+        Get.find<CategoryService>(),
+      ),
+    );
+
+    Get.offAllNamed(AppRoutes.home);
   }
 
   void _onPageChanged(int page) {

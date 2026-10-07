@@ -89,11 +89,9 @@ class AppPages {
       name: AppRoutes.productList,
       page: () => const ProductListScreen(),
       binding: BindingsBuilder(() {
-        Get.lazyPut(
-          () => ProductListController(
-            Get.find<ProductService>(),
-            Get.arguments as ProductListArgs,
-          ),
+        final args = Get.arguments as ProductListArgs;
+        Get.lazyPut<ProductListController>(
+          () => ProductListController(Get.find<ProductService>(), args),
         );
       }),
     ),

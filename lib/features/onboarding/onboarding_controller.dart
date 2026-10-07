@@ -11,6 +11,6 @@ class OnboardingController extends GetxController {
 
   void completeOnboarding() {
     _storage.write(onboardingKey, true);
-    Get.offAllNamed(AppRoutes.login);
+    Get.offAllNamed(AppRoutes.home);
   }
 }
