@@ -17,7 +17,7 @@ class LoginController extends GetxController {
   final RxBool rememberMe = false.obs;
   final RxBool isLoading = false.obs;
 
-  final AuthService _auth = Get.find<AuthService>();
+  final AuthService _authService = Get.find<AuthService>();
 
   void togglePasswordVisibility() {
     isPasswordVisible.value = !isPasswordVisible.value;
@@ -40,7 +40,10 @@ class LoginController extends GetxController {
     }
     isLoading.value = true;
     try {
-      await _auth.login(email: email, password: password);
+      await _authService.login(
+        username: emailController.text.trim(),
+        password: passwordController.text,
+      );
       Get.offAllNamed(AppRoutes.home);
     } on ApiException catch (e) {
       Get.snackbar(

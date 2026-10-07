@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:magna_data_ai_ecommerce/core/configs/app_config.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product.dart';
 
 import '../../core/network/api_client.dart';
@@ -25,15 +26,21 @@ class ProductService {
     CancelToken? cancelToken,
   }) async {
     final response = await _client.get<dynamic>(
-      '/products',
+      '${AppConfig.storeApiPath}/products',
       query: {
         'page': page,
         'per_page': perPage,
+
         if (search != null && search.isNotEmpty) 'search': search,
+
         if (category != null && category.isNotEmpty) 'category': category,
+
         if (tag != null && tag.isNotEmpty) 'tag': tag,
-        'orderby': ?orderBy,
-        'order': ?order,
+
+        if (orderBy != null && orderBy.isNotEmpty) 'orderby': orderBy,
+
+        if (order != null && order.isNotEmpty) 'order': order,
+
         'on_sale': ?onSale,
         'featured': ?featured,
         'min_price': ?minPrice,
@@ -42,6 +49,7 @@ class ProductService {
       },
       cancelToken: cancelToken,
     );
+
     return PagedResult.fromResponse(
       response,
       page: page,
@@ -50,17 +58,25 @@ class ProductService {
   }
 
   Future<Product> fetchProduct(int id) async {
-    final response = await _client.get<dynamic>('/products/$id');
+    final response = await _client.get<dynamic>(
+      '${AppConfig.storeApiPath}/products/$id',
+    );
+
     return Product.fromJson(Map<String, dynamic>.from(response.data as Map));
   }
 
   Future<List<Product>> fetchVariations(int parentId) async {
     final response = await _client.get<dynamic>(
-      '/products',
+      '${AppConfig.storeApiPath}/products',
       query: {'type': 'variation', 'parent': parentId, 'per_page': 100},
     );
+
     final data = response.data;
-    if (data is! List) return const [];
+
+    if (data is! List) {
+      return const [];
+    }
+
     return data
         .whereType<Map>()
         .map((e) => Product.fromJson(Map<String, dynamic>.from(e)))

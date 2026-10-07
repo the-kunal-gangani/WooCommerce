@@ -45,35 +45,58 @@ class HomeController extends GetxController {
   }
 
   Future<void> loadHome() async {
-    if (popular.isEmpty && categories.isEmpty) isLoading.value = true;
+    if (popular.isEmpty && categories.isEmpty) {
+      isLoading.value = true;
+    }
+
     errorMessage.value = null;
 
     final (categoryResult, popularResult, featuredResult, saleResult) = await (
-      _guard(_categories.fetchCategories(perPage: 50, parent: 0)),
+      _guard(_categories.fetchCategories(perPage: 50)),
       _guard(_fetchPopular()),
       _guard(_products.fetchProducts(perPage: 3, featured: true)),
       _guard(_products.fetchProducts(perPage: 10, onSale: true)),
     ).wait;
 
-    if (categoryResult != null) categories.assignAll(categoryResult.items);
-    if (popularResult != null) popular.assignAll(popularResult.items);
-    if (featuredResult != null) featured.assignAll(featuredResult.items);
-    if (saleResult != null) onSale.assignAll(saleResult.items);
+    if (categoryResult != null) {
+      categories.assignAll(categoryResult);
+    }
+
+    if (popularResult != null) {
+      popular.assignAll(popularResult.items);
+    }
+
+    if (featuredResult != null) {
+      featured.assignAll(featuredResult.items);
+    }
+
+    if (saleResult != null) {
+      onSale.assignAll(saleResult.items);
+    }
 
     if (categoryResult != null || popularResult != null) {
       errorMessage.value = null;
     }
+
     isLoading.value = false;
   }
 
   Future<void> selectCategory(int id) async {
     if (selectedCategoryId.value == id) return;
+
     selectedCategoryId.value = id;
+
     final request = ++_popularRequest;
     isProductsLoading.value = true;
+
     final result = await _guard(_fetchPopular());
+
     if (request != _popularRequest) return;
-    if (result != null) popular.assignAll(result.items);
+
+    if (result != null) {
+      popular.assignAll(result.items);
+    }
+
     isProductsLoading.value = false;
   }
 

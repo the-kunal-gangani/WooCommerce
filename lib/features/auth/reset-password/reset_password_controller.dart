@@ -18,7 +18,7 @@ class ResetPasswordController extends GetxController {
   final isLoading = false.obs;
   final resendSeconds = 30.obs;
 
-  final AuthService _auth = Get.find<AuthService>();
+  final AuthService _authService = Get.find<AuthService>();
   Timer? _timer;
 
   @override
@@ -58,11 +58,7 @@ class ResetPasswordController extends GetxController {
 
     isLoading.value = true;
     try {
-      await _auth.resetPassword(
-        email: email,
-        code: code,
-        newPassword: password,
-      );
+      await _authService.requestPasswordReset(email);
       Get.offAllNamed(AppRoutes.login);
       Get.snackbar(
         'Password updated',
@@ -82,7 +78,7 @@ class ResetPasswordController extends GetxController {
     if (resendSeconds.value > 0) return;
     _startCooldown();
     try {
-      await _auth.requestPasswordReset(email);
+      await _authService.requestPasswordReset(email);
       Get.snackbar(
         'Code sent',
         'Check your inbox for a new code',

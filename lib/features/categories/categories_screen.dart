@@ -243,7 +243,7 @@ class CategoriesScreen extends GetView<HomeController> {
         width: 78,
         height: 78,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) {
+        errorBuilder: (_, _, _) {
           return Container(
             width: 78,
             height: 78,
