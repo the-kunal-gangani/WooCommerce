@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
-import 'package:magna_data_ai_ecommerce/core/services/cart_service.dart';
-import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/app_network_image.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/state_views.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product.dart';
@@ -10,7 +8,9 @@ import 'package:magna_data_ai_ecommerce/features/favourites/favourites_controlle
 import 'package:magna_data_ai_ecommerce/features/product-details/product_details_controller.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
-  const ProductDetailsScreen({super.key});
+  const ProductDetailsScreen({super.key, required this.controllerTag});
+
+  final String controllerTag;
 
   @override
   State<ProductDetailsScreen> createState() => _ProductDetailsScreenState();
@@ -20,7 +20,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   late final ProductDetailsController controller;
   late final FavouriteController favController;
 
-  bool _isOpeningProduct = false;
+  // bool _isOpeningProduct = false;
   bool _isDescriptionExpanded = false;
 
   static const background = Color(0xFFF7F9FC);
@@ -33,21 +33,23 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   @override
   void initState() {
     super.initState();
-
-    controller = Get.find<ProductDetailsController>();
+    controller = Get.find<ProductDetailsController>(tag: widget.controllerTag);
     favController = Get.find<FavouriteController>();
   }
 
-  Future<void> _openRelatedProduct(Product product) async {
-    if (_isOpeningProduct) return;
-    _isOpeningProduct = true;
-    await Get.toNamed(
-      AppRoutes.productDetails,
-      arguments: product,
-      preventDuplicates: false,
-    );
-    _isOpeningProduct = false;
-  }
+  // Future<void> _openRelatedProduct(Product product) async {
+  //   if (_isOpeningProduct) return;
+  //   _isOpeningProduct = true;
+  //   try {
+  //     await Get.toNamed(
+  //       AppRoutes.productDetails,
+  //       arguments: product,
+  //       preventDuplicates: false,
+  //     );
+  //   } finally {
+  //     _isOpeningProduct = false;
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -865,11 +867,12 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 width: 185,
                 child: _RecommendedProductCard(
                   product: product,
-                  onTap: () {
+                  onTap: () async {
                     debugPrint(
-                      'OPENING PRODUCT: ${product.name} | ID: ${product.id}',
+                      'RECOMMENDED CARD TAPPED: '
+                      '${product.name} | ID: ${product.id}',
                     );
-                    Get.toNamed(
+                    await Get.toNamed(
                       AppRoutes.productDetails,
                       arguments: product,
                       preventDuplicates: false,
