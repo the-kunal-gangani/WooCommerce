@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
+import 'package:magna_data_ai_ecommerce/core/services/auth_service.dart';
+import 'package:magna_data_ai_ecommerce/features/main/main_shell_controller.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -304,9 +306,7 @@ class ProfileScreen extends StatelessWidget {
             icon: Icons.favorite_border_rounded,
             title: 'Wishlist',
             subtitle: 'Saved items',
-            onTap: () {
-              Get.toNamed(AppRoutes.favourites);
-            },
+            onTap: () => Get.find<MainShellController>().goTo(2),
           ),
         ),
       ],
@@ -690,16 +690,10 @@ class ProfileScreen extends StatelessWidget {
               actions: [
                 TextButton(onPressed: Get.back, child: const Text('Cancel')),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     Get.back();
-
-                    Get.snackbar(
-                      'Signed out',
-                      'You have been signed out successfully',
-                      snackPosition: SnackPosition.BOTTOM,
-                    );
-
-                    // Connect your real logout controller here.
+                    await Get.find<AuthService>().logout();
+                    Get.offAllNamed(AppRoutes.login);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFFFF1F2),

@@ -57,6 +57,7 @@ class ProductCard extends StatelessWidget {
                             child: Text(
                               'Out of stock',
                               style: TextStyle(
+                                color: Color(0xFF111827),
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
                               ),
@@ -125,6 +126,7 @@ class ProductCard extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
+                      color: Color(0xFF111827),
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
                     ),

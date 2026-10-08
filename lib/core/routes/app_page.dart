@@ -26,9 +26,9 @@ import 'package:magna_data_ai_ecommerce/features/onboarding/onboarding_screen.da
 import 'package:magna_data_ai_ecommerce/features/order-confirmation/order_confirmation_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/product-details/product_details_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/product-details/product_details_screen.dart';
-import 'package:magna_data_ai_ecommerce/features/product-list/product_list_controller.dart';
-import 'package:magna_data_ai_ecommerce/features/product-list/product_list_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/users-profile/user_profile_screen.dart';
+import 'package:magna_data_ai_ecommerce/features/main/main_shell.dart';
+import 'package:magna_data_ai_ecommerce/features/main/main_shell_controller.dart';
 
 import '../../features/splash/splash_controller.dart';
 import '../../features/splash/splash_screen.dart';
@@ -72,9 +72,10 @@ class AppPages {
 
     GetPage(
       name: AppRoutes.home,
-      page: () => const HomeScreen(),
+      page: () => const MainShell(),
       binding: BindingsBuilder(() {
-        Get.lazyPut(
+        Get.lazyPut<MainShellController>(() => MainShellController());
+        Get.lazyPut<HomeController>(
           () => HomeController(
             Get.find<ProductService>(),
             Get.find<CategoryService>(),

@@ -23,62 +23,6 @@ class HomeScreen extends GetView<HomeController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: background,
-      bottomNavigationBar: Obx(
-        () => Padding(
-          padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-          child: SnakeNavigationBar.color(
-            behaviour: SnakeBarBehaviour.floating,
-            snakeShape: SnakeShape.circle,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            backgroundColor: Colors.white,
-            snakeViewColor: primary,
-            selectedItemColor: Colors.white,
-            unselectedItemColor: const Color(0xFF8A94A6),
-            currentIndex: controller.selectedTab.value,
-            onTap: (index) {
-              switch (index) {
-                case 0:
-                  controller.selectedTab.value = 0;
-                  break;
-
-                case 1:
-                  Get.toNamed(AppRoutes.categories);
-                  break;
-
-                case 2:
-                  Get.toNamed(AppRoutes.favourites);
-                  break;
-
-                case 3:
-                  Get.toNamed(AppRoutes.profile);
-                  break;
-              }
-            },
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home_rounded),
-                label: 'Home',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.grid_view_rounded),
-                label: 'Categories',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.favorite_rounded),
-                label: 'Wishlist',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.person_rounded),
-                label: 'Profile',
-              ),
-            ],
-          ),
-        ),
-      ),
-
       body: Obx(() {
         if (controller.isLoading.value) {
           return const LoadingView();
@@ -424,9 +368,7 @@ class HomeScreen extends GetView<HomeController> {
               ],
             ),
           ),
-
           const SizedBox(width: 8),
-
           if (product.imageUrl != null)
             SizedBox(
               width: 100,

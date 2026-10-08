@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product_category.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/product-list/product_list_controller.dart';
 
 class CategoriesScreen extends GetView<HomeController> {
   const CategoriesScreen({super.key});
@@ -61,14 +62,8 @@ class CategoriesScreen extends GetView<HomeController> {
       backgroundColor: background,
       elevation: 0,
       surfaceTintColor: Colors.transparent,
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 14),
-        child: _iconButton(
-          icon: Icons.arrow_back_ios_new_rounded,
-          onTap: Get.back,
-        ),
-      ),
-      titleSpacing: 14,
+      automaticallyImplyLeading: false,
+      titleSpacing: 20,
       title: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -138,7 +133,10 @@ class CategoriesScreen extends GetView<HomeController> {
       onTap: () {
         Get.toNamed(
           AppRoutes.productList,
-          arguments: {'categoryId': category.id, 'categoryName': category.name},
+          arguments: ProductListArgs(
+            title: category.name,
+            categoryId: category.id,
+          ),
         );
       },
       child: Container(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
+import 'package:magna_data_ai_ecommerce/features/main/main_shell_controller.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/product_card.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product.dart';
 import 'package:magna_data_ai_ecommerce/features/favourites/favourites_controller.dart';
@@ -45,6 +45,7 @@ class FavouriteScreen extends GetView<FavouriteController> {
           }),
           const SizedBox(width: 8),
         ],
+        automaticallyImplyLeading: false,
       ),
       body: Obx(() {
         final products = controller.favourites.toList();
@@ -199,9 +200,7 @@ class FavouriteScreen extends GetView<FavouriteController> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: () {
-                Get.offNamed(AppRoutes.home);
-              },
+              onPressed: () => Get.find<MainShellController>().goTo(0),
               style: ElevatedButton.styleFrom(
                 backgroundColor: primary,
                 foregroundColor: Colors.white,
