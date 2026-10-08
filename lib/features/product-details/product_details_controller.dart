@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/core/network/api_exception.dart';
 import 'package:magna_data_ai_ecommerce/core/services/cart_service.dart';
@@ -27,16 +28,13 @@ class ProductDetailsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    debugPrint('🔥 ProductDetailsController ON_INIT');
     final args = Get.arguments;
     if (args is Product) {
+      debugPrint('🔥 ProductDetailsController PRODUCT: ${args.id}');
       product.value = args;
       _productId = args.id;
       quantity.value = args.addToCart.minimum;
-    } else if (args is int) {
-      _productId = args;
-    } else {
-      errorMessage.value = 'Product not found.';
-      return;
     }
     _load();
   }

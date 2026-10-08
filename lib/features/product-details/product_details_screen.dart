@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
+import 'package:magna_data_ai_ecommerce/core/services/cart_service.dart';
+import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/app_network_image.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/state_views.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product.dart';
@@ -31,6 +33,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   void initState() {
     super.initState();
     controller = Get.find<ProductDetailsController>();
+    favController = Get.find<FavouriteController>();
   }
 
   @override
@@ -855,10 +858,10 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 child: _RecommendedProductCard(
                   product: product,
                   onTap: () {
-                    Get.toNamed(
-                      AppRoutes.productDetails,
-                      arguments: product.id,
+                    debugPrint(
+                      'OPENING PRODUCT: ${product.name} | ID: ${product.id}',
                     );
+                    Get.toNamed(AppRoutes.productDetails, arguments: product);
                   },
                 ),
               );
@@ -979,101 +982,108 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 class _RecommendedProductCard extends StatelessWidget {
   final Product product;
   final VoidCallback onTap;
+
   const _RecommendedProductCard({required this.product, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: _ProductDetailsScreenState.border),
-          boxShadow: [
-            BoxShadow(
-              color: _ProductDetailsScreenState.navy.withValues(alpha: 0.035),
-              blurRadius: 14,
-              offset: const Offset(0, 5),
-            ),
-          ],
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        splashColor: _ProductDetailsScreenState.primary.withValues(alpha: 0.08),
+        highlightColor: _ProductDetailsScreenState.primary.withValues(
+          alpha: 0.04,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(10),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF7F9FC),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: AppNetworkImage(
-                    url: product.imageUrl,
-                    fit: BoxFit.contain,
-                  ),
-                ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: _ProductDetailsScreenState.border),
+            boxShadow: [
+              BoxShadow(
+                color: _ProductDetailsScreenState.navy.withValues(alpha: 0.035),
+                blurRadius: 14,
+                offset: const Offset(0, 5),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: _ProductDetailsScreenState.navy,
-                      fontSize: 12,
-                      height: 1.3,
-                      fontWeight: FontWeight.w700,
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    color: const Color(0xFFF7F9FC),
+                    child: AppNetworkImage(
+                      url: product.imageUrl,
+                      fit: BoxFit.contain,
                     ),
                   ),
-                  const SizedBox(height: 7),
-                  Row(
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text(
-                          product.priceLabel,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: _ProductDetailsScreenState.primary,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                          ),
+                      Text(
+                        product.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: _ProductDetailsScreenState.navy,
+                          fontSize: 12,
+                          height: 1.3,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                      if (product.reviewCount > 0)
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.star_rounded,
-                              color: Color(0xFFF59E0B),
-                              size: 14,
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              product.averageRating.toStringAsFixed(1),
+                      const SizedBox(height: 7),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              product.priceLabel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                color: _ProductDetailsScreenState.muted,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w700,
+                                color: _ProductDetailsScreenState.primary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                          if (product.reviewCount > 0)
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.star_rounded,
+                                  color: Color(0xFFF59E0B),
+                                  size: 14,
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  product.averageRating.toStringAsFixed(1),
+                                  style: const TextStyle(
+                                    color: _ProductDetailsScreenState.muted,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

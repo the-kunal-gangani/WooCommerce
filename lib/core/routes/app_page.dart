@@ -87,13 +87,12 @@ class AppPages {
       name: AppRoutes.productDetails,
       page: () => const ProductDetailsScreen(),
       binding: BindingsBuilder(() {
-        Get.lazyPut(
-          () => ProductDetailsController(
+        Get.put<ProductDetailsController>(
+          ProductDetailsController(
             Get.find<ProductService>(),
             Get.find<CartService>(),
           ),
         );
-        Get.lazyPut(() => AddToCartController(Get.find<CartService>()));
       }),
     ),
 
