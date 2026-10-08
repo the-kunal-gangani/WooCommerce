@@ -9,12 +9,14 @@ import 'package:magna_data_ai_ecommerce/data/models/product.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product_category.dart';
 import 'package:magna_data_ai_ecommerce/features/home/widgets/home_filter_sheet.dart';
 import 'package:magna_data_ai_ecommerce/features/product-list/product_list_controller.dart';
+import 'package:magna_data_ai_ecommerce/core/services/location_service.dart';
 
 class HomeController extends GetxController {
-  HomeController(this._products, this._categories);
+  HomeController(this._products, this._categories, this._locationService);
 
   final ProductService _products;
   final CategoryService _categories;
+  final LocationService _locationService;
 
   final selectedTab = 0.obs;
   final categories = <ProductCategory>[].obs;
@@ -44,6 +46,24 @@ class HomeController extends GetxController {
 
   final minPrice = 0.0.obs;
   final maxPrice = 100000.0.obs;
+
+  RxString get city => _locationService.city;
+  RxBool get isLocationLoading => _locationService.isLoading;
+
+  Future<void> selectLocation() async {
+    final result = await _locationService.detectCity();
+
+    if (result == null) {
+      Get.snackbar(
+        'Location unavailable',
+        'We could not determine your city. Please check location permission.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.white,
+        colorText: const Color(0xFF111827),
+        margin: const EdgeInsets.all(16),
+      );
+    }
+  }
 
   void resetFilters() {
     selectedSort.value = 'popularity';

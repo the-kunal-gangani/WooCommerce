@@ -5,6 +5,7 @@ import 'package:magna_data_ai_ecommerce/core/services/cart_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/category_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/checkout_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/favourites_services.dart';
+import 'package:magna_data_ai_ecommerce/core/services/location_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/secure_storage_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/storage_services.dart';
@@ -16,6 +17,7 @@ class InitialBinding extends Bindings {
     final apiClient = ApiClient();
     final secureStorage = SecureStorageService();
     final storage = StorageService();
+    final locationService = LocationService(storage);
     final authService = AuthService(apiClient, secureStorage, storage);
     final productService = ProductService(apiClient);
     final categoryService = CategoryService(apiClient);
@@ -26,6 +28,7 @@ class InitialBinding extends Bindings {
 
     Get.put<SecureStorageService>(secureStorage, permanent: true);
     Get.put<StorageService>(storage, permanent: true);
+    Get.put<LocationService>(locationService, permanent: true);
     Get.put<ApiClient>(apiClient, permanent: true);
     Get.put<AuthService>(authService, permanent: true);
     Get.put<ProductService>(productService, permanent: true);

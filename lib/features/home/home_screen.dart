@@ -180,30 +180,50 @@ class HomeScreen extends GetView<HomeController> {
                   ],
                 ),
                 const SizedBox(height: 5),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.location_on_outlined,
-                      size: 14,
-                      color: muted,
+                Obx(() {
+                  final city = controller.city.value;
+                  final isLoading = controller.isLocationLoading.value;
+
+                  return GestureDetector(
+                    onTap: isLoading ? null : controller.selectLocation,
+                    behavior: HitTestBehavior.opaque,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.location_on_outlined,
+                          size: 14,
+                          color: muted,
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            isLoading
+                                ? 'Detecting your location...'
+                                : city.isEmpty
+                                ? 'Your shopping destination'
+                                : city,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: muted,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 3),
+                        Icon(
+                          isLoading
+                              ? Icons.sync_rounded
+                              : Icons.keyboard_arrow_down_rounded,
+                          size: 16,
+                          color: muted,
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Your shopping destination',
-                      style: const TextStyle(
-                        color: muted,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(width: 3),
-                    const Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      size: 16,
-                      color: muted,
-                    ),
-                  ],
-                ),
+                  );
+                }),
               ],
             ),
           ),
@@ -478,7 +498,7 @@ class HomeScreen extends GetView<HomeController> {
     required VoidCallback onSeeAllTap,
     String actionLabel = 'See all',
   }) {
-       return Padding(
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: [

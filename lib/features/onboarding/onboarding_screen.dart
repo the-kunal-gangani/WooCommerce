@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 import 'package:magna_data_ai_ecommerce/core/services/category_service.dart';
+import 'package:magna_data_ai_ecommerce/core/services/location_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
 
@@ -82,6 +83,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       () => HomeController(
         Get.find<ProductService>(),
         Get.find<CategoryService>(),
+        Get.find<LocationService>(),
       ),
     );
 
