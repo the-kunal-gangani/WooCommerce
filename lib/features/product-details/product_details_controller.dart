@@ -205,17 +205,8 @@ class ProductDetailsController extends GetxController {
     }
   }
 
-  void incrementQuantity() {
-    final active = activeProduct;
-    if (active == null) return;
-    final max = active.addToCart.maximum;
-    if (quantity.value < max) {
-      quantity.value++;
-    }
-  }
-
   String get totalPriceLabel {
-    final active = activeProduct ?? product.value;
+    final active = activeProduct;
     if (active == null) {
       return '';
     }
@@ -223,12 +214,13 @@ class ProductDetailsController extends GetxController {
     return active.prices.format(totalMinor);
   }
 
+  void incrementQuantity() {
+    quantity.value = quantity.value + 1;
+  }
+
   void decrementQuantity() {
-    final active = activeProduct;
-    if (active == null) return;
-    final min = active.addToCart.minimum;
-    if (quantity.value > min) {
-      quantity.value--;
+    if (quantity.value > 1) {
+      quantity.value = quantity.value - 1;
     }
   }
 

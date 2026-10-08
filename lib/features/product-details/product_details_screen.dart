@@ -652,7 +652,11 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             children: [
               _QuantityButton(
                 icon: Icons.remove_rounded,
-                onTap: controller.decrementQuantity,
+                onTap: () {
+                  debugPrint('BEFORE DECREMENT: ${controller.quantity.value}');
+                  controller.decrementQuantity();
+                  debugPrint('AFTER DECREMENT: ${controller.quantity.value}');
+                },
               ),
               SizedBox(
                 width: 40,
@@ -669,7 +673,11 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               ),
               _QuantityButton(
                 icon: Icons.add_rounded,
-                onTap: controller.incrementQuantity,
+                onTap: () {
+                  debugPrint('BEFORE INCREMENT: ${controller.quantity.value}');
+                  controller.incrementQuantity();
+                  debugPrint('AFTER INCREMENT: ${controller.quantity.value}');
+                },
               ),
             ],
           ),
