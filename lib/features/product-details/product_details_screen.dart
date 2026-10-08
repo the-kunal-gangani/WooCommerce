@@ -20,6 +20,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   late final ProductDetailsController controller;
   late final FavouriteController favController;
 
+  bool _isOpeningProduct = false;
   bool _isDescriptionExpanded = false;
 
   static const background = Color(0xFFF7F9FC);
@@ -32,8 +33,20 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   @override
   void initState() {
     super.initState();
+
     controller = Get.find<ProductDetailsController>();
     favController = Get.find<FavouriteController>();
+  }
+
+  Future<void> _openRelatedProduct(Product product) async {
+    if (_isOpeningProduct) return;
+    _isOpeningProduct = true;
+    await Get.toNamed(
+      AppRoutes.productDetails,
+      arguments: product,
+      preventDuplicates: false,
+    );
+    _isOpeningProduct = false;
   }
 
   @override
@@ -135,16 +148,11 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             ),
           ),
         Obx(() {
-          final related = controller.relatedProducts;
-          if (related.isEmpty) {
+          final products = controller.relatedProducts.toList();
+          if (products.isEmpty) {
             return const SliverToBoxAdapter(child: SizedBox.shrink());
           }
-          return SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 30, left: 20),
-              child: _buildRecommendedProducts(related),
-            ),
-          );
+          return SliverToBoxAdapter(child: _buildRecommendedProducts(products));
         }),
         const SliverToBoxAdapter(child: SizedBox(height: 130)),
       ],
@@ -861,7 +869,11 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     debugPrint(
                       'OPENING PRODUCT: ${product.name} | ID: ${product.id}',
                     );
-                    Get.toNamed(AppRoutes.productDetails, arguments: product);
+                    Get.toNamed(
+                      AppRoutes.productDetails,
+                      arguments: product,
+                      preventDuplicates: false,
+                    );
                   },
                 ),
               );
@@ -1013,11 +1025,13 @@ class _RecommendedProductCard extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(18),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
+                SizedBox(
+                  height: 150,
+                  width: double.infinity,
                   child: Container(
-                    width: double.infinity,
                     padding: const EdgeInsets.all(10),
                     color: const Color(0xFFF7F9FC),
                     child: AppNetworkImage(

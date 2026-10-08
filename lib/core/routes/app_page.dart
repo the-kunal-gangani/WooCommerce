@@ -4,7 +4,6 @@ import 'package:magna_data_ai_ecommerce/core/services/category_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/checkout_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/favourites_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
-import 'package:magna_data_ai_ecommerce/features/add-to-cart/add_to_cart_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/add-to-cart/add_to_cart_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/add-to-cart/cart_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/forget-password/forget_password_controller.dart';
@@ -87,22 +86,13 @@ class AppPages {
       name: AppRoutes.productDetails,
       page: () => const ProductDetailsScreen(),
       binding: BindingsBuilder(() {
-        Get.put<ProductDetailsController>(
-          ProductDetailsController(
+        final args = Get.arguments;
+        Get.lazyPut<ProductDetailsController>(
+          () => ProductDetailsController(
             Get.find<ProductService>(),
             Get.find<CartService>(),
+            args,
           ),
-        );
-      }),
-    ),
-
-    GetPage(
-      name: AppRoutes.productList,
-      page: () => const ProductListScreen(),
-      binding: BindingsBuilder(() {
-        final args = Get.arguments as ProductListArgs;
-        Get.lazyPut<ProductListController>(
-          () => ProductListController(Get.find<ProductService>(), args),
         );
       }),
     ),

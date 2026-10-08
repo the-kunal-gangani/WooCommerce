@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/core/network/api_exception.dart';
 import 'package:magna_data_ai_ecommerce/core/services/cart_service.dart';
@@ -10,10 +9,12 @@ import 'package:magna_data_ai_ecommerce/data/models/product_attribute.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product_image.dart';
 
 class ProductDetailsController extends GetxController {
-  ProductDetailsController(this._service, this._cart);
+  ProductDetailsController(this._service, this._cart, [Object? arguments])
+    : _arguments = arguments;
 
   final ProductService _service;
   final CartService _cart;
+  final Object? _arguments;
 
   final product = Rxn<Product>();
   final variations = <int, Product>{}.obs;
@@ -28,13 +29,16 @@ class ProductDetailsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    debugPrint('🔥 ProductDetailsController ON_INIT');
-    final args = Get.arguments;
+    final args = _arguments;
     if (args is Product) {
-      debugPrint('🔥 ProductDetailsController PRODUCT: ${args.id}');
       product.value = args;
       _productId = args.id;
       quantity.value = args.addToCart.minimum;
+    } else if (args is int) {
+      _productId = args;
+    } else {
+      errorMessage.value = 'Product not found.';
+      return;
     }
     _load();
   }
@@ -69,31 +73,28 @@ class ProductDetailsController extends GetxController {
   /// Maximum 6 products are displayed.
   Future<void> loadRelatedProducts(Product current) async {
     relatedProducts.clear();
-    if (current.categories.isEmpty) {
-      return;
-    }
+    final categoryIds = current.categories
+        .where((c) => c.slug != 'uncategorized')
+        .map((c) => c.id)
+        .toSet();
+    if (categoryIds.isEmpty) return;
     try {
-      final categoryId = current.categories.first.id;
       final result = await _service.fetchProducts(
         page: 1,
-        perPage: 7,
-        category: categoryId.toString(),
+        perPage: 13,
+        category: categoryIds.join(','),
       );
-
       final products = result.items
-          .where((item) => item.id != current.id)
-          .take(6)
+          .where((product) => product.id != current.id)
+          .take(12)
           .toList();
       relatedProducts.assignAll(products);
+      printLog('Current: ${current.name} (${current.id})');
       printLog(
-        'related products loaded for category '
-        '$categoryId: ${relatedProducts.length}',
+        'Related: ${products.map((p) => '${p.name} (${p.id})').join(', ')}',
       );
     } on ApiException catch (e) {
       printLog('related products failed: $e');
-      relatedProducts.clear();
-    } catch (e) {
-      printLog('related products unexpected error: $e');
       relatedProducts.clear();
     }
   }

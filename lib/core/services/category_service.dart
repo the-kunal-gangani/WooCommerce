@@ -16,13 +16,10 @@ class CategoryService {
       '${AppConfig.storeApiPath}/products/categories',
       query: {'page': page, 'per_page': perPage},
     );
-
     final data = response.data;
-
     if (data is! List) {
       return const [];
     }
-
     return data
         .whereType<Map>()
         .map((e) => ProductCategory.fromJson(Map<String, dynamic>.from(e)))
