@@ -1,8 +1,6 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_snake_navigationbar/flutter_snake_navigationbar.dart';
 import 'package:get/get.dart';
-import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/app_network_image.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/product_card.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/state_views.dart';

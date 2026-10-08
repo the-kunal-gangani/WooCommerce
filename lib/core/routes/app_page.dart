@@ -20,12 +20,13 @@ import 'package:magna_data_ai_ecommerce/features/checkout/checkout_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/favourites/favourites_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/favourites/favourites_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
-import 'package:magna_data_ai_ecommerce/features/home/home_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/onboarding/onboarding_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/onboarding/onboarding_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/order-confirmation/order_confirmation_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/product-details/product_details_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/product-details/product_details_screen.dart';
+import 'package:magna_data_ai_ecommerce/features/product-list/product_list_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/product-list/product_list_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/users-profile/user_profile_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/main/main_shell.dart';
 import 'package:magna_data_ai_ecommerce/features/main/main_shell_controller.dart';
@@ -79,6 +80,19 @@ class AppPages {
           () => HomeController(
             Get.find<ProductService>(),
             Get.find<CategoryService>(),
+          ),
+        );
+      }),
+    ),
+
+    GetPage(
+      name: AppRoutes.productList,
+      page: () => const ProductListScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<ProductListController>(
+          () => ProductListController(
+            Get.find<ProductService>(),
+            const ProductListArgs(title: 'Search', searchMode: true),
           ),
         );
       }),
