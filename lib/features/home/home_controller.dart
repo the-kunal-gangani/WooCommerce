@@ -52,7 +52,6 @@ class HomeController extends GetxController {
 
   Future<void> selectLocation() async {
     final result = await _locationService.detectCity();
-
     if (result == null) {
       Get.snackbar(
         'Location unavailable',
@@ -75,13 +74,6 @@ class HomeController extends GetxController {
   }
 
   int _popularRequest = 0;
-
-  @override
-  void onInit() {
-    super.onInit();
-    loadHome();
-  }
-
   void openFilters() {
     Get.bottomSheet(
       HomeFilterSheet(controller: this),
@@ -121,12 +113,16 @@ class HomeController extends GetxController {
       isLoading.value = true;
     }
     errorMessage.value = null;
-    final (categoryResult, popularResult, featuredResult, saleResult) = await (
+    final results = await (
       _guard(_categories.fetchCategories(perPage: 50)),
       _guard(_fetchPopular()),
       _guard(_products.fetchProducts(perPage: 3, featured: true)),
       _guard(_products.fetchProducts(perPage: 10, onSale: true)),
     ).wait;
+    final categoryResult = results.$1;
+    final popularResult = results.$2;
+    final featuredResult = results.$3;
+    final saleResult = results.$4;
     if (categoryResult != null) {
       categories.assignAll(categoryResult);
     }

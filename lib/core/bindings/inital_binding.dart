@@ -10,6 +10,7 @@ import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/secure_storage_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/storage_services.dart';
 import 'package:magna_data_ai_ecommerce/features/favourites/favourites_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
 
 class InitialBinding extends Bindings {
   @override
@@ -25,6 +26,11 @@ class InitialBinding extends Bindings {
     final checkoutService = CheckoutService();
     final favouriteService = FavouriteService(storage);
     final favouriteController = FavouriteController(favouriteService);
+    final homeController = HomeController(
+      productService,
+      categoryService,
+      locationService,
+    );
 
     Get.put<SecureStorageService>(secureStorage, permanent: true);
     Get.put<StorageService>(storage, permanent: true);
@@ -37,5 +43,6 @@ class InitialBinding extends Bindings {
     Get.put<CheckoutService>(checkoutService, permanent: true);
     Get.put<FavouriteService>(favouriteService, permanent: true);
     Get.put<FavouriteController>(favouriteController, permanent: true);
+    Get.put<HomeController>(homeController, permanent: true);
   }
 }
