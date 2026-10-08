@@ -31,6 +31,17 @@ class HomeController extends GetxController {
   final saleOnly = false.obs;
   final inStockOnly = false.obs;
 
+  final showAllPopular = false.obs;
+  final showAllOnSale = false.obs;
+
+  void togglePopular() {
+    showAllPopular.toggle();
+  }
+
+  void toggleOnSale() {
+    showAllOnSale.toggle();
+  }
+
   final minPrice = 0.0.obs;
   final maxPrice = 100000.0.obs;
 

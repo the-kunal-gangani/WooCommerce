@@ -78,7 +78,10 @@ class HomeScreen extends GetView<HomeController> {
                     title: popularTitle,
                     subtitle: 'Picked for your shopping journey',
                     icon: Icons.auto_awesome_rounded,
-                    onSeeAllTap: controller.openPopular,
+                    actionLabel: controller.showAllPopular.value
+                        ? 'Show less'
+                        : 'See all',
+                    onSeeAllTap: controller.togglePopular,
                   ),
                 ),
               ),
@@ -94,7 +97,12 @@ class HomeScreen extends GetView<HomeController> {
                 ),
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-                sliver: _buildPopularGrid(popular, loadingProducts),
+                sliver: _buildPopularGrid(
+                  controller.showAllPopular.value
+                      ? popular
+                      : popular.take(2).toList(),
+                  loadingProducts,
+                ),
               ),
               if (onSale.isNotEmpty) ...[
                 SliverToBoxAdapter(
@@ -104,11 +112,20 @@ class HomeScreen extends GetView<HomeController> {
                       title: 'Trending Deals',
                       subtitle: 'Limited-time picks',
                       icon: Icons.local_offer_outlined,
-                      onSeeAllTap: controller.openOnSale,
+                      actionLabel: controller.showAllOnSale.value
+                          ? 'Show less'
+                          : 'See all',
+                      onSeeAllTap: controller.toggleOnSale,
                     ),
                   ),
                 ),
-                SliverToBoxAdapter(child: _buildOnSaleList(onSale)),
+                SliverToBoxAdapter(
+                  child: _buildOnSaleList(
+                    controller.showAllOnSale.value
+                        ? onSale
+                        : onSale.take(2).toList(),
+                  ),
+                ),
               ],
               const SliverToBoxAdapter(child: SizedBox(height: 30)),
             ],
@@ -459,8 +476,9 @@ class HomeScreen extends GetView<HomeController> {
     required String subtitle,
     required IconData icon,
     required VoidCallback onSeeAllTap,
+    String actionLabel = 'See all',
   }) {
-    return Padding(
+       return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: [
@@ -514,9 +532,9 @@ class HomeScreen extends GetView<HomeController> {
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: const Text(
-              'See all',
-              style: TextStyle(
+            child: Text(
+              actionLabel,
+              style: const TextStyle(
                 color: primary,
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
