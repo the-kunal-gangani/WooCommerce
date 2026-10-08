@@ -21,17 +21,13 @@ class ProductDetailsController extends GetxController {
   final quantity = 1.obs;
   final isFavorite = false.obs;
   final errorMessage = RxnString();
-
   final relatedProducts = <Product>[].obs;
-
   int _productId = 0;
 
   @override
   void onInit() {
     super.onInit();
-
     final args = Get.arguments;
-
     if (args is Product) {
       product.value = args;
       _productId = args.id;
@@ -42,7 +38,6 @@ class ProductDetailsController extends GetxController {
       errorMessage.value = 'Product not found.';
       return;
     }
-
     _load();
   }
 
@@ -54,9 +49,7 @@ class ProductDetailsController extends GetxController {
   Future<void> _load() async {
     try {
       final fresh = await _service.fetchProduct(_productId);
-
       product.value = fresh;
-
       if (quantity.value < fresh.addToCart.minimum) {
         quantity.value = fresh.addToCart.minimum;
       }
@@ -66,9 +59,7 @@ class ProductDetailsController extends GetxController {
         errorMessage.value = e.message;
       }
     }
-
     final current = product.value;
-
     if (current != null && current.isVariable) {
       await _loadVariations(current.id);
     }
@@ -112,9 +103,7 @@ class ProductDetailsController extends GetxController {
   Future<void> _loadVariations(int parentId) async {
     try {
       final list = await _service.fetchVariations(parentId);
-
       variations.assignAll({for (final v in list) v.id: v});
-
       printLog('variations loaded for $parentId: ${list.length}');
     } on ApiException catch (e) {
       printLog('variations failed for $parentId: $e');
@@ -201,17 +190,43 @@ class ProductDetailsController extends GetxController {
   void selectOption(String attributeName, String termSlug) {
     selection[attributeName] = termSlug;
     selectedImageIndex.value = 0;
+    final active = activeProduct;
+    if (active == null) return;
+    _normalizeQuantity(active);
+  }
+
+  void _normalizeQuantity(Product active) {
+    final min = active.addToCart.minimum;
+    final max = active.addToCart.maximum;
+    if (quantity.value < min) {
+      quantity.value = min;
+    } else if (quantity.value > max) {
+      quantity.value = max;
+    }
   }
 
   void incrementQuantity() {
-    final max = product.value?.addToCart.maximum ?? 9999;
+    final active = activeProduct;
+    if (active == null) return;
+    final max = active.addToCart.maximum;
     if (quantity.value < max) {
       quantity.value++;
     }
   }
 
+  String get totalPriceLabel {
+    final active = activeProduct ?? product.value;
+    if (active == null) {
+      return '';
+    }
+    final totalMinor = active.prices.price * quantity.value;
+    return active.prices.format(totalMinor);
+  }
+
   void decrementQuantity() {
-    final min = product.value?.addToCart.minimum ?? 1;
+    final active = activeProduct;
+    if (active == null) return;
+    final min = active.addToCart.minimum;
     if (quantity.value > min) {
       quantity.value--;
     }
@@ -230,12 +245,10 @@ class ProductDetailsController extends GetxController {
     if (active == null) {
       return;
     }
-
     if (p.isVariable) {
       final missing = variationAttributes.firstWhereOrNull(
         (attribute) => !selection.containsKey(attribute.name),
       );
-
       if (missing != null) {
         Get.snackbar(
           'Select an option',
@@ -244,7 +257,6 @@ class ProductDetailsController extends GetxController {
         );
         return;
       }
-
       if (selectedVariation == null) {
         Get.snackbar(
           'Unavailable',
@@ -254,7 +266,6 @@ class ProductDetailsController extends GetxController {
         return;
       }
     }
-
     if (!active.canBuy) {
       Get.snackbar(
         'Unavailable',
@@ -263,7 +274,6 @@ class ProductDetailsController extends GetxController {
       );
       return;
     }
-
     final cartItem = CartItem(
       productId: p.id,
       variationId: selectedVariation?.id,
@@ -276,9 +286,7 @@ class ProductDetailsController extends GetxController {
       currencySymbol: active.prices.currencySymbol,
       minorUnit: active.prices.minorUnit,
     );
-
     await _cart.addItem(item: cartItem);
-
     Get.snackbar(
       'Added to Cart',
       '${p.name} has been added to your cart.',

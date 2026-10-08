@@ -4,6 +4,7 @@ import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/app_network_image.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/state_views.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product.dart';
+import 'package:magna_data_ai_ecommerce/features/favourites/favourites_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/product-details/product_details_controller.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
@@ -15,6 +16,7 @@ class ProductDetailsScreen extends StatefulWidget {
 
 class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   late final ProductDetailsController controller;
+  late final FavouriteController favController;
 
   bool _isDescriptionExpanded = false;
 
@@ -35,75 +37,46 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: background,
-
       body: Obx(() {
         final product = controller.product.value;
-
         if (product == null) {
           final error = controller.errorMessage.value;
-
           if (error != null) {
             return ErrorView(message: error, onRetry: controller.reload);
           }
-
           return const LoadingView();
         }
-
         return _buildBody(context, product);
       }),
-
       bottomNavigationBar: Obx(() {
         final product = controller.product.value;
-
         if (product == null) {
           return const SizedBox.shrink();
         }
-
         return _buildBottomBar(product);
       }),
     );
   }
 
-  // ═══════════════════════════════════════════════════
-  // BODY
-  // ═══════════════════════════════════════════════════
-
   Widget _buildBody(BuildContext context, Product product) {
     final active = controller.activeProduct ?? product;
-
     final images = controller.images;
-
     final imageIndex = images.isEmpty
         ? 0
         : controller.selectedImageIndex.value.clamp(0, images.length - 1);
-
     final selection = Map<String, String>.from(controller.selection);
-
-    final quantity = controller.quantity.value;
-
     final attributes = controller.variationAttributes;
-
     final priceLabel = controller.unitPriceLabel;
-
     final stockLabel = controller.stockLabel;
-
     final description = product.plainDescription.isNotEmpty
         ? product.plainDescription
         : product.plainShortDescription;
-
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
-        // ─────────────────────────────────────────────
-        // HERO
-        // ─────────────────────────────────────────────
         SliverToBoxAdapter(
           child: _buildProductHero(product, images, imageIndex),
         ),
-
-        // ─────────────────────────────────────────────
-        // PRODUCT INFO
-        // ─────────────────────────────────────────────
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
@@ -117,10 +90,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             ),
           ),
         ),
-
-        // ─────────────────────────────────────────────
-        // CATEGORIES
-        // ─────────────────────────────────────────────
         if (product.categories.isNotEmpty)
           SliverToBoxAdapter(
             child: Padding(
@@ -128,10 +97,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               child: _buildCategories(product),
             ),
           ),
-
-        // ─────────────────────────────────────────────
-        // VARIATIONS
-        // ─────────────────────────────────────────────
         if (attributes.isNotEmpty)
           SliverToBoxAdapter(
             child: Padding(
@@ -139,21 +104,12 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               child: _buildVariations(context, attributes, selection),
             ),
           ),
-
-        // ─────────────────────────────────────────────
-        // QUANTITY
-        // ─────────────────────────────────────────────
-        if (controller.canBuy)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 26, 20, 0),
-              child: _buildQuantity(quantity),
-            ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 26, 20, 0),
+            child: Obx(() => _buildQuantity(controller.quantity.value)),
           ),
-
-        // ─────────────────────────────────────────────
-        // SPECIFICATIONS
-        // ─────────────────────────────────────────────
+        ),
         if (product.attributes.isNotEmpty)
           SliverToBoxAdapter(
             child: Padding(
@@ -161,10 +117,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               child: _buildSpecifications(product),
             ),
           ),
-
-        // ─────────────────────────────────────────────
-        // TAGS
-        // ─────────────────────────────────────────────
         if (product.tags.isNotEmpty)
           SliverToBoxAdapter(
             child: Padding(
@@ -172,10 +124,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               child: _buildTags(product),
             ),
           ),
-
-        // ─────────────────────────────────────────────
-        // REVIEWS
-        // ─────────────────────────────────────────────
         if (product.reviewCount > 0)
           SliverToBoxAdapter(
             child: Padding(
@@ -237,7 +185,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                   ),
                 ),
-
                 Positioned(
                   bottom: -100,
                   left: -80,
@@ -255,7 +202,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                   ),
                 ),
-
                 Center(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(30, 70, 30, 55),
@@ -264,7 +210,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                   ),
                 ),
-
                 if (images.isNotEmpty)
                   Positioned(
                     right: 18,
@@ -302,8 +247,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             ),
           ),
         ),
-
-        // Back
         Positioned(
           left: 18,
           top: 50,
@@ -312,8 +255,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             onTap: () => Get.back(),
           ),
         ),
-
-        // Favorite
         Positioned(
           right: 18,
           top: 50,
@@ -325,12 +266,10 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               iconColor: controller.isFavorite.value
                   ? const Color(0xFFE5484D)
                   : navy,
-              onTap: controller.toggleFavorite,
+              onTap: () => favController.toggleFavourite(product),
             ),
           ),
         ),
-
-        // Thumbnails
         if (images.length > 1)
           Positioned(
             bottom: 18,
@@ -345,7 +284,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 itemCount: images.length,
                 itemBuilder: (context, index) {
                   final isSelected = imageIndex == index;
-
                   return GestureDetector(
                     onTap: () {
                       controller.selectImage(index);
@@ -380,10 +318,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
       ],
     );
   }
-
-  // ═══════════════════════════════════════════════════
-  // BASIC PRODUCT INFO
-  // ═══════════════════════════════════════════════════
 
   Widget _buildProductInfo(
     BuildContext context,
@@ -425,9 +359,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   ],
                 ),
               ),
-
             if (product.reviewCount > 0) const SizedBox(width: 8),
-
             if (product.reviewCount > 0)
               Text(
                 '${product.reviewCount} reviews',
@@ -437,15 +369,11 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-
             const Spacer(),
-
             _stockPill(stockLabel),
           ],
         ),
-
         const SizedBox(height: 14),
-
         Text(
           product.name,
           style: const TextStyle(
@@ -456,55 +384,56 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             letterSpacing: -0.5,
           ),
         ),
-
         const SizedBox(height: 12),
-
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              priceLabel,
-              style: const TextStyle(
-                color: primary,
-                fontSize: 23,
-                fontWeight: FontWeight.w800,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEAF2FF),
+                borderRadius: BorderRadius.circular(7),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.arrow_downward, size: 18, color: primary),
+                  SizedBox(width: 3),
+                  Text(
+                    '${active.prices.discountPercent}%',
+                    style: const TextStyle(
+                      color: primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
-
+            const SizedBox(width: 10),
             if (active.hasDiscount) ...[
-              const SizedBox(width: 10),
-
               Text(
                 active.prices.formattedRegular,
                 style: const TextStyle(
-                  color: Color(0xFF929BA8),
+                  color: Color.fromARGB(255, 88, 97, 111),
                   fontSize: 13,
                   decoration: TextDecoration.lineThrough,
+                  decorationColor: Colors.blueGrey,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-
-              const SizedBox(width: 8),
-
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEAF2FF),
-                  borderRadius: BorderRadius.circular(7),
-                ),
-                child: Text(
-                  '${active.prices.discountPercent}% OFF',
-                  style: const TextStyle(
-                    color: primary,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                  ),
+              const SizedBox(width: 10),
+              Text(
+                priceLabel,
+                style: const TextStyle(
+                  color: primary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
+              const SizedBox(width: 8),
             ],
           ],
         ),
-
         if (product.sku.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(
@@ -517,30 +446,21 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             ),
           ),
         ],
-
         if (description.isNotEmpty) ...[
           const SizedBox(height: 22),
-
           const _SectionTitle(
             icon: Icons.description_outlined,
             title: 'About this product',
           ),
-
           const SizedBox(height: 9),
-
           _buildDescription(description),
         ],
       ],
     );
   }
 
-  // ═══════════════════════════════════════════════════
-  // STOCK
-  // ═══════════════════════════════════════════════════
-
   Widget _stockPill(String stockLabel) {
     final canBuy = controller.canBuy;
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
@@ -571,10 +491,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════
-  // DESCRIPTION
-  // ═══════════════════════════════════════════════════
-
   Widget _buildDescription(String description) {
     return AnimatedSize(
       duration: const Duration(milliseconds: 250),
@@ -595,9 +511,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               fontWeight: FontWeight.w500,
             ),
           ),
-
           const SizedBox(height: 7),
-
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () {
@@ -632,10 +546,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════
-  // CATEGORIES
-  // ═══════════════════════════════════════════════════
-
   Widget _buildCategories(Product product) {
     return _ProductSectionCard(
       icon: Icons.category_outlined,
@@ -650,10 +560,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════
-  // VARIATIONS
-  // ═══════════════════════════════════════════════════
-
   Widget _buildVariations(
     BuildContext context,
     List<dynamic> attributes,
@@ -666,9 +572,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           icon: Icons.tune_rounded,
           title: 'Choose your options',
         ),
-
         const SizedBox(height: 18),
-
         for (final attribute in attributes) ...[
           Text(
             attribute.name,
@@ -678,15 +582,12 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               fontWeight: FontWeight.w800,
             ),
           ),
-
           const SizedBox(height: 9),
-
           Wrap(
             spacing: 9,
             runSpacing: 9,
             children: attribute.terms.map<Widget>((term) {
               final isSelected = selection[attribute.name] == term.slug;
-
               return GestureDetector(
                 onTap: () {
                   controller.selectOption(attribute.name, term.slug);
@@ -725,16 +626,11 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               );
             }).toList(),
           ),
-
           const SizedBox(height: 18),
         ],
       ],
     );
   }
-
-  // ═══════════════════════════════════════════════════
-  // QUANTITY
-  // ═══════════════════════════════════════════════════
 
   Widget _buildQuantity(int quantity) {
     return Row(
@@ -745,7 +641,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             title: 'Quantity',
           ),
         ),
-
         Container(
           height: 44,
           decoration: BoxDecoration(
@@ -759,7 +654,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 icon: Icons.remove_rounded,
                 onTap: controller.decrementQuantity,
               ),
-
               SizedBox(
                 width: 40,
                 child: Center(
@@ -773,7 +667,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   ),
                 ),
               ),
-
               _QuantityButton(
                 icon: Icons.add_rounded,
                 onTap: controller.incrementQuantity,
@@ -784,10 +677,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
       ],
     );
   }
-
-  // ═══════════════════════════════════════════════════
-  // SPECIFICATIONS
-  // ═══════════════════════════════════════════════════
 
   Widget _buildSpecifications(Product product) {
     return _ProductSectionCard(
@@ -809,20 +698,14 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   String _attributeValue(dynamic attribute) {
     try {
       final terms = attribute.terms as List;
-
       if (terms.isEmpty) {
         return 'Not specified';
       }
-
       return terms.map((term) => term.name.toString()).join(', ');
     } catch (_) {
       return 'Not specified';
     }
   }
-
-  // ═══════════════════════════════════════════════════
-  // TAGS
-  // ═══════════════════════════════════════════════════
 
   Widget _buildTags(Product product) {
     return _ProductSectionCard(
@@ -838,13 +721,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════
-  // REVIEWS
-  // ═══════════════════════════════════════════════════
-
   Widget _buildReviews(Product product) {
     final rating = product.averageRating.clamp(0, 5);
-
     return _ProductSectionCard(
       icon: Icons.rate_review_outlined,
       title: 'Customer Reviews',
@@ -879,9 +757,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(width: 15),
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -889,7 +765,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     Row(
                       children: List.generate(5, (index) {
                         final filled = index < rating.round();
-
                         return Icon(
                           filled
                               ? Icons.star_rounded
@@ -899,9 +774,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         );
                       }),
                     ),
-
                     const SizedBox(height: 5),
-
                     Text(
                       '${product.reviewCount} customer reviews',
                       style: const TextStyle(
@@ -915,9 +788,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               ),
             ],
           ),
-
           const SizedBox(height: 16),
-
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(12),
@@ -949,10 +820,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     );
   }
 
-  // ═══════════════════════════════════════════════════
-  // YOU MIGHT ALSO LIKE
-  // ═══════════════════════════════════════════════════
-
   Widget _buildRecommendedProducts(List<Product> products) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -964,9 +831,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             title: 'You might also like',
           ),
         ),
-
         const SizedBox(height: 14),
-
         SizedBox(
           height: 292,
           child: ListView.separated(
@@ -977,7 +842,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             separatorBuilder: (_, _) => const SizedBox(width: 12),
             itemBuilder: (context, index) {
               final product = products[index];
-
               return SizedBox(
                 width: 185,
                 child: _RecommendedProductCard(
@@ -996,13 +860,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
       ],
     );
   }
-  // ═══════════════════════════════════════════════════
-  // BOTTOM BAR
-  // ═══════════════════════════════════════════════════
 
   Widget _buildBottomBar(Product product) {
     final canBuy = controller.canBuy;
-
     return SafeArea(
       top: false,
       child: Container(
@@ -1035,7 +895,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    canBuy ? product.priceLabel : 'Out of stock',
+                    canBuy ? controller.totalPriceLabel : 'Out of stock',
                     style: TextStyle(
                       color: canBuy ? navy : const Color(0xFFD92D20),
                       fontSize: 16,
@@ -1045,9 +905,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 ],
               ),
             ),
-
             const SizedBox(width: 12),
-
             SizedBox(
               height: 44,
               child: DecoratedBox(
@@ -1110,14 +968,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   }
 }
 
-// ═══════════════════════════════════════════════════════
-// RECOMMENDED PRODUCT CARD
-// ═══════════════════════════════════════════════════════
-
 class _RecommendedProductCard extends StatelessWidget {
   final Product product;
   final VoidCallback onTap;
-
   const _RecommendedProductCard({required this.product, required this.onTap});
 
   @override
@@ -1157,7 +1010,6 @@ class _RecommendedProductCard extends StatelessWidget {
                 ),
               ),
             ),
-
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
               child: Column(
@@ -1174,9 +1026,7 @@ class _RecommendedProductCard extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-
                   const SizedBox(height: 7),
-
                   Row(
                     children: [
                       Expanded(
@@ -1191,7 +1041,6 @@ class _RecommendedProductCard extends StatelessWidget {
                           ),
                         ),
                       ),
-
                       if (product.reviewCount > 0)
                         Row(
                           children: [
@@ -1222,10 +1071,6 @@ class _RecommendedProductCard extends StatelessWidget {
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════
-// PRODUCT SECTION CARD
-// ═══════════════════════════════════════════════════════
 
 class _ProductSectionCard extends StatelessWidget {
   final IconData icon;
@@ -1266,10 +1111,6 @@ class _ProductSectionCard extends StatelessWidget {
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════
-// SPECIFICATION ROW
-// ═══════════════════════════════════════════════════════
 
 class _SpecificationRow extends StatelessWidget {
   final String name;
@@ -1318,7 +1159,6 @@ class _SpecificationRow extends StatelessWidget {
               ),
             ],
           ),
-
           if (!isLast) ...[
             const SizedBox(height: 12),
             const Divider(height: 1, color: _ProductDetailsScreenState.border),
@@ -1328,10 +1168,6 @@ class _SpecificationRow extends StatelessWidget {
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════
-// SOFT CHIP
-// ═══════════════════════════════════════════════════════
 
 class _SoftChip extends StatelessWidget {
   final String label;
@@ -1366,10 +1202,6 @@ class _SoftChip extends StatelessWidget {
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════
-// HERO BUTTON
-// ═══════════════════════════════════════════════════════
 
 class _HeroActionButton extends StatelessWidget {
   final IconData icon;
@@ -1411,10 +1243,6 @@ class _HeroActionButton extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════
-// SECTION TITLE
-// ═══════════════════════════════════════════════════════
-
 class _SectionTitle extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -1452,10 +1280,6 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════
-// QUANTITY BUTTON
-// ═══════════════════════════════════════════════════════
-
 class _QuantityButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
@@ -1479,10 +1303,6 @@ class _QuantityButton extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════
-// ZOOMABLE PRODUCT IMAGE
-// ═══════════════════════════════════════════════════════
-
 class _ZoomableProductImage extends StatefulWidget {
   final String? url;
 
@@ -1495,7 +1315,6 @@ class _ZoomableProductImage extends StatefulWidget {
 class _ZoomableProductImageState extends State<_ZoomableProductImage> {
   final TransformationController _transformationController =
       TransformationController();
-
   TapDownDetails? _doubleTapDetails;
 
   @override
@@ -1506,23 +1325,18 @@ class _ZoomableProductImageState extends State<_ZoomableProductImage> {
 
   void _handleDoubleTap() {
     final currentScale = _transformationController.value.getMaxScaleOnAxis();
-
     if (currentScale > 1.01) {
       _transformationController.value = Matrix4.identity();
       return;
     }
-
     final position = _doubleTapDetails?.localPosition;
-
     if (position == null) {
       _transformationController.value = Matrix4.identity()..scale(2.5);
       return;
     }
-
     final zoomed = Matrix4.identity()
       ..translate(-position.dx * 1.5, -position.dy * 1.5)
       ..scale(2.5);
-
     _transformationController.value = zoomed;
   }
 

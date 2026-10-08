@@ -5,9 +5,7 @@ import 'package:magna_data_ai_ecommerce/data/models/product.dart';
 
 class FavouriteController extends GetxController {
   FavouriteController(this._favourites);
-
   final FavouriteService _favourites;
-
   RxList<Product> get favourites => _favourites.favourites;
 
   bool isFavourite(int productId) {
