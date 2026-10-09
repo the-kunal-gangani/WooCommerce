@@ -47,7 +47,7 @@ class ProductListToolbar extends StatelessWidget {
           ),
           if (chips.isNotEmpty)
             SizedBox(
-              height: 40, 
+              height: 40,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),

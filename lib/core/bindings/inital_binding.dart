@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:magna_data_ai_ecommerce/core/network/api_client.dart';
 import 'package:magna_data_ai_ecommerce/core/services/auth_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/cart_service.dart';
@@ -7,6 +8,7 @@ import 'package:magna_data_ai_ecommerce/core/services/checkout_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/favourites_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/location_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
+import 'package:magna_data_ai_ecommerce/core/services/recently_viewed_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/secure_storage_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/storage_services.dart';
 import 'package:magna_data_ai_ecommerce/features/favourites/favourites_controller.dart';
@@ -18,6 +20,7 @@ class InitialBinding extends Bindings {
     final apiClient = ApiClient();
     final secureStorage = SecureStorageService();
     final storage = StorageService();
+    final getStorage = GetStorage();
     final locationService = LocationService(storage);
     final authService = AuthService(apiClient, secureStorage, storage);
     final productService = ProductService(apiClient);
@@ -25,11 +28,13 @@ class InitialBinding extends Bindings {
     final cartService = CartService(storage, productService);
     final checkoutService = CheckoutService();
     final favouriteService = FavouriteService(storage);
+    final recentlyViewedService = RecentlyViewedService(getStorage);
     final favouriteController = FavouriteController(favouriteService);
     final homeController = HomeController(
       productService,
       categoryService,
       locationService,
+      recentlyViewedService,
     );
 
     Get.put<SecureStorageService>(secureStorage, permanent: true);
@@ -44,5 +49,6 @@ class InitialBinding extends Bindings {
     Get.put<FavouriteService>(favouriteService, permanent: true);
     Get.put<FavouriteController>(favouriteController, permanent: true);
     Get.put<HomeController>(homeController, permanent: true);
+    Get.put<RecentlyViewedService>(recentlyViewedService, permanent: true);
   }
 }

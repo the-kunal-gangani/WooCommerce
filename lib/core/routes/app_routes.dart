@@ -15,5 +15,6 @@ class AppRoutes {
   static const String favourites = '/favourites';
   static const String resetPassword = '/resetPassword';
   static const String categories = '/categories';
+  static const String recentlyViewed = '/recentlyViewed';
   static const String profile = '/profile';
 }

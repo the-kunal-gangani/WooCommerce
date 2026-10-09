@@ -5,6 +5,7 @@ import 'package:magna_data_ai_ecommerce/core/services/checkout_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/favourites_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/location_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
+import 'package:magna_data_ai_ecommerce/core/services/recently_viewed_service.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product.dart';
 import 'package:magna_data_ai_ecommerce/features/add-to-cart/add_to_cart_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/add-to-cart/cart_controller.dart';
@@ -28,6 +29,8 @@ import 'package:magna_data_ai_ecommerce/features/product-details/product_details
 import 'package:magna_data_ai_ecommerce/features/product-details/product_details_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/product-list/product_list_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/product-list/product_list_screen.dart';
+import 'package:magna_data_ai_ecommerce/features/recently-viewed/recently_viewed_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/recently-viewed/recently_viewed_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/users-profile/user_profile_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/main/main_shell.dart';
 import 'package:magna_data_ai_ecommerce/features/main/main_shell_controller.dart';
@@ -82,6 +85,7 @@ class AppPages {
             Get.find<ProductService>(),
             Get.find<CategoryService>(),
             Get.find<LocationService>(),
+            Get.find<RecentlyViewedService>(),
           ),
         );
       }),
@@ -190,5 +194,15 @@ class AppPages {
     GetPage(name: AppRoutes.categories, page: () => const CategoriesScreen()),
 
     GetPage(name: AppRoutes.profile, page: () => const ProfileScreen()),
+
+    GetPage(
+      name: AppRoutes.recentlyViewed,
+      page: () => const RecentlyViewedScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<RecentlyViewedController>(
+          () => RecentlyViewedController(Get.find<RecentlyViewedService>()),
+        );
+      }),
+    ),
   ];
 }

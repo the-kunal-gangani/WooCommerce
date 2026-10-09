@@ -104,6 +104,26 @@ class HomeScreen extends GetView<HomeController> {
                   loadingProducts,
                 ),
               ),
+
+              if (controller.recentlyViewed.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 24),
+                    child: _buildSectionHeader(
+                      title: 'Recently Viewed',
+                      subtitle: 'Pick up where you left off',
+                      icon: Icons.history_rounded,
+                      onSeeAllTap: controller.openRecentlyViewed,
+                    ),
+                  ),
+                ),
+              if (controller.recentlyViewed.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: _buildOnSaleList(
+                    controller.recentlyViewed.take(10).toList(),
+                  ),
+                ),
+
               if (onSale.isNotEmpty) ...[
                 SliverToBoxAdapter(
                   child: Padding(

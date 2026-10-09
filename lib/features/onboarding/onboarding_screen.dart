@@ -6,6 +6,7 @@ import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 import 'package:magna_data_ai_ecommerce/core/services/category_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/location_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
+import 'package:magna_data_ai_ecommerce/core/services/recently_viewed_service.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -84,6 +85,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         Get.find<ProductService>(),
         Get.find<CategoryService>(),
         Get.find<LocationService>(),
+        Get.find<RecentlyViewedService>(),
       ),
     );
 

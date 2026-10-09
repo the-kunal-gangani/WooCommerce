@@ -5,17 +5,24 @@ import 'package:magna_data_ai_ecommerce/core/network/paged_result.dart';
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 import 'package:magna_data_ai_ecommerce/core/services/category_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
+import 'package:magna_data_ai_ecommerce/core/services/recently_viewed_service.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product_category.dart';
 import 'package:magna_data_ai_ecommerce/features/product-list/product_list_controller.dart';
 import 'package:magna_data_ai_ecommerce/core/services/location_service.dart';
 
 class HomeController extends GetxController {
-  HomeController(this._products, this._categories, this._locationService);
+  HomeController(
+    this._products,
+    this._categories,
+    this._locationService,
+    this._recentlyViewedService,
+  );
 
   final ProductService _products;
   final CategoryService _categories;
   final LocationService _locationService;
+  final RecentlyViewedService _recentlyViewedService;
 
   final selectedTab = 0.obs;
   final categories = <ProductCategory>[].obs;
@@ -31,6 +38,7 @@ class HomeController extends GetxController {
   final selectedOrder = 'desc'.obs;
   final saleOnly = false.obs;
   final inStockOnly = false.obs;
+  final recentlyViewed = <Product>[].obs;
 
   final showAllPopular = false.obs;
   final showAllOnSale = false.obs;
@@ -41,6 +49,10 @@ class HomeController extends GetxController {
 
   void toggleOnSale() {
     showAllOnSale.toggle();
+  }
+
+  void openRecentlyViewed() {
+    Get.toNamed(AppRoutes.recentlyViewed, arguments: recentlyViewed.toList());
   }
 
   final minPrice = 0.0.obs;
@@ -152,7 +164,10 @@ class HomeController extends GetxController {
     isProductsLoading.value = false;
   }
 
-  void openProduct(Product product) {
+  Future<void> openProduct(Product product) async {
+    await _recentlyViewedService.addProduct(product);
+    recentlyViewed.assignAll(_recentlyViewedService.getRecentlyViewed());
+
     Get.toNamed(AppRoutes.productDetails, arguments: product);
   }
 
