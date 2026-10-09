@@ -69,6 +69,7 @@ class Product {
     required this.lowStockRemaining,
     required this.soldIndividually,
     required this.addToCart,
+    this.raw = const <String, dynamic>{},
   });
 
   final int id;
@@ -96,6 +97,7 @@ class Product {
   final int? lowStockRemaining;
   final bool soldIndividually;
   final AddToCartRules addToCart;
+  final Map<String, dynamic> raw;
 
   factory Product.fromJson(Map<String, dynamic> json) {
     final lowStock = json['low_stock_remaining'];
@@ -125,6 +127,7 @@ class Product {
       lowStockRemaining: lowStock == null ? null : asInt(lowStock),
       soldIndividually: asBool(json['sold_individually']),
       addToCart: AddToCartRules.fromJson(asMap(json['add_to_cart'])),
+      raw: json,
     );
   }
 
@@ -152,4 +155,25 @@ class Product {
 
   ProductCategory? get primaryCategory =>
       categories.isEmpty ? null : categories.first;
+
+  Map<String, dynamic> toJson() {
+    final data = Map<String, dynamic>.from(raw);
+    final images = data['images'];
+    if (images is List) {
+      data['images'] = images
+          .whereType<Map>()
+          .map(
+            (e) => {
+              'id': e['id'],
+              'src': e['src'],
+              'thumbnail': e['thumbnail'],
+              'name': e['name'],
+              'alt': e['alt'],
+            },
+          )
+          .toList();
+    }
+    data.remove('extensions');
+    return data;
+  }
 }

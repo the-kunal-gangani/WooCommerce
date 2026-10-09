@@ -242,7 +242,7 @@ class _ProductTile extends StatelessWidget {
                         imageUrl,
                         width: double.infinity,
                         fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const Center(
+                        errorBuilder: (_, _, _) => const Center(
                           child: Icon(
                             Icons.broken_image_outlined,
                             size: 42,

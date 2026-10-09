@@ -12,44 +12,35 @@ class RecentlyViewedService {
 
   List<Product> getRecentlyViewed() {
     final stored = _storage.read<List<dynamic>>(_storageKey);
-    if (stored == null) return [];
-    final products = <Product>[];
-    for (final item in stored) {
-      try {
-        if (item is Map) {
-          products.add(Product.fromJson(Map<String, dynamic>.from(item)));
-        } else if (item is String) {
-          final decoded = jsonDecode(item);
-          if (decoded is Map<String, dynamic>) {
-            products.add(Product.fromJson(decoded));
-          }
-        }
-      } catch (_) {
-        // Ignore malformed entries instead of breaking the Home screen.
-      }
+    if (stored == null) {
+      return [];
     }
-
-    return products;
-  }
-
-  Future<void> clearRecentlyViewed() async {
-    await _storage.remove(_storageKey);
+    return stored.map(_fromStorageJson).whereType<Product>().toList();
   }
 
   Future<void> addProduct(Product product) async {
     final products = getRecentlyViewed();
     products.removeWhere((item) => item.id == product.id);
     products.insert(0, product);
-    final limitedProducts = products.take(_maxProducts).toList();
     await _storage.write(
       _storageKey,
-      limitedProducts.map(_toStorageJson).toList(),
+      products.take(_maxProducts).map((item) => item.toJson()).toList(),
     );
   }
 
-  Map<String, dynamic> _toStorageJson(Product product) {
-    throw UnimplementedError(
-      'Add a matching Product JSON serializer before saving products.',
-    );
+  Future<void> clearRecentlyViewed() async {
+    await _storage.remove(_storageKey);
+  }
+
+  Product? _fromStorageJson(dynamic item) {
+    try {
+      if (item is String) {
+        final decoded = jsonDecode(item);
+        return Product.fromJson(Map<String, dynamic>.from(decoded as Map));
+      }
+      return Product.fromJson(Map<String, dynamic>.from(item as Map));
+    } catch (_) {
+      return null;
+    }
   }
 }

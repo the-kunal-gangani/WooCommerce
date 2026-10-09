@@ -164,11 +164,9 @@ class HomeController extends GetxController {
     isProductsLoading.value = false;
   }
 
-  Future<void> openProduct(Product product) async {
-    await _recentlyViewedService.addProduct(product);
-    recentlyViewed.assignAll(_recentlyViewedService.getRecentlyViewed());
-
+  void openProduct(Product product) {
     Get.toNamed(AppRoutes.productDetails, arguments: product);
+    _recordView(product);
   }
 
   void openCart() {
@@ -222,6 +220,19 @@ class HomeController extends GetxController {
     } on ApiException catch (e) {
       errorMessage.value ??= e.message;
       return null;
+    }
+  }
+
+  Future<void> _recordView(Product product) async {
+    final updated = [
+      product,
+      ...recentlyViewed.where((p) => p.id != product.id),
+    ].take(10).toList();
+    recentlyViewed.assignAll(updated);
+    try {
+      await _recentlyViewedService.addProduct(product);
+    } catch (e) {
+      debugPrint('recently viewed save failed: $e');
     }
   }
 }
