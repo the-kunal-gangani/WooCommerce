@@ -75,10 +75,9 @@ class HomeController extends GetxController {
 
   int _popularRequest = 0;
   void openFilters() {
-    Get.bottomSheet(
-      HomeFilterSheet(controller: this),
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+    Get.toNamed(
+      AppRoutes.productList,
+      arguments: const ProductListArgs(title: 'All Products'),
     );
   }
 
