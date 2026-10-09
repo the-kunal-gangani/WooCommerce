@@ -96,7 +96,7 @@ class ProductService {
     CancelToken? cancelToken,
   }) async {
     final response = await _client.get<dynamic>(
-      '/products',
+      '${AppConfig.storeApiPath}/products',
       query: {
         'page': page,
         'per_page': perPage,
@@ -105,6 +105,7 @@ class ProductService {
       },
       cancelToken: cancelToken,
     );
+
     return PagedResult.fromResponse(
       response,
       page: page,

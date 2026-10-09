@@ -198,7 +198,7 @@ class ProductListController extends GetxController {
 
     final (attributeResult, categoryResult, boundsResult) = await (
       _guard(_service.fetchFilterAttributes()),
-      _guard(_categoryService.fetchAllCategories()),
+      _guard(_categoryService.fetchCategories()),
       _guard(_service.fetchPriceBounds(categoryIds: baseFilter.categoryIds)),
     ).wait;
 

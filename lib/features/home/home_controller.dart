@@ -7,7 +7,6 @@ import 'package:magna_data_ai_ecommerce/core/services/category_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product_category.dart';
-import 'package:magna_data_ai_ecommerce/features/home/widgets/home_filter_sheet.dart';
 import 'package:magna_data_ai_ecommerce/features/product-list/product_list_controller.dart';
 import 'package:magna_data_ai_ecommerce/core/services/location_service.dart';
 
