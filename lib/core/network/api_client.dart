@@ -6,7 +6,7 @@ import 'interceptors/error_interceptors.dart';
 import 'interceptors/logging_interceptors.dart';
 
 class ApiClient {
-  ApiClient({String? baseUrl})
+  ApiClient({String? baseUrl, this._cookieProvider})
     : dio = Dio(
         BaseOptions(
           baseUrl: baseUrl ?? AppConfig.baseUrl,
@@ -23,9 +23,26 @@ class ApiClient {
     if (kDebugMode) {
       dio.interceptors.add(LoggingInterceptor());
     }
+
+    if (_cookieProvider != null) {
+      dio.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) {
+            final cookie = _cookieProvider();
+
+            if (cookie != null && cookie.isNotEmpty) {
+              options.headers['User-Cookie'] = cookie;
+            }
+
+            handler.next(options);
+          },
+        ),
+      );
+    }
   }
 
   final Dio dio;
+  final String? Function()? _cookieProvider;
 
   Future<Response<T>> get<T>(
     String path, {

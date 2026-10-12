@@ -32,12 +32,18 @@ class InitialBinding extends Bindings {
     final favouriteService = FavouriteService(storage);
     final recentlyViewedService = RecentlyViewedService(getStorage);
     final favouriteController = FavouriteController(favouriteService);
-    String? token() =>
-        Get.isRegistered<AuthService>() ? Get.find<AuthService>().token : null;
+
     final wpClient = ApiClient(
       baseUrl: '${AppConfig.baseUrl}/wp-json',
-      tokenProvider: token,
+      cookieProvider: () {
+        if (!Get.isRegistered<AuthService>()) {
+          return null;
+        }
+
+        return Get.find<AuthService>().cookie;
+      },
     );
+
     final orderService = OrderService(wpClient);
     final homeController = HomeController(
       productService,

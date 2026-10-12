@@ -1,5 +1,4 @@
 import 'package:get/get.dart';
-import 'package:magna_data_ai_ecommerce/core/configs/app_config.dart';
 import 'package:magna_data_ai_ecommerce/core/services/auth_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/cart_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/category_service.dart';
@@ -12,7 +11,6 @@ import 'package:magna_data_ai_ecommerce/core/services/recently_viewed_service.da
 import 'package:magna_data_ai_ecommerce/data/models/product.dart';
 import 'package:magna_data_ai_ecommerce/features/add-to-cart/add_to_cart_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/add-to-cart/cart_controller.dart';
-import 'package:magna_data_ai_ecommerce/features/auth/auth_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/forget-password/forget_password_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/forget-password/forget_password_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/login/login_controller.dart';
