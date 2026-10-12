@@ -291,13 +291,7 @@ class ProfileScreen extends StatelessWidget {
             icon: Icons.shopping_bag_outlined,
             title: 'Orders',
             subtitle: 'Track orders',
-            onTap: () {
-              Get.snackbar(
-                'Orders',
-                'Orders screen coming soon',
-                snackPosition: SnackPosition.BOTTOM,
-              );
-            },
+            onTap: () => Get.toNamed(AppRoutes.orders),
           ),
         ),
         const SizedBox(width: 12),

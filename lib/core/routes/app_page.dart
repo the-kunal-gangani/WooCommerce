@@ -1,14 +1,18 @@
 import 'package:get/get.dart';
+import 'package:magna_data_ai_ecommerce/core/configs/app_config.dart';
+import 'package:magna_data_ai_ecommerce/core/services/auth_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/cart_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/category_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/checkout_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/favourites_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/location_service.dart';
+import 'package:magna_data_ai_ecommerce/core/services/order_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/recently_viewed_service.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product.dart';
 import 'package:magna_data_ai_ecommerce/features/add-to-cart/add_to_cart_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/add-to-cart/cart_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/auth/auth_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/forget-password/forget_password_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/forget-password/forget_password_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/login/login_controller.dart';
@@ -22,6 +26,10 @@ import 'package:magna_data_ai_ecommerce/features/checkout/checkout_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/favourites/favourites_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/favourites/favourites_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/my-orders/order_details_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/my-orders/order_details_screen.dart';
+import 'package:magna_data_ai_ecommerce/features/my-orders/orders_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/my-orders/my_orders_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/onboarding/onboarding_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/onboarding/onboarding_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/order-confirmation/order_confirmation_screen.dart';
@@ -201,6 +209,29 @@ class AppPages {
       binding: BindingsBuilder(() {
         Get.lazyPut<RecentlyViewedController>(
           () => RecentlyViewedController(Get.find<RecentlyViewedService>()),
+        );
+      }),
+    ),
+
+    GetPage(
+      name: AppRoutes.orders,
+      page: () => const MyOrdersScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<OrdersController>(
+          () => OrdersController(
+            Get.find<OrderService>(),
+            Get.find<AuthService>(),
+          ),
+        );
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.orderDetails,
+      page: () => const OrderDetailsScreen(),
+      binding: BindingsBuilder(() {
+        final args = Get.arguments;
+        Get.lazyPut<OrderDetailsController>(
+          () => OrderDetailsController(Get.find<OrderService>(), args),
         );
       }),
     ),

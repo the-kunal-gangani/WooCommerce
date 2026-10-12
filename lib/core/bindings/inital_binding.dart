@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:magna_data_ai_ecommerce/core/configs/app_config.dart';
 import 'package:magna_data_ai_ecommerce/core/network/api_client.dart';
 import 'package:magna_data_ai_ecommerce/core/services/auth_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/cart_service.dart';
@@ -7,6 +8,7 @@ import 'package:magna_data_ai_ecommerce/core/services/category_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/checkout_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/favourites_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/location_service.dart';
+import 'package:magna_data_ai_ecommerce/core/services/order_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/recently_viewed_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/secure_storage_service.dart';
@@ -30,6 +32,13 @@ class InitialBinding extends Bindings {
     final favouriteService = FavouriteService(storage);
     final recentlyViewedService = RecentlyViewedService(getStorage);
     final favouriteController = FavouriteController(favouriteService);
+    String? token() =>
+        Get.isRegistered<AuthService>() ? Get.find<AuthService>().token : null;
+    final wpClient = ApiClient(
+      baseUrl: '${AppConfig.baseUrl}/wp-json',
+      tokenProvider: token,
+    );
+    final orderService = OrderService(wpClient);
     final homeController = HomeController(
       productService,
       categoryService,
@@ -50,5 +59,7 @@ class InitialBinding extends Bindings {
     Get.put<FavouriteController>(favouriteController, permanent: true);
     Get.put<HomeController>(homeController, permanent: true);
     Get.put<RecentlyViewedService>(recentlyViewedService, permanent: true);
+    Get.put<AuthService>(authService, permanent: true);
+    Get.put<OrderService>(orderService, permanent: true);
   }
 }
