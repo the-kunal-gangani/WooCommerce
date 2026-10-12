@@ -27,6 +27,11 @@ class Settings(BaseSettings):
         case_sensitive=False,
         extra="ignore",
     )
+    access_token_expire_minutes: int = Field(
+        default=15,
+        gt=0,
+        le=1440,
+    )
 
 
 @lru_cache

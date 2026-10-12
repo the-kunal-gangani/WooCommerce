@@ -2,6 +2,7 @@
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 from app.api.v1.endpoints.categories import router as categories_router
+from app.api.v1.endpoints.auth import router as auth_router
 
 from fastapi import FastAPI
 
@@ -52,5 +53,10 @@ app.include_router(
 
 app.include_router(
     categories_router,
+    prefix=settings.api_v1_prefix,
+)
+
+app.include_router(
+    auth_router,
     prefix=settings.api_v1_prefix,
 )
