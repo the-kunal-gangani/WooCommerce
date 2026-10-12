@@ -9,24 +9,23 @@ import 'package:magna_data_ai_ecommerce/core/utils/logger.dart';
 import 'package:magna_data_ai_ecommerce/data/models/auth_user.dart';
 
 class AuthService extends GetxService {
-  AuthService(this._wp, this._secure, this._storage);
+  AuthService(this._api, this._secure, this._storage);
 
-  final ApiClient _wp;
+  final ApiClient _api;
   final SecureStorageService _secure;
   final StorageService _storage;
 
-  static const String _cookieKey = 'woo_auth_cookie';
+  static const String _tokenKey = 'fastapi_access_token';
   static const String _userKey = 'auth_user';
 
   final user = Rxn<AuthUser>();
 
-  String? _cookie;
-
+  String? _accessToken;
   Future<void>? _restoring;
 
-  String? get cookie => _cookie;
+  String? get accessToken => _accessToken;
 
-  bool get isLoggedIn => _cookie != null && user.value != null;
+  bool get isLoggedIn => _accessToken != null && user.value != null;
 
   Future<void> restore() {
     return _restoring ??= _restore();
@@ -34,20 +33,24 @@ class AuthService extends GetxService {
 
   Future<void> _restore() async {
     try {
-      _cookie = await _secure.read(_cookieKey);
-      if (_cookie == null || _cookie!.isEmpty) {
+      _accessToken = await _secure.read(_tokenKey);
+
+      if (_accessToken == null || _accessToken!.isEmpty) {
         return;
       }
+
       final stored = _storage.read<Map>(_userKey);
       if (stored != null) {
         user.value = AuthUser.fromJson(Map<String, dynamic>.from(stored));
       }
+
       try {
         final currentUser = await _fetchCurrentUser();
         user.value = currentUser;
         await _storage.write(_userKey, currentUser.toJson());
       } on ApiException catch (e) {
         printLog('Session validation failed: $e');
+
         if (_isUnauthorized(e)) {
           await logout();
         }
@@ -62,83 +65,48 @@ class AuthService extends GetxService {
     required String password,
   }) async {
     try {
-      final response = await _wp.post<dynamic>(
-        '/wp-json/api/flutter_user/generate_auth_cookie/',
-        query: {'insecure': 'cool'},
-        data: {
-          'seconds': '120960000000',
-          'username': username,
-          'password': password,
-        },
-        options: Options(contentType: Headers.formUrlEncodedContentType),
+      final response = await _api.post<dynamic>(
+        '/auth/login',
+        data: {'email': username.trim(), 'password': password},
       );
-      final cookie = _extractCookie(response.data);
-      if (cookie == null || cookie.isEmpty) {
+
+      final body = _asMap(response.data);
+      final token = _extractToken(body);
+
+      if (token == null || token.isEmpty) {
         throw const ApiException(
-          type: ApiErrorType.unauthorized,
-          message: 'Login failed. Please check your details.',
+          type: ApiErrorType.unknown,
+          message: 'Login response did not contain an access token.',
         );
       }
-      _cookie = cookie;
+
+      _accessToken = token;
+      await _secure.write(_tokenKey, token);
+
       try {
         final currentUser = await _fetchCurrentUser();
-        await _secure.write(_cookieKey, cookie);
-        await _storage.write(_userKey, currentUser.toJson());
+
         user.value = currentUser;
+        await _storage.write(_userKey, currentUser.toJson());
+
         return currentUser;
       } catch (_) {
-        _cookie = null;
+        await _secure.delete(_tokenKey);
+        _accessToken = null;
+        user.value = null;
         rethrow;
       }
     } on ApiException {
       rethrow;
+    } on DioException catch (e) {
+      throw _toApiException(e);
     } catch (e) {
       printLog('Login failed: $e');
-
-      throw ApiException(
+      throw const ApiException(
         type: ApiErrorType.unknown,
         message: 'Unable to sign in. Please try again.',
       );
     }
-  }
-
-  Future<AuthUser> _fetchCurrentUser() async {
-    if (_cookie == null || _cookie!.isEmpty) {
-      throw const ApiException(
-        type: ApiErrorType.unauthorized,
-        message: 'Authentication session not found.',
-      );
-    }
-
-    final response = await _wp.get<dynamic>(
-      '/wp-json/api/flutter_user/get_currentuserinfo',
-      query: {'token': _encodeCookie(_cookie!)},
-      options: Options(headers: {'User-Cookie': _cookie}),
-    );
-    
-    final body = response.data;
-    if (body is! Map) {
-      throw const ApiException(
-        type: ApiErrorType.unknown,
-        message: 'Could not load your profile.',
-      );
-    }
-    final rawUser = body['user'];
-    if (rawUser is Map) {
-      return AuthUser.fromWooJson(Map<String, dynamic>.from(rawUser));
-    }
-    final message = body['message'];
-    if (message != null) {
-      throw ApiException(
-        type: ApiErrorType.unauthorized,
-        message: message.toString(),
-      );
-    }
-
-    throw const ApiException(
-      type: ApiErrorType.unknown,
-      message: 'Could not load your profile.',
-    );
   }
 
   Future<AuthUser> register({
@@ -149,73 +117,122 @@ class AuthService extends GetxService {
     String username = '',
     String phone = '',
   }) async {
-    final displayName = '$firstName $lastName'.trim();
-    final response = await _wp.post<dynamic>(
-      '/wp-json/api/flutter_user/sign_up/',
-      data: {
-        'user_email': email,
-        'user_login': username.isNotEmpty ? username : email,
-        'username': username.isNotEmpty ? username : email,
-        'user_pass': password,
-        'email': email,
-        if (displayName.isNotEmpty) 'display_name': displayName,
-        if (phone.isNotEmpty) 'phone': phone,
-        if (firstName.isNotEmpty) 'first_name': firstName,
-        if (lastName.isNotEmpty) 'last_name': lastName,
-      },
-      options: Options(contentType: Headers.jsonContentType),
-    );
-    final cookie = _extractCookie(response.data);
-    if (cookie == null || cookie.isEmpty) {
+    try {
+      final fullName = '$firstName $lastName'.trim();
+
+      await _api.post<dynamic>(
+        '/auth/register',
+        data: {
+          'email': email.trim(),
+          'password': password,
+          if (fullName.isNotEmpty) 'full_name': fullName,
+        },
+      );
+
+      // Registration and login are separate operations.
+      // Authenticate the new account to obtain an access token.
+      return await login(username: email, password: password);
+    } on ApiException {
+      rethrow;
+    } on DioException catch (e) {
+      throw _toApiException(e);
+    } catch (e) {
+      printLog('Registration failed: $e');
       throw const ApiException(
         type: ApiErrorType.unknown,
-        message: 'Account created, but we could not sign you in.',
+        message: 'Unable to create your account. Please try again.',
+      );
+    }
+  }
+
+  Future<AuthUser> _fetchCurrentUser() async {
+    final token = _accessToken;
+
+    if (token == null || token.isEmpty) {
+      throw const ApiException(
+        type: ApiErrorType.unauthorized,
+        message: 'Authentication session not found.',
       );
     }
 
-    _cookie = cookie;
-    final currentUser = await _fetchCurrentUser();
-    await _secure.write(_cookieKey, cookie);
-    await _storage.write(_userKey, currentUser.toJson());
-    user.value = currentUser;
-    return currentUser;
-  }
+    try {
+      final response = await _api.get<dynamic>(
+        '/auth/me',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
 
-  Future<void> requestPasswordReset(String email) async {
-    await _wp.post<dynamic>(
-      '/wp-json/api/flutter_user/reset-password',
-      data: {'user_login': email},
-      options: Options(contentType: Headers.jsonContentType),
-    );
+      final body = _asMap(response.data);
+      final rawUser = body['user'] ?? body['data'] ?? body;
+
+      if (rawUser is Map) {
+        return AuthUser.fromApiJson(Map<String, dynamic>.from(rawUser));
+      }
+
+      throw const ApiException(
+        type: ApiErrorType.unknown,
+        message: 'Could not load your profile.',
+      );
+    } on ApiException {
+      rethrow;
+    } on DioException catch (e) {
+      throw _toApiException(e);
+    }
   }
 
   Future<void> logout() async {
-    _cookie = null;
+    _accessToken = null;
     user.value = null;
-    await _secure.delete(_cookieKey);
+
+    await _secure.delete(_tokenKey);
     await _storage.remove(_userKey);
   }
 
-  String? _extractCookie(dynamic body) {
-    if (body is! Map) {
-      return null;
-    }
-    if (body['cookie'] != null) {
-      return body['cookie'].toString();
-    }
-    final data = body['data'];
-    if (data is Map && data['cookie'] != null) {
-      return data['cookie'].toString();
-    }
-    return null;
+  Map<String, dynamic> _asMap(dynamic value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return <String, dynamic>{};
   }
 
-  String _encodeCookie(String cookie) {
-    // FluxStore uses EncodeUtils.encodeCookie().
-    //
-    // The exact EncodeUtils implementation was not available
-    // in the extracted source, so do not invent an algorithm here.
-    return cookie;
+  String? _extractToken(Map<String, dynamic> body) {
+    final data = body['data'];
+    final nested = data is Map ? Map<String, dynamic>.from(data) : null;
+
+    final value = body['access_token'] ?? nested?['access_token'];
+
+    return value?.toString();
+  }
+
+  ApiException _toApiException(DioException error) {
+    final statusCode = error.response?.statusCode;
+    final body = error.response?.data;
+
+    String message = 'Unable to connect to the server. Please try again.';
+
+    if (body is Map) {
+      final detail = body['detail'] ?? body['message'];
+
+      if (detail is String && detail.isNotEmpty) {
+        message = detail;
+      } else if (detail is List && detail.isNotEmpty) {
+        message = detail
+            .map(
+              (item) => item is Map
+                  ? (item['msg'] ?? item.toString()).toString()
+                  : item.toString(),
+            )
+            .join('\n');
+      }
+    }
+
+    if (statusCode == 401) {
+      return ApiException(type: ApiErrorType.unauthorized, message: message);
+    }
+
+    if (statusCode == 403) {
+      return ApiException(type: ApiErrorType.forbidden, message: message);
+    }
+
+    return ApiException(type: ApiErrorType.unknown, message: message);
   }
 
   bool _isUnauthorized(ApiException e) {

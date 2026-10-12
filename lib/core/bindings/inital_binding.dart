@@ -20,6 +20,7 @@ class InitialBinding extends Bindings {
   @override
   void dependencies() {
     final apiClient = ApiClient();
+    final fastApiClient = ApiClient(baseUrl: AppConfig.backendBaseUrl);
     final secureStorage = SecureStorageService();
     final storage = StorageService();
     final getStorage = GetStorage();
@@ -43,6 +44,10 @@ class InitialBinding extends Bindings {
         return Get.find<AuthService>().cookie;
       },
     );
+
+    Get.put<ApiClient>(fastApiClient, tag: 'fastApi', permanent: true);
+
+    Get.put<AuthService>(authService, permanent: true);
 
     final orderService = OrderService(wpClient);
     final homeController = HomeController(

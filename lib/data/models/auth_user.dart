@@ -99,6 +99,63 @@ class AuthUser {
     );
   }
 
+  factory AuthUser.fromApiJson(Map<String, dynamic> json) {
+    final rawRoles = json['roles'] ?? json['role'];
+    final List<String> roles;
+
+    if (rawRoles is List) {
+      roles = rawRoles
+          .map((value) => value.toString())
+          .where((value) => value.isNotEmpty)
+          .toList();
+    } else if (rawRoles is String && rawRoles.isNotEmpty) {
+      roles = [rawRoles];
+    } else {
+      roles = [];
+    }
+
+    final firstName = asString(json['first_name'] ?? json['firstName']);
+    final lastName = asString(json['last_name'] ?? json['lastName']);
+
+    return AuthUser(
+      id: asInt(json['id']),
+      email: asString(json['email']),
+      displayName: asString(
+        json['display_name'] ??
+            json['displayName'] ??
+            json['full_name'] ??
+            json['name'] ??
+            json['username'],
+      ),
+      firstName: firstName,
+      lastName: lastName,
+      username: asString(json['username']),
+      nicename: asString(json['nicename']),
+      avatar: asString(json['avatar'] ?? json['picture']),
+      url: asString(json['url']),
+      phone: asString(json['phone']),
+      role: roles.isNotEmpty ? roles.first : '',
+      isAdmin: roles.contains('administrator'),
+      isVendor: roles.any(
+        (role) => [
+          'seller',
+          'wcfm_vendor',
+          'administrator',
+          'shop_manager',
+        ].contains(role),
+      ),
+      isDeliveryBoy: roles.any(
+        (role) => ['wcfm_delivery_boy', 'driver'].contains(role),
+      ),
+      shipping: json['shipping'] is Map
+          ? Map<String, dynamic>.from(json['shipping'])
+          : null,
+      billing: json['billing'] is Map
+          ? Map<String, dynamic>.from(json['billing'])
+          : null,
+    );
+  }
+
   /// Used when restoring the locally stored user.
   factory AuthUser.fromJson(Map<String, dynamic> json) {
     return AuthUser(
