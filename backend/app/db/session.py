@@ -6,7 +6,6 @@ from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from app.core.config import get_settings
 
-
 settings = get_settings()
 database_url = settings.database_url.get_secret_value()
 
