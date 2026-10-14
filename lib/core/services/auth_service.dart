@@ -179,6 +179,13 @@ class AuthService extends GetxService {
     }
   }
 
+  Future<void> requestPasswordReset(String email) async {
+    throw const ApiException(
+      type: ApiErrorType.unknown,
+      message: 'Password reset is not yet available through the new backend.',
+    );
+  }
+
   Future<void> logout() async {
     _accessToken = null;
     user.value = null;

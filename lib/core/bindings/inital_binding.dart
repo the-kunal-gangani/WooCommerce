@@ -20,12 +20,20 @@ class InitialBinding extends Bindings {
   @override
   void dependencies() {
     final apiClient = ApiClient();
+
+    // Separate FastAPI client for authentication.
     final fastApiClient = ApiClient(baseUrl: AppConfig.backendBaseUrl);
+
     final secureStorage = SecureStorageService();
     final storage = StorageService();
     final getStorage = GetStorage();
+
     final locationService = LocationService(storage);
-    final authService = AuthService(apiClient, secureStorage, storage);
+
+    // IMPORTANT: AuthService must use fastApiClient.
+    final authService = AuthService(fastApiClient, secureStorage, storage);
+
+    // Existing WooCommerce services remain unchanged.
     final productService = ProductService(apiClient);
     final categoryService = CategoryService(apiClient);
     final cartService = CartService(storage, productService);
@@ -34,22 +42,14 @@ class InitialBinding extends Bindings {
     final recentlyViewedService = RecentlyViewedService(getStorage);
     final favouriteController = FavouriteController(favouriteService);
 
+    // Existing WordPress order client.
     final wpClient = ApiClient(
       baseUrl: '${AppConfig.baseUrl}/wp-json',
-      cookieProvider: () {
-        if (!Get.isRegistered<AuthService>()) {
-          return null;
-        }
-
-        return Get.find<AuthService>().cookie;
-      },
+      cookieProvider: () => null,
     );
 
-    Get.put<ApiClient>(fastApiClient, tag: 'fastApi', permanent: true);
-
-    Get.put<AuthService>(authService, permanent: true);
-
     final orderService = OrderService(wpClient);
+
     final homeController = HomeController(
       productService,
       categoryService,
@@ -57,11 +57,16 @@ class InitialBinding extends Bindings {
       recentlyViewedService,
     );
 
+    // Register dependencies once.
+    Get.put<ApiClient>(apiClient, permanent: true);
+    Get.put<ApiClient>(fastApiClient, tag: 'fastApi', permanent: true);
+
     Get.put<SecureStorageService>(secureStorage, permanent: true);
     Get.put<StorageService>(storage, permanent: true);
     Get.put<LocationService>(locationService, permanent: true);
-    Get.put<ApiClient>(apiClient, permanent: true);
+
     Get.put<AuthService>(authService, permanent: true);
+
     Get.put<ProductService>(productService, permanent: true);
     Get.put<CategoryService>(categoryService, permanent: true);
     Get.put<CartService>(cartService, permanent: true);
@@ -70,7 +75,6 @@ class InitialBinding extends Bindings {
     Get.put<FavouriteController>(favouriteController, permanent: true);
     Get.put<HomeController>(homeController, permanent: true);
     Get.put<RecentlyViewedService>(recentlyViewedService, permanent: true);
-    Get.put<AuthService>(authService, permanent: true);
     Get.put<OrderService>(orderService, permanent: true);
   }
 }
