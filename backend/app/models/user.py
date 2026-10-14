@@ -58,3 +58,9 @@ class User(Base):
         onupdate=func.now(),
         nullable=False,
     )
+    
+    woocommerce_customer_id: Mapped[int | None] = mapped_column(
+        nullable=True,
+        unique=True,
+        index=True,
+    )

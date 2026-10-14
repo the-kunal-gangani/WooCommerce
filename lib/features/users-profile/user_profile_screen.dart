@@ -409,13 +409,7 @@ class ProfileScreen extends StatelessWidget {
           icon: Icons.location_on_outlined,
           title: 'My addresses',
           subtitle: 'Manage delivery addresses',
-          onTap: () {
-            Get.snackbar(
-              'Addresses',
-              'Address management coming soon',
-              snackPosition: SnackPosition.BOTTOM,
-            );
-          },
+          onTap: () => Get.toNamed(AppRoutes.myAddresses),
         ),
         _buildDivider(),
         _buildMenuItem(

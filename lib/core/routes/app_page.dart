@@ -46,6 +46,9 @@ import '../../features/splash/splash_screen.dart';
 
 import 'package:magna_data_ai_ecommerce/features/edit-profiles/edit_profile_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/edit-profiles/edit_profile_page.dart';
+import 'package:magna_data_ai_ecommerce/core/services/address_service.dart';
+import 'package:magna_data_ai_ecommerce/features/my-addresses/address_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/my-addresses/my_addresses_screen.dart';
 
 import 'app_routes.dart';
 
@@ -244,6 +247,16 @@ class AppPages {
       binding: BindingsBuilder(() {
         Get.lazyPut<EditProfileController>(
           () => EditProfileController(Get.find<AuthService>()),
+        );
+      }),
+    ),
+
+    GetPage(
+      name: AppRoutes.myAddresses,
+      page: () => const MyAddressesScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<AddressController>(
+          () => AddressController(Get.find<AddressService>()),
         );
       }),
     ),

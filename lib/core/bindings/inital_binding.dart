@@ -15,13 +15,12 @@ import 'package:magna_data_ai_ecommerce/core/services/secure_storage_service.dar
 import 'package:magna_data_ai_ecommerce/core/services/storage_services.dart';
 import 'package:magna_data_ai_ecommerce/features/favourites/favourites_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
+import 'package:magna_data_ai_ecommerce/core/services/address_service.dart';
 
 class InitialBinding extends Bindings {
   @override
   void dependencies() {
     final apiClient = ApiClient();
-
-    // Separate FastAPI client for authentication.
     final fastApiClient = ApiClient(baseUrl: AppConfig.backendBaseUrl);
 
     final secureStorage = SecureStorageService();
@@ -32,6 +31,7 @@ class InitialBinding extends Bindings {
 
     // IMPORTANT: AuthService must use fastApiClient.
     final authService = AuthService(fastApiClient, secureStorage, storage);
+    final addressService = AddressService(fastApiClient, authService);
 
     // Existing WooCommerce services remain unchanged.
     final productService = ProductService(apiClient);
@@ -41,6 +41,7 @@ class InitialBinding extends Bindings {
     final favouriteService = FavouriteService(storage);
     final recentlyViewedService = RecentlyViewedService(getStorage);
     final favouriteController = FavouriteController(favouriteService);
+    Get.put<AddressService>(addressService, permanent: true);
 
     // Existing WordPress order client.
     final wpClient = ApiClient(
