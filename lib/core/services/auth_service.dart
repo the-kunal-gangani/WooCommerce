@@ -179,6 +179,58 @@ class AuthService extends GetxService {
     }
   }
 
+  Future<AuthUser> updateProfile({
+    required String fullName,
+    required String phone,
+  }) async {
+    final token = _accessToken;
+
+    if (token == null || token.isEmpty) {
+      throw const ApiException(
+        type: ApiErrorType.unauthorized,
+        message: 'Please sign in again to update your profile.',
+      );
+    }
+
+    try {
+      final response = await _api.patch<dynamic>(
+        '/auth/me',
+        data: {'full_name': fullName.trim(), 'phone': phone.trim()},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      final body = _asMap(response.data);
+      final rawUser = body['user'] ?? body['data'] ?? body;
+
+      if (rawUser is! Map) {
+        throw const ApiException(
+          type: ApiErrorType.unknown,
+          message: 'Could not read the updated profile.',
+        );
+      }
+
+      final updatedUser = AuthUser.fromApiJson(
+        Map<String, dynamic>.from(rawUser),
+      );
+
+      user.value = updatedUser;
+      await _storage.write(_userKey, updatedUser.toJson());
+
+      return updatedUser;
+    } on ApiException {
+      rethrow;
+    } on DioException catch (e) {
+      throw _toApiException(e);
+    } catch (e) {
+      printLog('Profile update failed: $e');
+
+      throw const ApiException(
+        type: ApiErrorType.unknown,
+        message: 'Unable to update your profile. Please try again.',
+      );
+    }
+  }
+
   Future<void> requestPasswordReset(String email) async {
     throw const ApiException(
       type: ApiErrorType.unknown,

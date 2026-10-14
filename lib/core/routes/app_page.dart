@@ -43,6 +43,10 @@ import 'package:magna_data_ai_ecommerce/features/main/main_shell_controller.dart
 
 import '../../features/splash/splash_controller.dart';
 import '../../features/splash/splash_screen.dart';
+
+import 'package:magna_data_ai_ecommerce/features/edit-profiles/edit_profile_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/edit-profiles/edit_profile_page.dart';
+
 import 'app_routes.dart';
 
 class AppPages {
@@ -230,6 +234,16 @@ class AppPages {
         final args = Get.arguments;
         Get.lazyPut<OrderDetailsController>(
           () => OrderDetailsController(Get.find<OrderService>(), args),
+        );
+      }),
+    ),
+
+    GetPage(
+      name: AppRoutes.editProfile,
+      page: () => const EditProfilePage(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<EditProfileController>(
+          () => EditProfileController(Get.find<AuthService>()),
         );
       }),
     ),

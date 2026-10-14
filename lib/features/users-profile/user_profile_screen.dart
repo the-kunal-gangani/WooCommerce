@@ -178,109 +178,127 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildProfileCard() {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: border),
-        boxShadow: [
-          BoxShadow(
-            color: navy.withValues(alpha: 0.055),
-            blurRadius: 24,
-            offset: const Offset(0, 9),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 68,
-            height: 68,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [primary, violet],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: primary.withValues(alpha: 0.20),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
-                ),
-              ],
+    return Obx(() {
+      final user = Get.find<AuthService>().user.value;
+
+      final name = (user?.fullName ?? '').trim();
+      final email = (user?.email ?? '').trim();
+      final phone = (user?.phone ?? '').trim();
+
+      final displayName = name.isNotEmpty
+          ? name
+          : email.isNotEmpty
+          ? email.split('@').first
+          : 'Your Account';
+
+      final initial = displayName.isNotEmpty
+          ? displayName[0].toUpperCase()
+          : 'U';
+
+      return Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: border),
+          boxShadow: [
+            BoxShadow(
+              color: navy.withValues(alpha: 0.055),
+              blurRadius: 24,
+              offset: const Offset(0, 9),
             ),
-            child: const Center(
-              child: Text(
-                'U',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 25,
-                  fontWeight: FontWeight.w800,
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 68,
+              height: 68,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [primary, violet],
                 ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 15),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Welcome back!',
-                  style: TextStyle(
-                    color: muted,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
+                boxShadow: [
+                  BoxShadow(
+                    color: primary.withValues(alpha: 0.20),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
                   ),
-                ),
-                SizedBox(height: 3),
-                Text(
-                  'Your Account',
-                  style: TextStyle(
-                    color: navy,
-                    fontSize: 18,
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  initial,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 25,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                SizedBox(height: 3),
-                Text(
-                  'Manage your shopping experience',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: muted,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Material(
-            color: const Color(0xFFF1F5FF),
-            borderRadius: BorderRadius.circular(12),
-            child: InkWell(
-              onTap: () {
-                Get.snackbar(
-                  'Edit Profile',
-                  'Profile editing coming soon',
-                  snackPosition: SnackPosition.BOTTOM,
-                );
-              },
-              borderRadius: BorderRadius.circular(12),
-              child: const SizedBox(
-                width: 38,
-                height: 38,
-                child: Icon(Icons.edit_outlined, color: primary, size: 18),
               ),
             ),
-          ),
-        ],
-      ),
-    );
+            const SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Welcome back!',
+                    style: TextStyle(
+                      color: muted,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    displayName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: navy,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    email.isNotEmpty
+                        ? email
+                        : phone.isNotEmpty
+                        ? phone
+                        : 'Manage your shopping experience',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: muted,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Material(
+              color: const Color(0xFFF1F5FF),
+              borderRadius: BorderRadius.circular(12),
+              child: InkWell(
+                onTap: () => Get.toNamed(AppRoutes.editProfile),
+                borderRadius: BorderRadius.circular(12),
+                child: const SizedBox(
+                  width: 38,
+                  height: 38,
+                  child: Icon(Icons.edit_outlined, color: primary, size: 18),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildQuickActions() {
@@ -384,13 +402,7 @@ class ProfileScreen extends StatelessWidget {
           icon: Icons.person_outline_rounded,
           title: 'Personal information',
           subtitle: 'Name, email and phone',
-          onTap: () {
-            Get.snackbar(
-              'Personal Information',
-              'Profile details screen coming soon',
-              snackPosition: SnackPosition.BOTTOM,
-            );
-          },
+          onTap: () => Get.toNamed(AppRoutes.editProfile),
         ),
         _buildDivider(),
         _buildMenuItem(

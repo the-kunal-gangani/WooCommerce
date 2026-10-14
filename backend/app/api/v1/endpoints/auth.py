@@ -14,6 +14,7 @@ from app.db.session import get_db
 from app.models.user import User
 from app.schemas.auth import (
     LoginRequest,
+    ProfileUpdateRequest,
     RegisterRequest,
     TokenResponse,
     UserResponse,
@@ -104,3 +105,27 @@ def get_me(
     current_user: User = Depends(get_current_user),
 ) -> User:
     return current_user
+
+@router.patch("/me", response_model=UserResponse)
+def update_me(
+    payload: ProfileUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> User:
+    updates = payload.model_dump(exclude_unset=True)
+
+    if not updates:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Provide at least one profile field to update.",
+        )
+
+    for field, value in updates.items():
+        setattr(current_user, field, value)
+
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
+
+    return current_user
+
