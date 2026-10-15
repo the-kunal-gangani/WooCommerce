@@ -153,10 +153,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               _buildHeaderButton(
                 icon: Icons.settings_outlined,
-                onTap: () => _showComingSoon(
-                  'Settings',
-                  'Settings screen coming soon',
-                ),
+                onTap: () =>
+                    _showComingSoon('Settings', 'Settings screen coming soon'),
               ),
             ],
           ),
@@ -207,8 +205,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final displayName = name.isNotEmpty
           ? name
           : email.isNotEmpty
-              ? email.split('@').first
-              : 'Your Account';
+          ? email.split('@').first
+          : 'Your Account';
 
       final initial = displayName.isNotEmpty
           ? displayName[0].toUpperCase()
@@ -238,10 +236,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    ProfileScreen.primary,
-                    ProfileScreen.violet,
-                  ],
+                  colors: [ProfileScreen.primary, ProfileScreen.violet],
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -291,8 +286,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     email.isNotEmpty
                         ? email
                         : phone.isNotEmpty
-                            ? phone
-                            : 'Manage your shopping experience',
+                        ? phone
+                        : 'Manage your shopping experience',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -421,11 +416,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   borderRadius: BorderRadius.circular(13),
                 ),
-                child: Icon(
-                  icon,
-                  color: ProfileScreen.primary,
-                  size: 21,
-                ),
+                child: Icon(icon, color: ProfileScreen.primary, size: 21),
               ),
               const SizedBox(height: 13),
               Text(
@@ -474,10 +465,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon: Icons.credit_card_outlined,
           title: 'Payment methods',
           subtitle: 'Manage your payment options',
-          onTap: () => _showComingSoon(
-            'Payment Methods',
-            'Payment management coming soon',
-          ),
+          onTap: () => Get.toNamed(AppRoutes.paymentMethods),
         ),
       ],
     );
@@ -511,20 +499,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon: Icons.language_rounded,
           title: 'Language',
           subtitle: 'English',
-          onTap: () => _showComingSoon(
-            'Language',
-            'Language selection coming soon',
-          ),
+          onTap: () =>
+              _showComingSoon('Language', 'Language selection coming soon'),
         ),
         _buildDivider(),
         _buildMenuItem(
           icon: Icons.dark_mode_outlined,
           title: 'Appearance',
           subtitle: 'Light mode',
-          onTap: () => _showComingSoon(
-            'Appearance',
-            'Theme settings coming soon',
-          ),
+          onTap: () =>
+              _showComingSoon('Appearance', 'Theme settings coming soon'),
         ),
       ],
     );
@@ -538,30 +522,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon: Icons.help_outline_rounded,
           title: 'Help center',
           subtitle: 'Answers to common questions',
-          onTap: () => _showComingSoon(
-            'Help Center',
-            'Help center coming soon',
-          ),
+          onTap: () =>
+              _showComingSoon('Help Center', 'Help center coming soon'),
         ),
         _buildDivider(),
         _buildMenuItem(
           icon: Icons.chat_bubble_outline_rounded,
           title: 'Contact support',
           subtitle: 'We are here to help',
-          onTap: () => _showComingSoon(
-            'Support',
-            'Support chat coming soon',
-          ),
+          onTap: () => _showComingSoon('Support', 'Support chat coming soon'),
         ),
         _buildDivider(),
         _buildMenuItem(
           icon: Icons.info_outline_rounded,
           title: 'About Magna Data Store',
           subtitle: 'Learn more about the app',
-          onTap: () => _showComingSoon(
-            'About',
-            'Magna Data Store',
-          ),
+          onTap: () => _showComingSoon('About', 'Magna Data Store'),
         ),
       ],
     );
@@ -602,11 +578,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     borderRadius: BorderRadius.circular(11),
                   ),
-                  child: Icon(
-                    icon,
-                    color: ProfileScreen.primary,
-                    size: 19,
-                  ),
+                  child: Icon(icon, color: ProfileScreen.primary, size: 19),
                 ),
                 const SizedBox(width: 10),
                 const Expanded(
@@ -640,10 +612,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 13,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
           child: Row(
             children: [
               Container(
@@ -653,11 +622,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   color: const Color(0xFFF7F9FC),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  icon,
-                  color: const Color(0xFF536176),
-                  size: 19,
-                ),
+                child: Icon(icon, color: const Color(0xFF536176), size: 19),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -704,11 +669,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildDivider() {
     return const Padding(
       padding: EdgeInsets.only(left: 67),
-      child: Divider(
-        height: 1,
-        thickness: 0.7,
-        color: ProfileScreen.border,
-      ),
+      child: Divider(height: 1, thickness: 0.7, color: ProfileScreen.border),
     );
   }
 
@@ -728,11 +689,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.logout_rounded,
-                color: Color(0xFFE11D48),
-                size: 19,
-              ),
+              Icon(Icons.logout_rounded, color: Color(0xFFE11D48), size: 19),
               SizedBox(width: 9),
               Text(
                 'Sign out',
@@ -754,9 +711,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       AlertDialog(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(21),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(21)),
         title: const Text(
           'Sign out?',
           style: TextStyle(
@@ -766,10 +721,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         content: const Text(
           'Are you sure you want to sign out of your account?',
-          style: TextStyle(
-            color: ProfileScreen.muted,
-            height: 1.5,
-          ),
+          style: TextStyle(color: ProfileScreen.muted, height: 1.5),
         ),
         actions: [
           TextButton(

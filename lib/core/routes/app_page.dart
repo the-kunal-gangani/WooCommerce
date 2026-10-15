@@ -49,6 +49,8 @@ import 'package:magna_data_ai_ecommerce/features/edit-profiles/edit_profile_page
 import 'package:magna_data_ai_ecommerce/core/services/address_service.dart';
 import 'package:magna_data_ai_ecommerce/features/my-addresses/address_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/my-addresses/my_addresses_screen.dart';
+import 'package:magna_data_ai_ecommerce/features/payment-methods/payment_methods_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/payment-methods/payment_methods_screen.dart';
 
 import 'app_routes.dart';
 
@@ -258,6 +260,14 @@ class AppPages {
         Get.lazyPut<AddressController>(
           () => AddressController(Get.find<AddressService>()),
         );
+      }),
+    ),
+
+    GetPage(
+      name: AppRoutes.paymentMethods,
+      page: () => const PaymentMethodsScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<PaymentMethodsController>(() => PaymentMethodsController());
       }),
     ),
   ];
