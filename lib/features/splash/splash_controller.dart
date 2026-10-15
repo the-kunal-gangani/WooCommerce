@@ -20,6 +20,7 @@ class SplashController extends GetxController {
         _storage.read<bool>(OnboardingController.onboardingKey) ?? false;
     Get.offAllNamed(completed ? AppRoutes.home : AppRoutes.onboarding);
   }
+
   Future<void> _preloadHomeData() async {
     final homeController = Get.find<HomeController>();
     await homeController.loadHome();

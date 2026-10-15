@@ -66,11 +66,7 @@ class ProductListScreen extends GetView<ProductListController> {
             IconButton(
               onPressed: () => Get.toNamed(AppRoutes.productList),
               tooltip: 'Search',
-              icon: const Icon(
-                Icons.search_rounded,
-                color: navy,
-                size: 23,
-              ),
+              icon: const Icon(Icons.search_rounded, color: navy, size: 23),
             ),
           const SizedBox(width: 6),
         ],
@@ -213,20 +209,17 @@ class ProductListScreen extends GetView<ProductListController> {
                               crossAxisSpacing: 12,
                               mainAxisSpacing: 12,
                             ),
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final product = products[index];
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final product = products[index];
 
-                            return ProductCard(
-                              product: product,
-                              onTap: () => Get.toNamed(
-                                AppRoutes.productDetails,
-                                arguments: product,
-                              ),
-                            );
-                          },
-                          childCount: products.length,
-                        ),
+                          return ProductCard(
+                            product: product,
+                            onTap: () => Get.toNamed(
+                              AppRoutes.productDetails,
+                              arguments: product,
+                            ),
+                          );
+                        }, childCount: products.length),
                       ),
                     ),
                     if (loadingMore)
@@ -234,9 +227,7 @@ class ProductListScreen extends GetView<ProductListController> {
                         child: Padding(
                           padding: EdgeInsets.only(bottom: 24, top: 8),
                           child: Center(
-                            child: CircularProgressIndicator(
-                              color: primary,
-                            ),
+                            child: CircularProgressIndicator(color: primary),
                           ),
                         ),
                       ),
@@ -252,10 +243,7 @@ class ProductListScreen extends GetView<ProductListController> {
 }
 
 class _NoResults extends StatelessWidget {
-  const _NoResults({
-    required this.hasFilters,
-    required this.onClear,
-  });
+  const _NoResults({required this.hasFilters, required this.onClear});
 
   final bool hasFilters;
   final VoidCallback onClear;

@@ -151,11 +151,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
               ),
-              _buildHeaderButton(
-                icon: Icons.settings_outlined,
-                onTap: () =>
-                    _showComingSoon('Settings', 'Settings screen coming soon'),
-              ),
             ],
           ),
           const SizedBox(height: 22),
@@ -165,35 +160,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildHeaderButton({
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(15),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(15),
-        child: Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: ProfileScreen.border),
-            boxShadow: [
-              BoxShadow(
-                color: ProfileScreen.navy.withValues(alpha: 0.04),
-                blurRadius: 14,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Icon(icon, color: ProfileScreen.navy, size: 21),
-        ),
-      ),
-    );
-  }
+  // Widget _buildHeaderButton({
+  //   required IconData icon,
+  //   required VoidCallback onTap,
+  // }) {
+  //   return Material(
+  //     color: Colors.white,
+  //     borderRadius: BorderRadius.circular(15),
+  //     child: InkWell(
+  //       onTap: onTap,
+  //       borderRadius: BorderRadius.circular(15),
+  //       child: Container(
+  //         width: 46,
+  //         height: 46,
+  //         decoration: BoxDecoration(
+  //           borderRadius: BorderRadius.circular(15),
+  //           border: Border.all(color: ProfileScreen.border),
+  //           boxShadow: [
+  //             BoxShadow(
+  //               color: ProfileScreen.navy.withValues(alpha: 0.04),
+  //               blurRadius: 14,
+  //               offset: const Offset(0, 5),
+  //             ),
+  //           ],
+  //         ),
+  //         child: Icon(icon, color: ProfileScreen.navy, size: 21),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildProfileCard() {
     return Obx(() {

@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+
 import '../../core/services/cart_service.dart';
 import '../../data/models/product.dart';
 

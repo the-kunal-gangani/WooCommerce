@@ -22,7 +22,7 @@ class InitialBinding extends Bindings {
   void dependencies() {
     final apiClient = ApiClient();
     final fastApiClient = ApiClient(baseUrl: AppConfig.backendBaseUrl);
-    
+
     final secureStorage = SecureStorageService();
     final storage = StorageService();
     final getStorage = GetStorage();

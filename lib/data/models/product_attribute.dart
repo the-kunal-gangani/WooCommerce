@@ -1,6 +1,5 @@
 import 'package:magna_data_ai_ecommerce/core/utils/json_utils.dart';
 
-
 class AttributeTerm {
   const AttributeTerm({
     required this.id,
