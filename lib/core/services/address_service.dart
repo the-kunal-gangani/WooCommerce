@@ -11,24 +11,20 @@ class AddressService {
 
   Options get _authOptions {
     final token = _authService.accessToken;
-
     if (token == null || token.isEmpty) {
       throw Exception('Please log in to manage your addresses.');
     }
-
     return Options(headers: {'Authorization': 'Bearer $token'});
   }
 
   Future<List<SavedAddress>> getAddresses({String? addressType}) async {
     final response = await _apiClient.get(
       '/addresses',
-      query: {if (addressType != null) 'address_type': addressType},
+      query: {'address_type': ?addressType},
       options: _authOptions,
     );
-
     final data = Map<String, dynamic>.from(response.data as Map);
     final items = data['items'] as List<dynamic>;
-
     return items
         .map(
           (item) =>
@@ -43,7 +39,6 @@ class AddressService {
       data: payload,
       options: _authOptions,
     );
-
     return SavedAddress.fromJson(
       Map<String, dynamic>.from(response.data as Map),
     );
@@ -58,7 +53,6 @@ class AddressService {
       data: payload,
       options: _authOptions,
     );
-
     return SavedAddress.fromJson(
       Map<String, dynamic>.from(response.data as Map),
     );
@@ -73,7 +67,6 @@ class AddressService {
       '/addresses/$id/default',
       options: _authOptions,
     );
-
     return SavedAddress.fromJson(
       Map<String, dynamic>.from(response.data as Map),
     );

@@ -22,9 +22,40 @@ class EditProfilePage extends GetView<EditProfileController> {
         backgroundColor: background,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          onPressed: Get.back,
-          icon: const Icon(Icons.arrow_back_rounded, color: navy),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: Center(
+            child: SizedBox(
+              width: 42,
+              height: 42,
+              child: Material(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(15),
+                child: InkWell(
+                  onTap: Get.back,
+                  borderRadius: BorderRadius.circular(15),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: border),
+                      boxShadow: [
+                        BoxShadow(
+                          color: navy.withValues(alpha: 0.06),
+                          blurRadius: 14,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back_rounded,
+                      color: navy,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
         title: const Text(
           'Edit Profile',
@@ -127,6 +158,12 @@ class EditProfilePage extends GetView<EditProfileController> {
                     textInputAction: TextInputAction.next,
                     autofillHints: const [AutofillHints.name],
                     validator: controller.validateFullName,
+                    style: const TextStyle(
+                      color: navy,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    cursorColor: primary,
                     inputFormatters: [LengthLimitingTextInputFormatter(150)],
                     decoration: _inputDecoration(
                       hint: 'Enter your full name',
@@ -139,6 +176,11 @@ class EditProfilePage extends GetView<EditProfileController> {
                   TextFormField(
                     initialValue: controller.email,
                     readOnly: true,
+                    style: const TextStyle(
+                      color: Color(0xFF111827),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
                     keyboardType: TextInputType.emailAddress,
                     decoration: _inputDecoration(
                       hint: 'Your email address',
@@ -157,6 +199,12 @@ class EditProfilePage extends GetView<EditProfileController> {
                     controller: controller.phoneController,
                     keyboardType: TextInputType.phone,
                     textInputAction: TextInputAction.done,
+                    style: const TextStyle(
+                      color: navy,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    cursorColor: primary,
                     autofillHints: const [AutofillHints.telephoneNumber],
                     validator: controller.validatePhone,
                     inputFormatters: [LengthLimitingTextInputFormatter(30)],
@@ -251,8 +299,12 @@ class EditProfilePage extends GetView<EditProfileController> {
   }) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: Color(0xFF9AA4B2), fontSize: 13),
-      prefixIcon: Icon(icon, color: muted, size: 20),
+      hintStyle: const TextStyle(
+        color: Color(0xFF687386),
+        fontSize: 13,
+        fontWeight: FontWeight.w400,
+      ),
+      prefixIcon: Icon(icon, color: const Color(0xFF687386), size: 20),
       filled: true,
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 17),
