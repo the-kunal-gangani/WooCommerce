@@ -39,36 +39,42 @@ class MainShell extends GetView<MainShellController> {
                   : const SizedBox.shrink(),
             ],
           ),
-          bottomNavigationBar: Padding(
-            padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+          bottomNavigationBar: Container(
+            margin: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+            ),
             child: SnakeNavigationBar.color(
-              behaviour: SnakeBarBehaviour.floating,
-              snakeShape: SnakeShape.circle,
+              behaviour: SnakeBarBehaviour.pinned,
+              snakeShape: SnakeShape.indicator,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              backgroundColor: Colors.white,
+              padding: EdgeInsets.zero,
+              backgroundColor: Colors.transparent,
               snakeViewColor: primary,
-              selectedItemColor: Colors.white,
+              selectedItemColor: const Color.fromARGB(255, 54, 58, 65),
               unselectedItemColor: const Color(0xFF8A94A6),
+              showSelectedLabels: false,
+              showUnselectedLabels: false,
               currentIndex: index,
               onTap: controller.goTo,
               items: const [
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.home_rounded),
+                  icon: Icon(Icons.home_rounded, size: 24),
                   label: 'Home',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.grid_view_rounded),
+                  icon: Icon(Icons.grid_view_rounded, size: 24),
                   label: 'Categories',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.favorite_rounded),
+                  icon: Icon(Icons.favorite_rounded, size: 24),
                   label: 'Wishlist',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.person_rounded),
+                  icon: Icon(Icons.person_rounded, size: 24),
                   label: 'Profile',
                 ),
               ],
