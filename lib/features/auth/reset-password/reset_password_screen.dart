@@ -121,8 +121,8 @@ class ResetPasswordScreen extends GetView<ResetPasswordController> {
             ),
           ),
           const SizedBox(width: 14),
-          const Text(
-            'Reset Password',
+          Text(
+            'reset_password'.tr,
             style: TextStyle(
               color: navy,
               fontSize: 19,
@@ -199,8 +199,8 @@ class ResetPasswordScreen extends GetView<ResetPasswordController> {
           ),
         ),
         const SizedBox(height: 20),
-        const Text(
-          'Create a new password',
+        Text(
+          'create_new_password'.tr,
           textAlign: TextAlign.center,
           style: TextStyle(
             color: navy,
@@ -211,7 +211,7 @@ class ResetPasswordScreen extends GetView<ResetPasswordController> {
         ),
         const SizedBox(height: 7),
         Text(
-          'Enter the verification code sent to\n${controller.email}',
+          'enter_verification_code'.trParams({'email': controller.email}),
           textAlign: TextAlign.center,
           style: const TextStyle(
             color: muted,
@@ -320,11 +320,11 @@ class ResetPasswordScreen extends GetView<ResetPasswordController> {
                           color: Colors.white,
                         ),
                       )
-                    : const Row(
+                    : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Update Password',
+                            'update_password'.tr,
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
@@ -358,11 +358,11 @@ class ResetPasswordScreen extends GetView<ResetPasswordController> {
                       color: muted,
                     ),
                     children: [
-                      const TextSpan(text: 'Didn\'t receive the code? '),
+                      TextSpan(text: 'update_password'.tr),
                       TextSpan(
                         text: seconds == 0
-                            ? 'Resend code'
-                            : 'Resend in ${seconds}s',
+                            ? 'resend_code'.tr
+                            : 'resend_code_in'.tr,
                         style: TextStyle(
                           color: seconds == 0 ? primary : muted,
                           fontWeight: FontWeight.w800,
@@ -408,9 +408,9 @@ class ResetPasswordScreen extends GetView<ResetPasswordController> {
           ),
         ),
         const SizedBox(width: 9),
-        const Expanded(
+        Expanded(
           child: Text(
-            'Use a strong password that you haven\'t used before.',
+            'strong_password_hint'.tr,
             style: TextStyle(
               color: muted,
               fontSize: 11,

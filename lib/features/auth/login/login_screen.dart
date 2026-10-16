@@ -12,7 +12,6 @@ class LoginScreen extends GetView<LoginController> {
     final controller = Get.isRegistered<LoginController>()
         ? Get.find<LoginController>()
         : Get.put(LoginController());
-
     controller.navigateToRegisterScreen();
   }
 
@@ -20,17 +19,14 @@ class LoginScreen extends GetView<LoginController> {
     final controller = Get.isRegistered<LoginController>()
         ? Get.find<LoginController>()
         : Get.put(LoginController());
-
     controller.navigateToForgetPasswordScreen();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
     final primary = theme.colorScheme.primary;
     final secondary = theme.colorScheme.secondary;
-
     const background = Color(0xFFF7F9FC);
     const textColor = Color(0xFF111827);
     const mutedColor = Color(0xFF687386);
@@ -39,12 +35,7 @@ class LoginScreen extends GetView<LoginController> {
       backgroundColor: background,
       body: Stack(
         children: [
-          // ═════════════════════════════════════════════
-          // AMBIENT BACKGROUND
-          // ═════════════════════════════════════════════
-
           const Positioned.fill(child: _LoginBackground()),
-
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -58,19 +49,10 @@ class LoginScreen extends GetView<LoginController> {
                     key: controller.formKey,
                     child: Column(
                       children: [
-                        // ═════════════════════════════════
-                        // BRAND / AI MARK
-                        // ═════════════════════════════════
-
                         const _LoginBrandMark(),
-
                         const SizedBox(height: 28),
-
-                        // ═════════════════════════════════
-                        // HEADER
-                        // ═════════════════════════════════
-                        const Text(
-                          'Welcome back',
+                        Text(
+                          'welcome_back'.tr,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: textColor,
@@ -79,11 +61,9 @@ class LoginScreen extends GetView<LoginController> {
                             letterSpacing: -0.8,
                           ),
                         ),
-
                         const SizedBox(height: 9),
-
                         Text(
-                          'Sign in to continue your intelligent\nshopping experience.',
+                          'sign_in_subtitle'.tr,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: mutedColor,
@@ -91,12 +71,7 @@ class LoginScreen extends GetView<LoginController> {
                             height: 1.55,
                           ),
                         ),
-
                         const SizedBox(height: 30),
-
-                        // ═════════════════════════════════
-                        // LOGIN CARD
-                        // ═════════════════════════════════
                         Container(
                           padding: const EdgeInsets.all(22),
                           decoration: BoxDecoration(
@@ -115,17 +90,11 @@ class LoginScreen extends GetView<LoginController> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // ─────────────────────────
-                              // EMAIL
-                              // ─────────────────────────
-
-                              const _FieldLabel(
+                              _FieldLabel(
                                 icon: Icons.alternate_email_rounded,
-                                label: 'Email address',
+                                label: 'email_address'.tr,
                               ),
-
                               const SizedBox(height: 9),
-
                               TextFormField(
                                 controller: controller.emailController,
                                 keyboardType: TextInputType.emailAddress,
@@ -142,29 +111,20 @@ class LoginScreen extends GetView<LoginController> {
                                 ),
                                 validator: (value) {
                                   if (value == null || value.trim().isEmpty) {
-                                    return 'Please enter your email';
+                                    return 'please_enter_email0'.tr;
                                   }
-
                                   if (!GetUtils.isEmail(value.trim())) {
-                                    return 'Please enter a valid email address';
+                                    return 'valid_email_required'.tr;
                                   }
-
                                   return null;
                                 },
                               ),
-
                               const SizedBox(height: 19),
-
-                              // ─────────────────────────
-                              // PASSWORD
-                              // ─────────────────────────
-                              const _FieldLabel(
+                              _FieldLabel(
                                 icon: Icons.lock_outline_rounded,
-                                label: 'Password',
+                                label: 'password'.tr,
                               ),
-
                               const SizedBox(height: 9),
-
                               Obx(
                                 () => TextFormField(
                                   controller: controller.passwordController,
@@ -178,7 +138,7 @@ class LoginScreen extends GetView<LoginController> {
                                   ),
                                   decoration:
                                       _inputDecoration(
-                                        hint: 'Enter your password',
+                                        hint: 'enter_password'.tr,
                                         icon: Icons.lock_outline_rounded,
                                         primary: primary,
                                       ).copyWith(
@@ -196,23 +156,16 @@ class LoginScreen extends GetView<LoginController> {
                                       ),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
-                                      return 'Please enter your password';
+                                      return 'please_enter_password'.tr;
                                     }
-
                                     if (value.length < 6) {
-                                      return 'Password must be at least 6 characters';
+                                      return 'password_min_length'.tr;
                                     }
-
                                     return null;
                                   },
                                 ),
                               ),
-
                               const SizedBox(height: 9),
-
-                              // ─────────────────────────
-                              // REMEMBER + FORGOT
-                              // ─────────────────────────
                               Row(
                                 children: [
                                   Obx(
@@ -236,20 +189,16 @@ class LoginScreen extends GetView<LoginController> {
                                       ),
                                     ),
                                   ),
-
                                   const SizedBox(width: 3),
-
-                                  const Text(
-                                    'Remember me',
+                                  Text(
+                                    'remember_me'.tr,
                                     style: TextStyle(
                                       color: mutedColor,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
-
                                   const Spacer(),
-
                                   TextButton(
                                     onPressed: () {
                                       forgetPassword(context);
@@ -261,7 +210,7 @@ class LoginScreen extends GetView<LoginController> {
                                           MaterialTapTargetSize.shrinkWrap,
                                     ),
                                     child: Text(
-                                      'Forgot password?',
+                                      'forgot_password'.tr,
                                       style: TextStyle(
                                         color: primary,
                                         fontSize: 12,
@@ -271,7 +220,6 @@ class LoginScreen extends GetView<LoginController> {
                                   ),
                                 ],
                               ),
-
                               const SizedBox(height: 18),
                               Obx(
                                 () => SizedBox(
@@ -320,12 +268,12 @@ class LoginScreen extends GetView<LoginController> {
                                                 strokeWidth: 2.2,
                                               ),
                                             )
-                                          : const Row(
+                                          : Row(
                                               mainAxisAlignment:
                                                   MainAxisAlignment.center,
                                               children: [
                                                 Text(
-                                                  'Sign In',
+                                                  'sign_in'.tr,
                                                   style: TextStyle(
                                                     color: Colors.white,
                                                     fontSize: 15,
@@ -347,17 +295,12 @@ class LoginScreen extends GetView<LoginController> {
                             ],
                           ),
                         ),
-
                         const SizedBox(height: 24),
-
-                        // ═════════════════════════════════
-                        // SIGN UP
-                        // ═════════════════════════════════
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text(
-                              "Don't have an account?",
+                            Text(
+                              "no_account".tr,
                               style: TextStyle(color: mutedColor, fontSize: 13),
                             ),
                             TextButton(
@@ -370,7 +313,7 @@ class LoginScreen extends GetView<LoginController> {
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
                               child: Text(
-                                'Create account',
+                                'create_account'.tr,
                                 style: TextStyle(
                                   color: primary,
                                   fontSize: 13,
@@ -380,12 +323,7 @@ class LoginScreen extends GetView<LoginController> {
                             ),
                           ],
                         ),
-
                         const SizedBox(height: 16),
-
-                        // ═════════════════════════════════
-                        // BRAND FOOTER
-                        // ═════════════════════════════════
                         Text(
                           '${AppConfig.appName.toUpperCase()} • AI COMMERCE',
                           style: TextStyle(
@@ -449,10 +387,6 @@ class LoginScreen extends GetView<LoginController> {
   }
 }
 
-// ═══════════════════════════════════════════════════════════
-// FIELD LABEL
-// ═══════════════════════════════════════════════════════════
-
 class _FieldLabel extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -478,10 +412,6 @@ class _FieldLabel extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════
-// BRAND MARK
-// ═══════════════════════════════════════════════════════════
-
 class _LoginBrandMark extends StatefulWidget {
   const _LoginBrandMark();
 
@@ -496,7 +426,6 @@ class _LoginBrandMarkState extends State<_LoginBrandMark>
   @override
   void initState() {
     super.initState();
-
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 5),
@@ -537,7 +466,6 @@ class _LoginBrandMarkState extends State<_LoginBrandMark>
                   ),
                 ),
               ),
-
               Container(
                 width: 64,
                 height: 64,
@@ -562,13 +490,11 @@ class _LoginBrandMarkState extends State<_LoginBrandMark>
                   size: 28,
                 ),
               ),
-
               Positioned(
                 top: 6,
                 right: 9,
                 child: _BrandDot(color: secondary, size: 7),
               ),
-
               Positioned(
                 bottom: 11,
                 left: 5,
@@ -581,10 +507,6 @@ class _LoginBrandMarkState extends State<_LoginBrandMark>
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════════
-// BRAND DOT
-// ═══════════════════════════════════════════════════════════
 
 class _BrandDot extends StatelessWidget {
   final Color color;
@@ -611,10 +533,6 @@ class _BrandDot extends StatelessWidget {
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════════
-// ANIMATED BACKGROUND
-// ═══════════════════════════════════════════════════════════
 
 class _LoginBackground extends StatefulWidget {
   const _LoginBackground();
@@ -649,7 +567,6 @@ class _LoginBackgroundState extends State<_LoginBackground>
       animation: _controller,
       builder: (context, child) {
         final t = _controller.value * math.pi * 2;
-
         return CustomPaint(painter: _LoginBackgroundPainter(animation: t));
       },
     );
@@ -674,7 +591,6 @@ class _LoginBackgroundPainter extends CustomPainter {
       const Color(0xFF4C8DFF),
       0.10,
     );
-
     _drawOrb(
       canvas,
       size,
@@ -686,7 +602,6 @@ class _LoginBackgroundPainter extends CustomPainter {
       const Color(0xFF8B6CFF),
       0.08,
     );
-
     _drawOrb(
       canvas,
       size,
@@ -715,7 +630,6 @@ class _LoginBackgroundPainter extends CustomPainter {
           color.withValues(alpha: 0),
         ],
       ).createShader(Rect.fromCircle(center: center, radius: radius));
-
     canvas.drawCircle(center, radius, paint);
   }
 

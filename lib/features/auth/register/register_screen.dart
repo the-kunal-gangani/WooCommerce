@@ -14,14 +14,12 @@ class RegisterScreen extends StatelessWidget {
     final controller = Get.isRegistered<RegisterController>()
         ? Get.find<RegisterController>()
         : Get.put(RegisterController());
-
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
       body: SafeArea(
         child: Stack(
           children: [
             const _RegisterBackground(),
-
             SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
@@ -37,8 +35,8 @@ class RegisterScreen extends StatelessWidget {
                   const SizedBox(height: 22),
                   _LoginPrompt(),
                   const SizedBox(height: 20),
-                  const Text(
-                    'CREATE YOUR AI SHOPPING PROFILE',
+                  Text(
+                    'create_ai_shopping_profile'.tr,
                     style: TextStyle(
                       color: Color(0xFF9AA4B2),
                       fontSize: 9,
@@ -101,7 +99,7 @@ class _TopBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(30),
             border: Border.all(color: const Color(0xFFDCEBFF)),
           ),
-          child: const Row(
+          child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
@@ -111,7 +109,7 @@ class _TopBar extends StatelessWidget {
               ),
               SizedBox(width: 6),
               Text(
-                'AI COMMERCE',
+                'ai_commerce'.tr,
                 style: TextStyle(
                   color: Color(0xFF2563EB),
                   fontSize: 10,
@@ -134,8 +132,8 @@ class _RegisterHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Text(
-          'Create your account',
+        Text(
+          'create_your_account'.tr,
           textAlign: TextAlign.center,
           style: TextStyle(
             color: Color(0xFF111827),
@@ -147,7 +145,7 @@ class _RegisterHeader extends StatelessWidget {
         ),
         const SizedBox(height: 9),
         Text(
-          'Join a smarter shopping experience built around you.',
+          'signup_subtitle'.tr,
           textAlign: TextAlign.center,
           style: TextStyle(
             color: const Color(0xFF687386).withValues(alpha: 0.95),
@@ -185,10 +183,10 @@ class _RegisterForm extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _FormSectionTitle(
+          _FormSectionTitle(
             icon: Icons.person_add_alt_1_rounded,
-            title: 'Set up your profile',
-            subtitle: 'A few details and you are ready to shop.',
+            title: 'set_up_profile'.tr,
+            subtitle: 'profile_setup_description'.tr,
           ),
           const SizedBox(height: 22),
           const _FieldLabel(icon: Icons.badge_outlined, label: 'FULL NAME'),
@@ -272,14 +270,14 @@ class _RegisterForm extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: const Color(0xFFE9EDF3)),
             ),
-            child: const Row(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(Icons.shield_outlined, color: Color(0xFF2563EB), size: 18),
                 SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Your account credentials are protected and used only to keep your shopping experience secure.',
+                    'credentials_security_description.'.tr,
                     style: TextStyle(
                       color: Color(0xFF687386),
                       fontSize: 11,
@@ -510,12 +508,12 @@ class _RegisterButton extends StatelessWidget {
                       color: Colors.white,
                     ),
                   )
-                : const Row(
+                : Row(
                     key: ValueKey('button'),
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Create Account',
+                        'create_account'.tr,
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
@@ -540,8 +538,8 @@ class _LoginPrompt extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text(
-          'Already have an account? ',
+        Text(
+          'already_have_account'.tr,
           style: TextStyle(
             color: Color(0xFF7B8798),
             fontSize: 13,
@@ -556,8 +554,8 @@ class _LoginPrompt extends StatelessWidget {
               duration: const Duration(milliseconds: 600),
             );
           },
-          child: const Text(
-            'Log In',
+          child: Text(
+            'log_in'.tr,
             style: TextStyle(
               color: Color(0xFF2563EB),
               fontSize: 13,
@@ -584,7 +582,6 @@ class _RegisterIllustrationState extends State<_RegisterIllustration>
   @override
   void initState() {
     super.initState();
-
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 4),
@@ -757,7 +754,6 @@ class _RegisterNetworkPainter extends CustomPainter {
 
 class _RegisterBackground extends StatefulWidget {
   const _RegisterBackground();
-
   @override
   State<_RegisterBackground> createState() => _RegisterBackgroundState();
 }
@@ -769,7 +765,6 @@ class _RegisterBackgroundState extends State<_RegisterBackground>
   @override
   void initState() {
     super.initState();
-
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 8),

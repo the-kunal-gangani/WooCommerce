@@ -14,12 +14,9 @@ class ForgotPasswordScreen extends StatelessWidget {
     final controller = Get.isRegistered<ForgotPasswordController>()
         ? Get.find<ForgotPasswordController>()
         : Get.put(ForgotPasswordController());
-
     final theme = Theme.of(context);
-
     final primary = theme.colorScheme.primary;
     final secondary = theme.colorScheme.secondary;
-
     const background = Color(0xFFF7F9FC);
     const textColor = Color(0xFF111827);
     const mutedColor = Color(0xFF687386);
@@ -29,7 +26,6 @@ class ForgotPasswordScreen extends StatelessWidget {
       body: Stack(
         children: [
           const Positioned.fill(child: _RecoveryBackground()),
-
           SafeArea(
             child: Column(
               children: [
@@ -58,8 +54,8 @@ class ForgotPasswordScreen extends StatelessWidget {
                           children: [
                             const _RecoveryIllustration(),
                             const SizedBox(height: 20),
-                            const Text(
-                              'Recover your account',
+                            Text(
+                              'recover_account'.tr,
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: textColor,
@@ -69,9 +65,9 @@ class ForgotPasswordScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 9),
-                            const Text(
-                              'Enter the email connected to your account.\n'
-                              'We’ll help you get back in securely.',
+                            Text(
+                              '${'recovery_subtitle'.tr}\n'
+                              '${'recovery_description'.tr}',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: mutedColor,
@@ -101,9 +97,9 @@ class ForgotPasswordScreen extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const _FieldLabel(
+                                  _FieldLabel(
                                     icon: Icons.alternate_email_rounded,
-                                    label: 'Account email',
+                                    label: 'account_email'.tr,
                                   ),
                                   const SizedBox(height: 9),
                                   TextField(
@@ -156,10 +152,10 @@ class ForgotPasswordScreen extends StatelessWidget {
                                           ),
                                         ),
                                         const SizedBox(width: 10),
-                                        const Expanded(
+                                        Expanded(
                                           child: Text(
-                                            'Your account information stays '
-                                            'protected throughout the recovery process.',
+                                            '${'recovery_privacy_line1'.tr}\n'
+                                            '${'recovery_privacy_line2'.tr}',
                                             style: TextStyle(
                                               color: mutedColor,
                                               fontSize: 11.5,
@@ -221,12 +217,12 @@ class ForgotPasswordScreen extends StatelessWidget {
                                                         strokeWidth: 2.2,
                                                       ),
                                                 )
-                                              : const Row(
+                                              : Row(
                                                   mainAxisAlignment:
                                                       MainAxisAlignment.center,
                                                   children: [
                                                     Text(
-                                                      'Send Reset Link',
+                                                      'send_reset_link'.tr,
                                                       style: TextStyle(
                                                         color: Colors.white,
                                                         fontSize: 14.5,
@@ -254,8 +250,8 @@ class ForgotPasswordScreen extends StatelessWidget {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Text(
-                                  'Remember your password?',
+                                Text(
+                                  'remember_your_password'.tr,
                                   style: TextStyle(
                                     color: mutedColor,
                                     fontSize: 13,
@@ -278,7 +274,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                                         MaterialTapTargetSize.shrinkWrap,
                                   ),
                                   child: Text(
-                                    'Log In',
+                                    'log_in'.tr,
                                     style: TextStyle(
                                       color: primary,
                                       fontSize: 13,
@@ -290,7 +286,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 14),
                             Text(
-                              'SECURE ACCOUNT RECOVERY • AI COMMERCE',
+                              'secure_account_recovery'.tr,
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: textColor.withValues(alpha: 0.22),
@@ -403,8 +399,8 @@ class _SecurityStatus extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          const Text(
-            'SECURE',
+          Text(
+            'secure'.tr,
             style: TextStyle(
               color: Color(0xFF687386),
               fontSize: 8,
@@ -479,7 +475,6 @@ class _RecoveryIllustrationState extends State<_RecoveryIllustration>
       animation: _controller,
       builder: (context, child) {
         final t = _controller.value * math.pi * 2;
-
         return SizedBox(
           width: 270,
           height: 190,
@@ -500,7 +495,6 @@ class _RecoveryIllustrationState extends State<_RecoveryIllustration>
                   ),
                 ),
               ),
-
               Transform.rotate(
                 angle: -t * 0.18,
                 child: Container(
@@ -515,7 +509,6 @@ class _RecoveryIllustrationState extends State<_RecoveryIllustration>
                   ),
                 ),
               ),
-
               CustomPaint(
                 size: const Size(270, 190),
                 painter: _RecoveryNetworkPainter(
@@ -533,10 +526,6 @@ class _RecoveryIllustrationState extends State<_RecoveryIllustration>
                   scale: 1 + math.sin(t) * 0.035,
                 ),
               ),
-
-              // ─────────────────────────────
-              // RIGHT SECURITY NODE
-              // ─────────────────────────────
               Positioned(
                 right: 16,
                 top: 42,
@@ -546,10 +535,6 @@ class _RecoveryIllustrationState extends State<_RecoveryIllustration>
                   scale: 1 + math.cos(t * 1.1) * 0.035,
                 ),
               ),
-
-              // ─────────────────────────────
-              // BOTTOM DATA NODE
-              // ─────────────────────────────
               Positioned(
                 right: 39,
                 bottom: 17,
@@ -558,10 +543,6 @@ class _RecoveryIllustrationState extends State<_RecoveryIllustration>
                   scale: 1 + math.sin(t * 1.3) * 0.06,
                 ),
               ),
-
-              // ─────────────────────────────
-              // CENTRAL AI CORE
-              // ─────────────────────────────
               Transform.scale(
                 scale: 1 + math.sin(t * 1.2) * 0.025,
                 child: Container(
@@ -605,10 +586,6 @@ class _RecoveryIllustrationState extends State<_RecoveryIllustration>
                   ),
                 ),
               ),
-
-              // ─────────────────────────────
-              // FLOATING SPARKS
-              // ─────────────────────────────
               Positioned(
                 top: 15,
                 left: 78,
@@ -617,7 +594,6 @@ class _RecoveryIllustrationState extends State<_RecoveryIllustration>
                   opacity: 0.45 + math.sin(t) * 0.15,
                 ),
               ),
-
               Positioned(
                 bottom: 12,
                 left: 67,
@@ -633,10 +609,6 @@ class _RecoveryIllustrationState extends State<_RecoveryIllustration>
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════════
-// FLOATING NODE
-// ═══════════════════════════════════════════════════════════
 
 class _FloatingNode extends StatelessWidget {
   final IconData icon;
@@ -674,10 +646,6 @@ class _FloatingNode extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════
-// SMALL DATA NODE
-// ═══════════════════════════════════════════════════════════
-
 class _SmallDataNode extends StatelessWidget {
   final Color color;
   final double scale;
@@ -711,10 +679,6 @@ class _SmallDataNode extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════
-// SPARK
-// ═══════════════════════════════════════════════════════════
-
 class _Spark extends StatelessWidget {
   final Color color;
   final double opacity;
@@ -731,10 +695,6 @@ class _Spark extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════
-// NETWORK PAINTER
-// ═══════════════════════════════════════════════════════════
-
 class _RecoveryNetworkPainter extends CustomPainter {
   final double animation;
   final Color primary;
@@ -749,29 +709,23 @@ class _RecoveryNetworkPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1
       ..color = primary.withValues(alpha: 0.13);
-
     final points = [
       Offset(40, 92),
       Offset(230, 64),
       Offset(198, 153),
       Offset(76, 35),
     ];
-
     for (final point in points) {
       canvas.drawLine(center, point, paint);
     }
-
     for (var i = 0; i < points.length; i++) {
       final pulse = 2.2 + math.sin(animation * 1.2 + i) * 0.8;
-
       final nodePaint = Paint()
         ..color = (i.isEven ? primary : secondary).withValues(alpha: 0.35);
-
       canvas.drawCircle(points[i], pulse, nodePaint);
     }
   }
@@ -781,10 +735,6 @@ class _RecoveryNetworkPainter extends CustomPainter {
     return oldDelegate.animation != animation;
   }
 }
-
-// ═══════════════════════════════════════════════════════════
-// BACKGROUND
-// ═══════════════════════════════════════════════════════════
 
 class _RecoveryBackground extends StatefulWidget {
   const _RecoveryBackground();
@@ -800,7 +750,6 @@ class _RecoveryBackgroundState extends State<_RecoveryBackground>
   @override
   void initState() {
     super.initState();
-
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 16),
@@ -819,7 +768,6 @@ class _RecoveryBackgroundState extends State<_RecoveryBackground>
       animation: _controller,
       builder: (context, child) {
         final t = _controller.value * math.pi * 2;
-
         return CustomPaint(painter: _RecoveryBackgroundPainter(animation: t));
       },
     );
@@ -828,7 +776,6 @@ class _RecoveryBackgroundState extends State<_RecoveryBackground>
 
 class _RecoveryBackgroundPainter extends CustomPainter {
   final double animation;
-
   _RecoveryBackgroundPainter({required this.animation});
 
   @override
@@ -843,7 +790,6 @@ class _RecoveryBackgroundPainter extends CustomPainter {
       const Color(0xFF4C8DFF),
       0.09,
     );
-
     _drawOrb(
       canvas,
       Offset(
@@ -854,7 +800,6 @@ class _RecoveryBackgroundPainter extends CustomPainter {
       const Color(0xFF8B6CFF),
       0.075,
     );
-
     _drawOrb(
       canvas,
       Offset(
@@ -881,7 +826,6 @@ class _RecoveryBackgroundPainter extends CustomPainter {
           color.withValues(alpha: 0),
         ],
       ).createShader(Rect.fromCircle(center: center, radius: radius));
-
     canvas.drawCircle(center, radius, paint);
   }
 
