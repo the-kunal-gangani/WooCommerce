@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "722312780828",
+    "project_id": "magnadatae-commerce",
+    "storage_bucket": "magnadatae-commerce.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:722312780828:android:d74b5a8b0845c9ad1953d9",
+        "android_client_info": {
+          "package_name": "com.example.magna_data_ai_ecommerce"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1K-rGfnUR5FGIFk9ZA2rz8bmTNtAN3Ho"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

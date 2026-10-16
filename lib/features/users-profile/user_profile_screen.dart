@@ -471,17 +471,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
       icon: Icons.tune_rounded,
       children: [
         _buildMenuItem(
-          icon: Icons.notifications_none_rounded,
+          icon: Icons.notifications_active_outlined,
           title: 'Notifications',
           subtitle: _notificationsEnabled
               ? 'Offers, orders and updates'
-              : 'Notifications disabled on this screen',
-          trailing: Switch.adaptive(
-            value: _notificationsEnabled,
-            activeTrackColor: ProfileScreen.primary,
-            onChanged: (value) {
-              setState(() => _notificationsEnabled = value);
-            },
+              : 'Notifications are turned off',
+          trailing: Transform.scale(
+            scale: 0.9,
+            child: Switch(
+              value: _notificationsEnabled,
+              onChanged: (value) {
+                setState(() => _notificationsEnabled = value);
+              },
+              activeTrackColor: ProfileScreen.primary,
+              inactiveTrackColor: const Color(0xFFE5EAF1),
+              activeThumbColor: Colors.white,
+              inactiveThumbColor: Colors.white,
+              trackOutlineColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return ProfileScreen.primary;
+                }
+                return const Color(0xFFD5DCE7);
+              }),
+              trackOutlineWidth: const WidgetStatePropertyAll(1),
+            ),
           ),
           onTap: () {
             setState(() {
@@ -499,7 +512,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         _buildDivider(),
         _buildMenuItem(
-          icon: Icons.dark_mode_outlined,
+          icon: Icons.palette_outlined,
           title: 'Appearance',
           subtitle: 'Light mode',
           onTap: () =>
