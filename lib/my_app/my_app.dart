@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/core/bindings/inital_binding.dart';
 import 'package:magna_data_ai_ecommerce/core/configs/app_config.dart';
+import 'package:magna_data_ai_ecommerce/core/locallization/app_translations.dart';
+import 'package:magna_data_ai_ecommerce/core/locallization/language_controller.dart';
 import 'package:magna_data_ai_ecommerce/core/routes/app_page.dart';
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 import 'package:magna_data_ai_ecommerce/core/theme/app_theme.dart';
@@ -18,6 +20,9 @@ class MyApp extends StatelessWidget {
       designWidth: width,
       designHeight: height,
       app: GetMaterialApp(
+        translations: AppTranslations(),
+        locale: LanguageController.savedLocale,
+        fallbackLocale: const Locale('en', 'US'),
         debugShowCheckedModeBanner: false,
         title: AppConfig.appName,
         theme: AppTheme.light,
