@@ -510,8 +510,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon: Icons.language_rounded,
           title: 'Language',
           subtitle: 'English',
-          onTap: () =>
-              _showComingSoon('Language', 'Language selection coming soon'),
+          onTap: () => Get.toNamed('/languages'),
         ),
         _buildDivider(),
         _buildMenuItem(

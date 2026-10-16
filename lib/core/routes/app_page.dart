@@ -24,6 +24,7 @@ import 'package:magna_data_ai_ecommerce/features/checkout/checkout_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/favourites/favourites_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/favourites/favourites_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/languages/languages_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/my-orders/orders_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/my-orders/my_orders_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/notifications/notification_screen.dart';
@@ -280,5 +281,7 @@ class AppPages {
         Get.lazyPut<NotificationsController>(() => NotificationsController());
       }),
     ),
+
+    GetPage(name: '/languages', page: () => const LanguagesPage()),
   ];
 }

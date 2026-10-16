@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:magna_data_ai_ecommerce/core/configs/app_config.dart';
+import 'package:magna_data_ai_ecommerce/core/locallization/language_controller.dart';
 import 'package:magna_data_ai_ecommerce/core/network/api_client.dart';
 import 'package:magna_data_ai_ecommerce/core/services/auth_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/cart_service.dart';
@@ -64,5 +65,6 @@ class InitialBinding extends Bindings {
     Get.put<RecentlyViewedService>(recentlyViewedService, permanent: true);
     Get.put<OrderService>(orderService, permanent: true);
     Get.put<AddressService>(addressService, permanent: true);
+    Get.lazyPut<LanguageController>(() => LanguageController(), fenix: true);
   }
 }
