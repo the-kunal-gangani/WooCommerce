@@ -12,6 +12,21 @@ class NotificationsController extends GetxController {
   int get unreadCount =>
       notifications.where((notification) => !notification.isRead).length;
 
+  void reloadFromStorage() {
+    final saved = GetStorage().read<List<dynamic>>('magna_app_notifications');
+
+    if (saved == null) return;
+
+    final items = saved
+        .whereType<Map>()
+        .map(
+          (item) => AppNotification.fromJson(Map<String, dynamic>.from(item)),
+        )
+        .toList();
+
+    notifications.assignAll(items);
+  }
+
   List<AppNotification> get filteredNotifications {
     final filtered = notifications.where((notification) {
       switch (selectedFilter.value) {
