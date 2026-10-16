@@ -3,7 +3,7 @@ class AppConfig {
   static const String appName = 'Magna Data Store';
   static const String baseUrl = 'https://serverboat.com';
   static const String storeApiPath = '/wp-json/wc/store/v1';
-  static const String backendBaseUrl = 'http://192.168.1.11:8000/api/v1';
+  static const String backendBaseUrl = 'http://192.168.88.17:8000/api/v1';
   static const Duration connectTimeout = Duration(seconds: 20);
   static const Duration receiveTimeout = Duration(seconds: 30);
 }
