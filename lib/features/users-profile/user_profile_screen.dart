@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 import 'package:magna_data_ai_ecommerce/core/services/auth_service.dart';
+import 'package:magna_data_ai_ecommerce/core/services/push_notification_service.dart';
 import 'package:magna_data_ai_ecommerce/features/main/main_shell_controller.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -20,7 +21,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  bool _notificationsEnabled = true;
+  final pushService = Get.find<PushNotificationService>();
 
   @override
   Widget build(BuildContext context) {
@@ -470,36 +471,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return _buildSection(
       icon: Icons.tune_rounded,
       children: [
-        _buildMenuItem(
-          icon: Icons.notifications_active_outlined,
-          title: 'Notifications',
-          subtitle: _notificationsEnabled
-              ? 'Offers, orders and updates'
-              : 'Notifications are turned off',
-          trailing: Transform.scale(
-            scale: 0.9,
-            child: Switch(
-              value: _notificationsEnabled,
-              onChanged: (value) {
-                setState(() => _notificationsEnabled = value);
-              },
-              activeTrackColor: ProfileScreen.primary,
-              inactiveTrackColor: const Color(0xFFE5EAF1),
-              activeThumbColor: Colors.white,
-              inactiveThumbColor: Colors.white,
-              trackOutlineColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected)) {
-                  return ProfileScreen.primary;
-                }
-                return const Color(0xFFD5DCE7);
-              }),
-              trackOutlineWidth: const WidgetStatePropertyAll(1),
+        Obx(() {
+          final enabled = pushService.notificationsEnabled.value;
+
+          return _buildMenuItem(
+            icon: Icons.notifications_active_outlined,
+            title: 'Notifications',
+            subtitle: enabled
+                ? 'Offers, orders and updates'
+                : 'Notifications are turned off',
+            trailing: Transform.scale(
+              scale: 0.9,
+              child: Switch(
+                value: enabled,
+                onChanged: (value) async {
+                  await pushService.setNotificationsEnabled(value);
+                },
+                activeTrackColor: ProfileScreen.primary,
+                inactiveTrackColor: const Color(0xFFE5EAF1),
+                activeThumbColor: Colors.white,
+                inactiveThumbColor: Colors.white,
+                trackOutlineColor: WidgetStateProperty.resolveWith((states) {
+                  if (states.contains(WidgetState.selected)) {
+                    return ProfileScreen.primary;
+                  }
+                  return const Color(0xFFD5DCE7);
+                }),
+                trackOutlineWidth: const WidgetStatePropertyAll(1),
+              ),
             ),
-          ),
-          onTap: () {
-            Get.toNamed(AppRoutes.notifications);
-          },
-        ),
+            onTap: () {
+              Get.toNamed(AppRoutes.notifications);
+            },
+          );
+        }),
         _buildDivider(),
         _buildMenuItem(
           icon: Icons.language_rounded,
