@@ -9,45 +9,34 @@ import 'package:magna_data_ai_ecommerce/core/network/api_client.dart';
 import 'package:magna_data_ai_ecommerce/core/services/auth_service.dart';
 import 'package:magna_data_ai_ecommerce/data/models/app_notifications.dart';
 import 'package:magna_data_ai_ecommerce/features/notifications/notifications_controller.dart';
-
 import 'package:magna_data_ai_ecommerce/firebase_options.dart';
 
+const String _notificationHistoryKey = 'magna_app_notifications';
+/// Handles FCM messages when the application is in the background.
+/// This handler runs in a separate isolate, so it persists notification
+/// data directly instead of depending on GetX controllers.
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await GetStorage.init();
-  const storageKey = 'magna_app_notifications';
-  final box = GetStorage();
-  final id =
-      message.messageId ??
-      'fcm_${message.sentTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch}';
-  final raw = box.read<dynamic>(storageKey);
-  final history = raw is List
-      ? raw
-            .whereType<Map>()
-            .map((item) => Map<String, dynamic>.from(item))
-            .toList()
-      : <Map<String, dynamic>>[];
-  if (history.any((item) => item['id'] == id)) return;
-  history.insert(0, {
-    'id': id,
-    'title':
-        message.notification?.title ??
-        message.data['title']?.toString() ??
-        'Notification',
-    'message':
-        message.notification?.body ?? message.data['body']?.toString() ?? '',
-    'type': message.data['type']?.toString() ?? 'general',
-    'createdAt': (message.sentTime ?? DateTime.now()).toIso8601String(),
-    'isRead': false,
+  final storage = GetStorage();
+  final id = _messageId(message);
+  final saved =
+      storage.read<List<dynamic>>(_notificationHistoryKey) ?? <dynamic>[];
+  final alreadyExists = saved.any((item) {
+    if (item is! Map) return false;
+    return item['id']?.toString() == id;
   });
-  if (history.length > 100) {
-    history.removeRange(100, history.length);
+  if (alreadyExists) return;
+  final notification = _notificationToJson(message, id);
+  saved.insert(0, notification);
+  await storage.write(_notificationHistoryKey, saved.take(100).toList());
+  if (kDebugMode) {
+    debugPrint('Background notification saved: $id');
   }
-  await box.write(storageKey, history);
-  debugPrint('Background FCM message saved: $id');
 }
 
+/// Firebase Cloud Messaging integration for Magna Data Store.
 class PushNotificationService extends GetxService {
   static const String _preferenceKey = 'push_notifications_enabled';
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
@@ -67,12 +56,11 @@ class PushNotificationService extends GetxService {
       if (kDebugMode) {
         debugPrint('FCM token refreshed.');
       }
-      if (notificationsEnabled.value) {
-        _registerTokenWithBackend();
-      }
+      // Also sync a disabled preference when a token refreshes.
+      _registerTokenWithBackend(enabledOverride: notificationsEnabled.value);
     });
     if (notificationsEnabled.value) {
-      await _enableNotifications(requestPermission: true);
+      await _enableNotifications(requestPermission: false);
     }
     final initialMessage = await _messaging.getInitialMessage();
     if (initialMessage != null && notificationsEnabled.value) {
@@ -81,11 +69,6 @@ class PushNotificationService extends GetxService {
       });
     }
     return this;
-  }
-
-  Future<void> syncTokenWithBackend() async {
-    _fcmToken ??= await _messaging.getToken();
-    await _registerTokenWithBackend();
   }
 
   /// Called by the Profile screen's notification switch.
@@ -97,6 +80,15 @@ class PushNotificationService extends GetxService {
     await _storage.write(_preferenceKey, false);
     if (kDebugMode) {
       debugPrint('In-app push notifications disabled.');
+    }
+    // Update the backend preference, if the user is authenticated.
+    try {
+      _fcmToken ??= await _messaging.getToken();
+      await _registerTokenWithBackend(enabledOverride: false);
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint('Could not sync disabled notification preference: $error');
+      }
     }
     return true;
   }
@@ -120,26 +112,20 @@ class PushNotificationService extends GetxService {
       if (!permitted) {
         notificationsEnabled.value = false;
         await _storage.write(_preferenceKey, false);
-        Get.snackbar(
+        Get.snackbar( 
           'Permission required',
           'Allow notifications in your device settings to enable them.',
           snackPosition: SnackPosition.TOP,
         );
         return false;
       }
-
       _fcmToken = await _messaging.getToken();
-      if (kDebugMode) {
-        debugPrint('FCM token available: ${_fcmToken != null}');
-        debugPrint('FCM TOKEN: $_fcmToken');
-      }
       notificationsEnabled.value = true;
       await _storage.write(_preferenceKey, true);
       if (kDebugMode) {
         debugPrint('FCM token available: ${_fcmToken != null}');
-        debugPrint('FCM TOKEN: $_fcmToken');
       }
-      _registerTokenWithBackend();
+      await _registerTokenWithBackend(enabledOverride: true);
       return true;
     } catch (error, stackTrace) {
       if (kDebugMode) {
@@ -155,43 +141,17 @@ class PushNotificationService extends GetxService {
     }
   }
 
-  void _handleForegroundMessage(RemoteMessage message) {
+  /// Saves incoming messages and displays a snackbar in the foreground.
+  Future<void> _handleForegroundMessage(RemoteMessage message) async {
     if (!notificationsEnabled.value) return;
-
-    final remoteNotification = message.notification;
-    final data = message.data;
-
+    await _persistMessage(message);
     final title =
-        remoteNotification?.title ??
-        data['title']?.toString() ??
+        message.notification?.title ??
+        message.data['title']?.toString() ??
         'Magna Data Store';
-
-    final body = remoteNotification?.body ?? data['body']?.toString() ?? '';
-
-    final id =
-        message.messageId ??
-        data['notification_id']?.toString() ??
-        data['id']?.toString() ??
-        'fcm_${message.sentTime?.millisecondsSinceEpoch ?? DateTime.now().microsecondsSinceEpoch}';
-
-    final notification = AppNotification(
-      id: id,
-      title: title,
-      message: body,
-      type: data['type']?.toString() ?? 'general',
-      createdAt: message.sentTime ?? DateTime.now(),
-      isRead: false,
-    );
-
-    if (Get.isRegistered<NotificationsController>()) {
-      Get.find<NotificationsController>().addNotification(notification);
-    } else {
-      _saveNotificationToStorage(notification);
-    }
-    if (kDebugMode) {
-      debugPrint('Foreground notification saved: $id');
-    }
-    if (remoteNotification != null || body.isNotEmpty) {
+    final body =
+        message.notification?.body ?? message.data['body']?.toString() ?? '';
+    if (message.notification != null || body.isNotEmpty) {
       Get.snackbar(
         title,
         body,
@@ -202,89 +162,86 @@ class PushNotificationService extends GetxService {
     }
   }
 
-  void _saveNotificationToStorage(AppNotification notification) {
-    final storage = GetStorage();
-    const storageKey = 'magna_app_notifications';
-
-    final saved = storage.read<List<dynamic>>(storageKey) ?? [];
-
-    if (saved.any(
-      (item) => item is Map && item['id']?.toString() == notification.id,
-    )) {
-      return;
-    }
-    saved.insert(0, notification.toJson());
-    storage.write(storageKey, saved.take(100).toList());
-  }
-
+  /// Saves a message to GetStorage and updates the controller if present.
   Future<void> _persistMessage(RemoteMessage message) async {
-    const storageKey = 'magna_app_notifications';
-    final box = GetStorage();
-    final id =
-        message.messageId ??
-        'fcm_${message.sentTime?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch}';
-    final raw = box.read<dynamic>(storageKey);
-    final history = raw is List
-        ? raw
-              .whereType<Map>()
-              .map((item) => Map<String, dynamic>.from(item))
-              .toList()
-        : <Map<String, dynamic>>[];
-    // Avoid inserting the same FCM message twice.
-    if (history.any((item) => item['id'] == id)) {
-      if (Get.isRegistered<NotificationsController>()) {
-        Get.find<NotificationsController>().reloadFromStorage();
-      }
+    final id = _messageId(message);
+    final storage = GetStorage();
+    final saved =
+        storage.read<List<dynamic>>(_notificationHistoryKey) ?? <dynamic>[];
+    final alreadyExists = saved.any((item) {
+      if (item is! Map) return false;
+      return item['id']?.toString() == id;
+    });
+    if (alreadyExists) {
+      // A background handler may have saved it while the app was paused.
+      _updateRegisteredController(message, id);
       return;
     }
-    final title =
-        message.notification?.title ??
-        message.data['title']?.toString() ??
-        'Notification';
-    final body =
-        message.notification?.body ?? message.data['body']?.toString() ?? '';
-    final notification = <String, dynamic>{
-      'id': id,
-      'title': title,
-      'message': body,
-      'type': message.data['type']?.toString() ?? 'general',
-      'createdAt': (message.sentTime ?? DateTime.now()).toIso8601String(),
-      'isRead': false,
-    };
-    history.insert(0, notification);
-    if (history.length > 100) {
-      history.removeRange(100, history.length);
-    }
-    await box.write(storageKey, history);
-    if (Get.isRegistered<NotificationsController>()) {
-      Get.find<NotificationsController>().reloadFromStorage();
+    final json = _notificationToJson(message, id);
+    saved.insert(0, json);
+    await storage.write(_notificationHistoryKey, saved.take(100).toList());
+    _updateRegisteredController(message, id);
+    if (kDebugMode) {
+      debugPrint('Notification saved: $id');
     }
   }
 
+  /// Updates an existing notification controller without creating duplicates.
+  void _updateRegisteredController(RemoteMessage message, String id) {
+    if (!Get.isRegistered<NotificationsController>()) return;
+    final controller = Get.find<NotificationsController>();
+    final alreadyInController = controller.notifications.any(
+      (item) => item.id == id,
+    );
+    if (alreadyInController) return;
+    final json = _notificationToJson(message, id);
+    controller.addNotification(AppNotification.fromJson(json));
+  }
+
+  /// Called after a notification is tapped or opened from a terminated app.
   Future<void> _handleNotificationTap(RemoteMessage message) async {
     if (!notificationsEnabled.value) return;
     await _persistMessage(message);
     if (kDebugMode) {
-      debugPrint('Notification tapped: ${message.messageId}');
+      debugPrint('Notification tapped: ${_messageId(message)}');
       debugPrint('Notification data: ${message.data}');
     }
     Get.toNamed('/notifications');
   }
 
+  /// Allows AuthService to register the device after successful login.
+  /// Call this after the access token has been saved.
+  Future<void> syncTokenWithBackend() async {
+    try {
+      _fcmToken ??= await _messaging.getToken();
+      await _registerTokenWithBackend(
+        enabledOverride: notificationsEnabled.value,
+      );
+    } catch (error) {
+      if (kDebugMode) {
+        debugPrint('FCM token sync failed: $error');
+      }
+    }
+  }
+
+  /// Registers or updates the device token through the authenticated API.
+  /// Endpoint: POST /notifications/devices/register
   Future<void> _registerTokenWithBackend({bool? enabledOverride}) async {
     final token = _fcmToken;
     if (token == null || token.isEmpty) return;
     if (!Get.isRegistered<AuthService>() ||
         !Get.isRegistered<ApiClient>(tag: 'fastApi')) {
-      debugPrint(
-        'FCM registration deferred: authentication services unavailable.',
-      );
+      if (kDebugMode) {
+        debugPrint('FCM registration deferred: API services are unavailable.');
+      }
       return;
     }
-    final accessToken = Get.find<AuthService>().accessToken;
-    // The registration endpoint requires an authenticated user.
+    final authService = Get.find<AuthService>();
+    final accessToken = authService.accessToken;
     if (accessToken == null || accessToken.isEmpty) {
-      debugPrint('FCM registration deferred until login.');
+      if (kDebugMode) {
+        debugPrint('FCM registration deferred until login.');
+      }
       return;
     }
     final platform = kIsWeb
@@ -299,7 +256,7 @@ class PushNotificationService extends GetxService {
           };
     try {
       final api = Get.find<ApiClient>(tag: 'fastApi');
-      await api.dio.post(
+      await api.dio.post<dynamic>(
         '/notifications/devices/register',
         data: {
           'token': token,
@@ -308,14 +265,44 @@ class PushNotificationService extends GetxService {
         },
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
-      debugPrint('FCM device registration synced with backend.');
+      if (kDebugMode) {
+        debugPrint('FCM device registration synced with FastAPI.');
+      }
     } on DioException catch (error) {
-      debugPrint(
-        'FCM registration failed: '
-        '${error.response?.statusCode ?? 'network error'}',
-      );
+      if (kDebugMode) {
+        debugPrint(
+          'FCM registration failed: '
+          '${error.response?.statusCode ?? 'network error'}',
+        );
+      }
     } catch (error) {
-      debugPrint('FCM registration error: $error');
+      if (kDebugMode) {
+        debugPrint('FCM registration error: $error');
+      }
     }
   }
+}
+
+/// Returns a stable ID for deduplication whenever Firebase provides one.
+String _messageId(RemoteMessage message) {
+  return message.messageId ??
+      message.data['notification_id']?.toString() ??
+      message.data['id']?.toString() ??
+      'fcm_${message.sentTime?.millisecondsSinceEpoch ?? DateTime.now().microsecondsSinceEpoch}';
+}
+
+/// Converts an FCM message into the existing AppNotification JSON format.
+Map<String, dynamic> _notificationToJson(RemoteMessage message, String id) {
+  return {
+    'id': id,
+    'title':
+        message.notification?.title ??
+        message.data['title']?.toString() ??
+        'Magna Data Store',
+    'message':
+        message.notification?.body ?? message.data['body']?.toString() ?? '',
+    'type': message.data['type']?.toString() ?? 'general',
+    'createdAt': (message.sentTime ?? DateTime.now()).toIso8601String(),
+    'isRead': false,
+  };
 }
