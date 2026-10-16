@@ -23,4 +23,5 @@ class AppRoutes {
   static const String myAddresses = '/my-addresses';
   static const String paymentMethods = '/payment-methods';
   static const String settings = '/settings';
+  static const String notifications = '/notifications';
 }

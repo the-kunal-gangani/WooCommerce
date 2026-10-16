@@ -497,9 +497,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           onTap: () {
-            setState(() {
-              _notificationsEnabled = !_notificationsEnabled;
-            });
+            Get.toNamed(AppRoutes.notifications);
           },
         ),
         _buildDivider(),

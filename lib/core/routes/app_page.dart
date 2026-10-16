@@ -26,6 +26,8 @@ import 'package:magna_data_ai_ecommerce/features/favourites/favourites_screen.da
 import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/my-orders/orders_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/my-orders/my_orders_screen.dart';
+import 'package:magna_data_ai_ecommerce/features/notifications/notification_screen.dart';
+import 'package:magna_data_ai_ecommerce/features/notifications/notifications_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/onboarding/onboarding_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/onboarding/onboarding_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/order-confirmation/order_confirmation_screen.dart';
@@ -268,6 +270,14 @@ class AppPages {
       page: () => const PaymentMethodsScreen(),
       binding: BindingsBuilder(() {
         Get.lazyPut<PaymentMethodsController>(() => PaymentMethodsController());
+      }),
+    ),
+
+    GetPage(
+      name: AppRoutes.notifications,
+      page: () => const NotificationsScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<NotificationsController>(() => NotificationsController());
       }),
     ),
   ];
