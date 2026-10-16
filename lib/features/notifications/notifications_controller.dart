@@ -4,16 +4,11 @@ import 'package:magna_data_ai_ecommerce/data/models/app_notifications.dart';
 
 class NotificationsController extends GetxController {
   static const String _storageKey = 'magna_app_notifications';
-
   final GetStorage _storage = GetStorage();
-
   final RxList<AppNotification> notifications = <AppNotification>[].obs;
-
   final RxString selectedFilter = 'all'.obs;
-
   bool get hasUnread =>
       notifications.any((notification) => !notification.isRead);
-
   int get unreadCount =>
       notifications.where((notification) => !notification.isRead).length;
 
@@ -30,9 +25,7 @@ class NotificationsController extends GetxController {
           return true;
       }
     }).toList();
-
     filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
     return filtered;
   }
 
@@ -44,7 +37,6 @@ class NotificationsController extends GetxController {
 
   void _loadNotifications() {
     final saved = _storage.read<List<dynamic>>(_storageKey);
-
     if (saved != null) {
       try {
         notifications.assignAll(
@@ -60,7 +52,6 @@ class NotificationsController extends GetxController {
       return;
     }
     final now = DateTime.now();
-
     notifications.assignAll([
       AppNotification(
         id: 'demo_welcome',
@@ -85,7 +76,6 @@ class NotificationsController extends GetxController {
         isRead: true,
       ),
     ]);
-
     _persistNotifications();
   }
 
@@ -102,17 +92,13 @@ class NotificationsController extends GetxController {
 
   Future<void> markAsRead(String id) async {
     final index = notifications.indexWhere((item) => item.id == id);
-
     if (index == -1 || notifications[index].isRead) return;
-
     notifications[index] = notifications[index].copyWith(isRead: true);
-
     await _persistNotifications();
   }
 
   Future<void> markAllAsRead() async {
     if (!hasUnread) return;
-
     notifications.assignAll(
       notifications.map((item) => item.copyWith(isRead: true)),
     );
@@ -130,9 +116,18 @@ class NotificationsController extends GetxController {
     await _persistNotifications();
   }
 
-  Future<void> addNotification(AppNotification notification) async {
-    notifications.removeWhere((item) => item.id == notification.id);
-    notifications.add(notification);
-    await _persistNotifications();
+  void addNotification(AppNotification notification) {
+    final alreadyExists = notifications.any(
+      (item) => item.id == notification.id,
+    );
+    if (alreadyExists) return;
+    notifications.insert(0, notification);
+    if (notifications.length > 100) {
+      notifications.removeRange(100, notifications.length);
+    }
+    GetStorage().write(
+      'magna_app_notifications',
+      notifications.map((item) => item.toJson()).toList(),
+    );
   }
 }

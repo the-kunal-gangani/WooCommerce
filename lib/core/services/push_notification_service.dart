@@ -4,14 +4,46 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:magna_data_ai_ecommerce/data/models/app_notifications.dart';
+import 'package:magna_data_ai_ecommerce/features/notifications/notifications_controller.dart';
 
 import 'package:magna_data_ai_ecommerce/firebase_options.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await GetStorage.init();
+  final storage = GetStorage();
+  const storageKey = 'magna_app_notifications';
+  final title =
+      message.notification?.title ??
+      message.data['title']?.toString() ??
+      'Magna Data Store';
+  final body =
+      message.notification?.body ?? message.data['body']?.toString() ?? '';
+  final id =
+      message.messageId ??
+      message.data['notification_id']?.toString() ??
+      message.data['id']?.toString() ??
+      'fcm_${message.sentTime?.millisecondsSinceEpoch ?? DateTime.now().microsecondsSinceEpoch}';
+  final saved = storage.read<List<dynamic>>(storageKey) ?? [];
+  final exists = saved.any((item) {
+    if (item is! Map) return false;
+    return item['id']?.toString() == id;
+  });
+  if (exists) return;
+  final notification = {
+    'id': id,
+    'title': title,
+    'message': body,
+    'type': message.data['type']?.toString() ?? 'general',
+    'createdAt': (message.sentTime ?? DateTime.now()).toIso8601String(),
+    'isRead': false,
+  };
+  saved.insert(0, notification);
+  await storage.write(storageKey, saved.take(100).toList());
   if (kDebugMode) {
-    debugPrint('Background FCM message: ${message.messageId}');
+    debugPrint('Background notification saved: $id');
   }
 }
 
@@ -119,18 +151,66 @@ class PushNotificationService extends GetxService {
 
   void _handleForegroundMessage(RemoteMessage message) {
     if (!notificationsEnabled.value) return;
-    final notification = message.notification;
-    if (kDebugMode) {
-      debugPrint('Foreground FCM message: ${message.messageId}');
-    }
-    if (notification == null) return;
-    Get.snackbar(
-      notification.title ?? 'Magna Data Store',
-      notification.body ?? 'You have a new notification.',
-      snackPosition: SnackPosition.TOP,
-      duration: const Duration(seconds: 4),
-      onTap: (_) => _handleNotificationTap(message),
+
+    final remoteNotification = message.notification;
+    final data = message.data;
+
+    final title =
+        remoteNotification?.title ??
+        data['title']?.toString() ??
+        'Magna Data Store';
+
+    final body = remoteNotification?.body ?? data['body']?.toString() ?? '';
+
+    final id =
+        message.messageId ??
+        data['notification_id']?.toString() ??
+        data['id']?.toString() ??
+        'fcm_${message.sentTime?.millisecondsSinceEpoch ?? DateTime.now().microsecondsSinceEpoch}';
+
+    final notification = AppNotification(
+      id: id,
+      title: title,
+      message: body,
+      type: data['type']?.toString() ?? 'general',
+      createdAt: message.sentTime ?? DateTime.now(),
+      isRead: false,
     );
+
+    if (Get.isRegistered<NotificationsController>()) {
+      Get.find<NotificationsController>().addNotification(notification);
+    } else {
+      _saveNotificationToStorage(notification);
+    }
+    if (kDebugMode) {
+      debugPrint('Foreground notification saved: $id');
+    }
+    if (remoteNotification != null || body.isNotEmpty) {
+      Get.snackbar(
+        title,
+        body,
+        snackPosition: SnackPosition.TOP,
+        duration: const Duration(seconds: 4),
+        onTap: (_) => _handleNotificationTap(message),
+      );
+    }
+  }
+
+  void _saveNotificationToStorage(AppNotification notification) {
+    final storage = GetStorage();
+    const storageKey = 'magna_app_notifications';
+
+    final saved = storage.read<List<dynamic>>(storageKey) ?? [];
+
+    if (saved.any(
+      (item) => item is Map && item['id']?.toString() == notification.id,
+    )) {
+      return;
+    }
+
+    saved.insert(0, notification.toJson());
+
+    storage.write(storageKey, saved.take(100).toList());
   }
 
   void _handleNotificationTap(RemoteMessage message) {
