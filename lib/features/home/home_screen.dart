@@ -1,6 +1,8 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
+import 'package:magna_data_ai_ecommerce/core/services/auth_service.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/app_network_image.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/product_card.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/state_views.dart';
@@ -47,6 +49,7 @@ class HomeScreen extends GetView<HomeController> {
             slivers: [
               SliverToBoxAdapter(child: _buildHeader()),
               SliverToBoxAdapter(child: _buildSearchBar()),
+              const SliverToBoxAdapter(child: GuestAuthBanner()),
               if (banners.isNotEmpty)
                 SliverToBoxAdapter(
                   child: Padding(
@@ -635,6 +638,198 @@ class HomeScreen extends GetView<HomeController> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class GuestAuthBanner extends StatelessWidget {
+  const GuestAuthBanner({super.key});
+
+  static const Color _primary = Color(0xFF2563EB);
+  static const Color _navy = Color(0xFF111827);
+  static const Color _muted = Color(0xFF687386);
+  static const Color _border = Color(0xFFE5EAF2);
+  static const Color _background = Color(0xFFF0F5FF);
+
+  @override
+  Widget build(BuildContext context) {
+    final authService = Get.find<AuthService>();
+
+    return Obx(() {
+      final isLoggedIn =
+          authService.user.value != null || authService.accessToken != null;
+
+      if (isLoggedIn) return const SizedBox.shrink();
+
+      return Container(
+        margin: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: _border),
+          boxShadow: [
+            BoxShadow(
+              color: _navy.withValues(alpha: 0.045),
+              blurRadius: 22,
+              offset: const Offset(0, 7),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: _background,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: _primary.withValues(alpha: 0.08)),
+                  ),
+                  child: const Icon(
+                    Icons.person_outline_rounded,
+                    color: _primary,
+                    size: 27,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 2),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Welcome to Magna!',
+                          style: TextStyle(
+                            color: _navy,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.4,
+                            height: 1.2,
+                          ),
+                        ),
+                        SizedBox(height: 6),
+                        Text(
+                          'Your next favorite find is just around the corner.',
+                          style: TextStyle(
+                            color: _muted,
+                            fontSize: 12,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFD),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: _border.withValues(alpha: 0.85)),
+              ),
+              child: Row(
+                children: [
+                  _buildBenefit(Icons.local_shipping_outlined, 'Track orders'),
+                  Container(
+                    width: 1,
+                    height: 22,
+                    margin: const EdgeInsets.symmetric(horizontal: 10),
+                    color: _border,
+                  ),
+                  _buildBenefit(
+                    Icons.favorite_border_rounded,
+                    'Save favorites',
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 17),
+            SizedBox(
+              width: double.infinity,
+              height: 49,
+              child: FilledButton(
+                onPressed: () => Get.toNamed(AppRoutes.login),
+                style: FilledButton.styleFrom(
+                  backgroundColor: _primary,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Login or Create Account',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.05,
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Icon(Icons.arrow_forward_rounded, size: 18),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 11),
+            const Center(
+              child: Text(
+                'A better shopping experience awaits.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: _muted,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  static Widget _buildBenefit(IconData icon, String label) {
+    return Expanded(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: _background,
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Icon(icon, size: 16, color: _primary),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: _muted,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
