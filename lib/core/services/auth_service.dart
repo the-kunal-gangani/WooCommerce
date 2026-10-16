@@ -17,6 +17,7 @@ class AuthService extends GetxService {
 
   static const String _tokenKey = 'fastapi_access_token';
   static const String _userKey = 'auth_user';
+  static const String _rememberMeKey = 'remember_me_enabled';
 
   final user = Rxn<AuthUser>();
 
@@ -24,8 +25,11 @@ class AuthService extends GetxService {
   Future<void>? _restoring;
 
   String? get accessToken => _accessToken;
-
   bool get isLoggedIn => _accessToken != null && user.value != null;
+
+  Future<bool> getRememberMePreference() async {
+    return _storage.read<bool>(_rememberMeKey) ?? false;
+  }
 
   Future<void> restore() {
     return _restoring ??= _restore();
@@ -33,24 +37,28 @@ class AuthService extends GetxService {
 
   Future<void> _restore() async {
     try {
+      final shouldRemember = await getRememberMePreference();
+      if (!shouldRemember) {
+        _accessToken = null;
+        user.value = null;
+        await _secure.delete(_tokenKey);
+        await _storage.remove(_userKey);
+        return;
+      }
       _accessToken = await _secure.read(_tokenKey);
-
       if (_accessToken == null || _accessToken!.isEmpty) {
         return;
       }
-
       final stored = _storage.read<Map>(_userKey);
       if (stored != null) {
         user.value = AuthUser.fromJson(Map<String, dynamic>.from(stored));
       }
-
       try {
         final currentUser = await _fetchCurrentUser();
         user.value = currentUser;
         await _storage.write(_userKey, currentUser.toJson());
       } on ApiException catch (e) {
         printLog('Session validation failed: $e');
-
         if (_isUnauthorized(e)) {
           await logout();
         }
@@ -63,35 +71,40 @@ class AuthService extends GetxService {
   Future<AuthUser> login({
     required String username,
     required String password,
+    bool rememberMe = false,
   }) async {
     try {
       final response = await _api.post<dynamic>(
         '/auth/login',
         data: {'email': username.trim(), 'password': password},
       );
-
       final body = _asMap(response.data);
       final token = _extractToken(body);
-
       if (token == null || token.isEmpty) {
         throw const ApiException(
           type: ApiErrorType.unknown,
           message: 'Login response did not contain an access token.',
         );
       }
-
       _accessToken = token;
-      await _secure.write(_tokenKey, token);
-
+      await _storage.write(_rememberMeKey, rememberMe);
+      if (rememberMe) {
+        await _secure.write(_tokenKey, token);
+      } else {
+        await _secure.delete(_tokenKey);
+      }
       try {
         final currentUser = await _fetchCurrentUser();
-
         user.value = currentUser;
-        await _storage.write(_userKey, currentUser.toJson());
-
+        if (rememberMe) {
+          await _storage.write(_userKey, currentUser.toJson());
+        } else {
+          await _storage.remove(_userKey);
+        }
         return currentUser;
       } catch (_) {
         await _secure.delete(_tokenKey);
+        await _storage.remove(_userKey);
         _accessToken = null;
         user.value = null;
         rethrow;

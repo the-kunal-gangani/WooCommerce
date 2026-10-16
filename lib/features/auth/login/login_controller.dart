@@ -19,6 +19,16 @@ class LoginController extends GetxController {
 
   final AuthService _authService = Get.find<AuthService>();
 
+  @override
+  void onInit() {
+    super.onInit();
+    _loadRememberMePreference();
+  }
+
+  Future<void> _loadRememberMePreference() async {
+    rememberMe.value = await _authService.getRememberMePreference();
+  }
+
   void togglePasswordVisibility() {
     isPasswordVisible.value = !isPasswordVisible.value;
   }
@@ -41,8 +51,9 @@ class LoginController extends GetxController {
     isLoading.value = true;
     try {
       await _authService.login(
-        username: emailController.text.trim(),
-        password: passwordController.text,
+        username: email,
+        password: password,
+        rememberMe: rememberMe.value,
       );
       Get.offAllNamed(AppRoutes.home);
     } on ApiException catch (e) {
