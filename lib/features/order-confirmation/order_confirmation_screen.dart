@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 import 'package:magna_data_ai_ecommerce/data/models/checkout_data.dart';
+import 'package:magna_data_ai_ecommerce/core/services/checkout_services.dart';
+import 'package:magna_data_ai_ecommerce/features/order-confirmation/invoice_email_action.dart';
 
 class OrderConfirmationScreen extends StatelessWidget {
   const OrderConfirmationScreen({
@@ -87,6 +89,20 @@ class OrderConfirmationScreen extends StatelessWidget {
     }
 
     return '#$id';
+  }
+
+  int? get _woocommerceOrderId {
+    final value =
+        _order['woocommerce_order_id'] ??
+        _payment['woocommerce_order_id'] ??
+        _order['order_id'];
+
+    if (value is int && value > 0) return value;
+
+    if (value is num && value > 0) return value.toInt();
+
+    final parsed = int.tryParse(value?.toString() ?? '');
+    return parsed != null && parsed > 0 ? parsed : null;
   }
 
   String get _currency {
@@ -304,6 +320,10 @@ class OrderConfirmationScreen extends StatelessWidget {
                       _buildItemsSection(),
                       const SizedBox(height: 14),
                       _buildPaymentSummary(),
+                      if (_isPaid) ...[
+                        const SizedBox(height: 16),
+                        InvoiceEmailAction(orderId: _woocommerceOrderId),
+                      ],
                       const SizedBox(height: 20),
                       _buildTrustMessage(),
                     ],
