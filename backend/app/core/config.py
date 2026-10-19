@@ -32,6 +32,11 @@ class Settings(BaseSettings):
         gt=0,
         le=1440,
     )
+    
+    # Razorpay payment gateway
+    razorpay_key_id: str = ""
+    razorpay_key_secret: SecretStr = SecretStr("")
+    razorpay_webhook_secret: SecretStr = SecretStr("")
 
 
 @lru_cache

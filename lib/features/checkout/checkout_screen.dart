@@ -6,10 +6,6 @@ import 'checkout_controller.dart';
 class CheckoutScreen extends GetView<CheckoutController> {
   const CheckoutScreen({super.key});
 
-  // ---------------------------------------------------------------------------
-  // COLORS
-  // ---------------------------------------------------------------------------
-
   static const Color background = Color(0xFFF7F9FC);
   static const Color navy = Color(0xFF111827);
   static const Color textSecondary = Color(0xFF687386);
@@ -35,85 +31,58 @@ class CheckoutScreen extends GetView<CheckoutController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildHeader(),
-
                 const SizedBox(height: 22),
-
                 _buildSectionTitle(
                   icon: Icons.location_on_outlined,
                   title: 'Delivery address',
                   subtitle: 'Where should we deliver your order?',
                 ),
-
                 const SizedBox(height: 12),
-
                 _buildAddressCard(context),
-
                 const SizedBox(height: 26),
-
                 _buildSectionTitle(
                   icon: Icons.local_shipping_outlined,
                   title: 'Shipping method',
                   subtitle: 'Choose how you want your order delivered',
                 ),
-
                 const SizedBox(height: 12),
-
                 _buildShippingCard(),
-
                 const SizedBox(height: 26),
-
                 _buildSectionTitle(
                   icon: Icons.account_balance_wallet_outlined,
                   title: 'Payment method',
                   subtitle: 'Select your preferred payment option',
                 ),
-
                 const SizedBox(height: 12),
-
                 _buildPaymentCard(context),
-
                 const SizedBox(height: 26),
-
                 _buildSectionTitle(
                   icon: Icons.local_offer_outlined,
                   title: 'Promo code',
                   subtitle: 'Have a discount code?',
                 ),
-
                 const SizedBox(height: 12),
-
                 _buildCouponCard(),
-
                 const SizedBox(height: 26),
-
                 _buildSectionTitle(
                   icon: Icons.receipt_long_outlined,
                   title: 'Order summary',
                   subtitle: 'Review your order before placing it',
                 ),
-
                 const SizedBox(height: 12),
-
                 _buildSummaryCard(),
-
                 const SizedBox(height: 24),
-
                 _buildSecurityNote(),
               ],
             ),
           ),
         ),
       ),
-
       // Important:
       // This is intentionally outside any Obx.
       bottomNavigationBar: _buildBottomBar(),
     );
   }
-
-  // ===========================================================================
-  // APP BAR
-  // ===========================================================================
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
@@ -167,10 +136,6 @@ class CheckoutScreen extends GetView<CheckoutController> {
     );
   }
 
-  // ===========================================================================
-  // HEADER
-  // ===========================================================================
-
   Widget _buildHeader() {
     return Container(
       width: double.infinity,
@@ -213,9 +178,7 @@ class CheckoutScreen extends GetView<CheckoutController> {
               size: 22,
             ),
           ),
-
           const SizedBox(width: 13),
-
           const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -245,10 +208,6 @@ class CheckoutScreen extends GetView<CheckoutController> {
     );
   }
 
-  // ===========================================================================
-  // SECTION TITLE
-  // ===========================================================================
-
   Widget _buildSectionTitle({
     required IconData icon,
     required String title,
@@ -267,9 +226,7 @@ class CheckoutScreen extends GetView<CheckoutController> {
           ),
           child: Icon(icon, size: 17, color: primary),
         ),
-
         const SizedBox(width: 10),
-
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -298,10 +255,6 @@ class CheckoutScreen extends GetView<CheckoutController> {
     );
   }
 
-  // ===========================================================================
-  // ADDRESS
-  // ===========================================================================
-
   Widget _buildAddressCard(BuildContext context) {
     return _card(
       child: Column(
@@ -316,13 +269,10 @@ class CheckoutScreen extends GetView<CheckoutController> {
               if (value == null || value.trim().isEmpty) {
                 return 'Please enter your name';
               }
-
               return null;
             },
           ),
-
           const SizedBox(height: 13),
-
           _buildTextField(
             controller: controller.phoneController,
             label: 'Phone Number',
@@ -333,17 +283,13 @@ class CheckoutScreen extends GetView<CheckoutController> {
               if (value == null || value.trim().isEmpty) {
                 return 'Please enter your phone number';
               }
-
               if (value.trim().length < 7) {
                 return 'Enter a valid phone number';
               }
-
               return null;
             },
           ),
-
           const SizedBox(height: 13),
-
           _buildTextField(
             controller: controller.addressController,
             label: 'Street Address',
@@ -354,13 +300,10 @@ class CheckoutScreen extends GetView<CheckoutController> {
               if (value == null || value.trim().isEmpty) {
                 return 'Please enter your address';
               }
-
               return null;
             },
           ),
-
           const SizedBox(height: 13),
-
           Row(
             children: [
               Expanded(
@@ -373,14 +316,11 @@ class CheckoutScreen extends GetView<CheckoutController> {
                     if (value == null || value.trim().isEmpty) {
                       return 'Required';
                     }
-
                     return null;
                   },
                 ),
               ),
-
               const SizedBox(width: 11),
-
               Expanded(
                 child: _buildTextField(
                   controller: controller.stateController,
@@ -391,16 +331,13 @@ class CheckoutScreen extends GetView<CheckoutController> {
                     if (value == null || value.trim().isEmpty) {
                       return 'Required';
                     }
-
                     return null;
                   },
                 ),
               ),
             ],
           ),
-
           const SizedBox(height: 13),
-
           _buildTextField(
             controller: controller.postalCodeController,
             label: 'Postal Code',
@@ -411,13 +348,10 @@ class CheckoutScreen extends GetView<CheckoutController> {
               if (value == null || value.trim().isEmpty) {
                 return 'Please enter postal code';
               }
-
               return null;
             },
           ),
-
           const SizedBox(height: 7),
-
           // Only this small widget listens to saveAddress.
           Obx(
             () => _buildCheckbox(
@@ -432,10 +366,6 @@ class CheckoutScreen extends GetView<CheckoutController> {
     );
   }
 
-  // ===========================================================================
-  // SHIPPING
-  // ===========================================================================
-
   Widget _buildShippingCard() {
     return _card(
       child: Column(
@@ -447,9 +377,7 @@ class CheckoutScreen extends GetView<CheckoutController> {
             icon: Icons.local_shipping_outlined,
             value: 'standard',
           ),
-
           const SizedBox(height: 10),
-
           _buildShippingOption(
             title: 'Express Delivery',
             subtitle: '1–2 business days',
@@ -471,7 +399,6 @@ class CheckoutScreen extends GetView<CheckoutController> {
   }) {
     return Obx(() {
       final selected = controller.selectedShippingMethod.value == value;
-
       return InkWell(
         onTap: () => controller.selectShippingMethod(value),
         borderRadius: BorderRadius.circular(15),
@@ -503,9 +430,7 @@ class CheckoutScreen extends GetView<CheckoutController> {
                   color: selected ? primary : textSecondary,
                 ),
               ),
-
               const SizedBox(width: 11),
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -529,7 +454,6 @@ class CheckoutScreen extends GetView<CheckoutController> {
                   ],
                 ),
               ),
-
               Text(
                 price,
                 style: TextStyle(
@@ -538,9 +462,7 @@ class CheckoutScreen extends GetView<CheckoutController> {
                   fontWeight: FontWeight.w800,
                 ),
               ),
-
               const SizedBox(width: 9),
-
               _RadioIndicator(selected: selected),
             ],
           ),
@@ -548,10 +470,6 @@ class CheckoutScreen extends GetView<CheckoutController> {
       );
     });
   }
-
-  // ===========================================================================
-  // PAYMENT
-  // ===========================================================================
 
   Widget _buildPaymentCard(BuildContext context) {
     return _card(
@@ -563,31 +481,25 @@ class CheckoutScreen extends GetView<CheckoutController> {
             subtitle: 'Visa, Mastercard, RuPay and more',
             icon: Icons.credit_card_rounded,
           ),
-
           const SizedBox(height: 10),
-
           _buildPaymentOption(
             value: 'paypal',
             title: 'PayPal',
             subtitle: 'Pay securely with your PayPal account',
             icon: Icons.account_balance_wallet_outlined,
           ),
-
           const SizedBox(height: 10),
-
           _buildPaymentOption(
             value: 'cod',
             title: 'Cash on Delivery',
             subtitle: 'Pay when your order arrives',
             icon: Icons.payments_outlined,
           ),
-
           // Only this area listens to selectedPaymentMethod.
           Obx(() {
             if (controller.selectedPaymentMethod.value != 'card') {
               return const SizedBox.shrink();
             }
-
             return Padding(
               padding: const EdgeInsets.only(top: 14),
               child: _buildCardDetails(context),
@@ -606,7 +518,6 @@ class CheckoutScreen extends GetView<CheckoutController> {
   }) {
     return Obx(() {
       final selected = controller.selectedPaymentMethod.value == value;
-
       return InkWell(
         onTap: () => controller.selectPaymentMethod(value),
         borderRadius: BorderRadius.circular(15),
@@ -638,9 +549,7 @@ class CheckoutScreen extends GetView<CheckoutController> {
                   color: selected ? primary : textSecondary,
                 ),
               ),
-
               const SizedBox(width: 11),
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -664,7 +573,6 @@ class CheckoutScreen extends GetView<CheckoutController> {
                   ],
                 ),
               ),
-
               _RadioIndicator(selected: selected),
             ],
           ),
@@ -698,18 +606,14 @@ class CheckoutScreen extends GetView<CheckoutController> {
               ),
             ],
           ),
-
           const SizedBox(height: 13),
-
           _buildTextField(
             controller: controller.cardHolderController,
             label: 'Card Holder',
             hint: 'Name on card',
             icon: Icons.person_outline_rounded,
           ),
-
           const SizedBox(height: 12),
-
           _buildTextField(
             controller: controller.cardNumberController,
             label: 'Card Number',
@@ -717,9 +621,7 @@ class CheckoutScreen extends GetView<CheckoutController> {
             icon: Icons.credit_card_rounded,
             keyboardType: TextInputType.number,
           ),
-
           const SizedBox(height: 12),
-
           Row(
             children: [
               Expanded(
@@ -730,9 +632,7 @@ class CheckoutScreen extends GetView<CheckoutController> {
                   icon: Icons.calendar_today_outlined,
                 ),
               ),
-
               const SizedBox(width: 10),
-
               Expanded(
                 child: _buildTextField(
                   controller: controller.cvvController,
@@ -745,9 +645,7 @@ class CheckoutScreen extends GetView<CheckoutController> {
               ),
             ],
           ),
-
           const SizedBox(height: 5),
-
           // Only this checkbox listens to savePaymentMethod.
           Obx(
             () => _buildCheckbox(
@@ -762,15 +660,10 @@ class CheckoutScreen extends GetView<CheckoutController> {
     );
   }
 
-  // ===========================================================================
-  // COUPON
-  // ===========================================================================
-
   Widget _buildCouponCard() {
     return _card(
       child: Obx(() {
         final applied = controller.couponApplied.value;
-
         if (applied) {
           return Row(
             children: [
@@ -787,9 +680,7 @@ class CheckoutScreen extends GetView<CheckoutController> {
                   size: 20,
                 ),
               ),
-
               const SizedBox(width: 11),
-
               const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -810,7 +701,6 @@ class CheckoutScreen extends GetView<CheckoutController> {
                   ],
                 ),
               ),
-
               TextButton(
                 onPressed: controller.removeCoupon,
                 child: const Text(
@@ -825,7 +715,6 @@ class CheckoutScreen extends GetView<CheckoutController> {
             ],
           );
         }
-
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -838,9 +727,7 @@ class CheckoutScreen extends GetView<CheckoutController> {
                 textCapitalization: TextCapitalization.characters,
               ),
             ),
-
             const SizedBox(width: 10),
-
             Padding(
               padding: const EdgeInsets.only(top: 22),
               child: SizedBox(
@@ -869,10 +756,6 @@ class CheckoutScreen extends GetView<CheckoutController> {
     );
   }
 
-  // ===========================================================================
-  // SUMMARY
-  // ===========================================================================
-
   Widget _buildSummaryCard() {
     return _card(
       child: Obx(() {
@@ -882,23 +765,19 @@ class CheckoutScreen extends GetView<CheckoutController> {
         final couponApplied = controller.couponApplied.value;
         final total = controller.total;
         final currency = controller.currencySymbol;
-
         return Column(
           children: [
             _buildSummaryRow(
               'Subtotal',
               '$currency${subtotal.toStringAsFixed(controller.minorUnit)}',
             ),
-
             const SizedBox(height: 11),
-
             _buildSummaryRow(
               'Shipping',
               shipping == 0
                   ? 'Free'
                   : '$currency${shipping.toStringAsFixed(controller.minorUnit)}',
             ),
-
             if (couponApplied) ...[
               const SizedBox(height: 11),
               _buildSummaryRow(
@@ -907,12 +786,10 @@ class CheckoutScreen extends GetView<CheckoutController> {
                 valueColor: const Color(0xFF16A34A),
               ),
             ],
-
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 14),
               child: Divider(height: 1, color: border),
             ),
-
             Row(
               children: [
                 const Expanded(
@@ -925,7 +802,6 @@ class CheckoutScreen extends GetView<CheckoutController> {
                     ),
                   ),
                 ),
-
                 Text(
                   '$currency${total.toStringAsFixed(controller.minorUnit)}',
                   style: const TextStyle(
@@ -971,10 +847,6 @@ class CheckoutScreen extends GetView<CheckoutController> {
     );
   }
 
-  // ===========================================================================
-  // SECURITY NOTE
-  // ===========================================================================
-
   Widget _buildSecurityNote() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -984,9 +856,7 @@ class CheckoutScreen extends GetView<CheckoutController> {
           size: 15,
           color: primary.withValues(alpha: 0.75),
         ),
-
         const SizedBox(width: 6),
-
         const Flexible(
           child: Text(
             'Your checkout information is handled securely.',
@@ -1023,7 +893,6 @@ class CheckoutScreen extends GetView<CheckoutController> {
             Expanded(
               child: Obx(() {
                 final total = controller.total;
-
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1036,9 +905,7 @@ class CheckoutScreen extends GetView<CheckoutController> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-
                     const SizedBox(height: 2),
-
                     Text(
                       '${controller.currencySymbol}'
                       '${total.toStringAsFixed(controller.minorUnit)}',
@@ -1052,12 +919,9 @@ class CheckoutScreen extends GetView<CheckoutController> {
                 );
               }),
             ),
-
             const SizedBox(width: 12),
-
             Obx(() {
               final isLoading = controller.isPlacingOrder.value;
-
               return SizedBox(
                 height: 44,
                 child: DecoratedBox(
@@ -1143,9 +1007,7 @@ class CheckoutScreen extends GetView<CheckoutController> {
             fontWeight: FontWeight.w700,
           ),
         ),
-
         const SizedBox(height: 6),
-
         TextFormField(
           controller: controller,
           validator: validator,
@@ -1165,45 +1027,36 @@ class CheckoutScreen extends GetView<CheckoutController> {
               fontSize: 11.5,
               fontWeight: FontWeight.w500,
             ),
-
             prefixIcon: Padding(
               padding: const EdgeInsets.only(left: 12, right: 8),
               child: Icon(icon, size: 17, color: textSecondary),
             ),
-
             prefixIconConstraints: const BoxConstraints(
               minWidth: 42,
               minHeight: 42,
             ),
-
             filled: true,
             fillColor: const Color(0xFFFAFBFD),
-
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 13,
               vertical: 13,
             ),
-
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: border),
             ),
-
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: border),
             ),
-
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: primary, width: 1.3),
             ),
-
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFFEF4444)),
             ),
-
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(
@@ -1211,7 +1064,6 @@ class CheckoutScreen extends GetView<CheckoutController> {
                 width: 1.3,
               ),
             ),
-
             errorStyle: const TextStyle(
               fontSize: 9.5,
               fontWeight: FontWeight.w600,
@@ -1221,10 +1073,6 @@ class CheckoutScreen extends GetView<CheckoutController> {
       ],
     );
   }
-
-  // ===========================================================================
-  // CHECKBOX
-  // ===========================================================================
 
   Widget _buildCheckbox({
     required BuildContext context,
@@ -1260,10 +1108,6 @@ class CheckoutScreen extends GetView<CheckoutController> {
     );
   }
 
-  // ===========================================================================
-  // CARD
-  // ===========================================================================
-
   Widget _card({required Widget child}) {
     return Container(
       width: double.infinity,
@@ -1285,15 +1129,9 @@ class CheckoutScreen extends GetView<CheckoutController> {
   }
 }
 
-// ==============================================================================
-// RADIO INDICATOR
-// ==============================================================================
-
 class _RadioIndicator extends StatelessWidget {
   const _RadioIndicator({required this.selected});
-
   final bool selected;
-
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
