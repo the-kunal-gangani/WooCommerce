@@ -18,6 +18,8 @@ if config.config_file_name is not None:
 # Example:
 from app.models import user  # noqa: F401
 from app.models import address, user  # noqa: F401
+from app.models import address, payment, user  # noqa: F401
+from app.models import fcm_device  # noqa: F401
 
 target_metadata = Base.metadata
 

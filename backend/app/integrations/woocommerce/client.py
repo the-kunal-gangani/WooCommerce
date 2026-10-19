@@ -208,3 +208,120 @@ class WooCommerceClient:
             "total": total,
             "total_pages": total_pages,
         }
+    
+    async def _request_json(
+        self,
+        method: str,
+        endpoint: str,
+        *,
+        payload: dict[str, Any] | None = None,
+    ) -> Any:
+        """Make a safe, authenticated WooCommerce REST API request."""
+
+        if not self._configured:
+            raise WooCommerceConfigurationError(
+                "WooCommerce credentials are not configured."
+            )
+
+        try:
+            response = await self._client.request(
+                method,
+                endpoint,
+                json=payload,
+            )
+            response.raise_for_status()
+
+        except httpx.TimeoutException as exc:
+            raise WooCommerceError(
+                "WooCommerce request timed out."
+            ) from exc
+
+        except httpx.HTTPStatusError as exc:
+            raise WooCommerceError(
+                "WooCommerce returned an unsuccessful response."
+            ) from exc
+
+        except httpx.RequestError as exc:
+            raise WooCommerceError(
+                "Unable to connect to WooCommerce."
+            ) from exc
+
+        try:
+            return response.json()
+        except ValueError as exc:
+            raise WooCommerceError(
+                "WooCommerce returned an invalid response."
+            ) from exc
+
+    async def get_product(self, product_id: int) -> dict[str, Any]:
+        """Fetch the authoritative product details."""
+
+        result = await self._request_json(
+            "GET",
+            f"products/{product_id}",
+        )
+
+        if not isinstance(result, dict):
+            raise WooCommerceError(
+                "WooCommerce returned an unexpected product response."
+            )
+
+        return result
+
+    async def get_variation(
+        self,
+        product_id: int,
+        variation_id: int,
+    ) -> dict[str, Any]:
+        """Fetch a variation belonging to a specific product."""
+
+        result = await self._request_json(
+            "GET",
+            f"products/{product_id}/variations/{variation_id}",
+        )
+
+        if not isinstance(result, dict):
+            raise WooCommerceError(
+                "WooCommerce returned an unexpected variation response."
+            )
+
+        return result
+
+    async def create_order(
+        self,
+        payload: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Create a WooCommerce order."""
+
+        result = await self._request_json(
+            "POST",
+            "orders",
+            payload=payload,
+        )
+
+        if not isinstance(result, dict) or not result.get("id"):
+            raise WooCommerceError(
+                "WooCommerce did not return a valid order."
+            )
+
+        return result
+
+    async def update_order(
+        self,
+        order_id: int,
+        payload: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Update an existing WooCommerce order."""
+
+        result = await self._request_json(
+            "PUT",
+            f"orders/{order_id}",
+            payload=payload,
+        )
+
+        if not isinstance(result, dict) or not result.get("id"):
+            raise WooCommerceError(
+                "WooCommerce did not return a valid updated order."
+            )
+
+        return result
