@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 import '../../data/models/checkout_data.dart';
@@ -14,11 +15,18 @@ class CheckoutService {
         data: data.toJson(),
       );
       final result = response.data;
+      debugPrint('CREATE ORDER RESPONSE: $result');
       if (result == null ||
           result['razorpay_order_id'] == null ||
           result['key_id'] == null ||
-          result['amount'] == null) {
-        throw Exception('The server returned incomplete payment details.');
+          result['amount'] == null ||
+          result['subtotal'] == null ||
+          result['shipping_total'] == null ||
+          result['total_tax'] == null ||
+          result['total'] == null) {
+        throw Exception(
+          'The server returned incomplete payment or order totals.',
+        );
       }
       return result;
     } on DioException catch (error) {
@@ -48,7 +56,6 @@ class CheckoutService {
       final message = error.response?.data is Map
           ? (error.response!.data as Map)['detail']?.toString()
           : null;
-
       throw Exception(message ?? 'Unable to verify payment.');
     }
   }

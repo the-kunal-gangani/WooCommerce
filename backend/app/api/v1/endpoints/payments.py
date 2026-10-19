@@ -379,17 +379,21 @@ async def create_payment_order(
                 detail="Could not save the payment order.",
             ) from None
 
-        line_items = woo_order.get("line_items",[])
+        line_items = woo_order.get("line_items", [])
+
         subtotal = sum(
-            Decimal(str(item.get("subtotal","0") or "0"))
-            for item in line_items
+            (
+                Decimal(str(item.get("subtotal", "0") or "0"))
+                for item in line_items
+                ),
+            Decimal("0.00"),
         )
         settings = get_settings()
         return {
             "woocommerce_order_id": woo_order_id,
             "order_number": str(woo_order.get("number") or woo_order_id),
             "razorpay_order_id": razorpay_order_id,
-            "subtotal": str(woo_order.get("total", "0")),
+            "subtotal": str(subtotal),
             "shipping_total": str(woo_order.get("shipping_total", "0")),
             "discount_total": str(woo_order.get("discount_total", "0")),
             "total_tax": str(woo_order.get("total_tax", "0")),
