@@ -9,6 +9,15 @@ class Settings(BaseSettings):
     app_name: str = "Magna Data AI Ecommerce API"
     app_env: str = "development"
     api_v1_prefix: str = "/api/v1"
+    
+    # Invoice email configuration
+    smtp_host: str = ""
+    smtp_port: int = Field(default=587, gt=0, le=65535)
+    smtp_username: str = ""
+    smtp_password: SecretStr = SecretStr("")
+    smtp_from_email: str = ""
+    smtp_starttls: bool = True
+
 
     # WooCommerce credentials must remain on the backend.
     woocommerce_base_url: str = "https://serverboat.com"

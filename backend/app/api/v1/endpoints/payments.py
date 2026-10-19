@@ -6,6 +6,24 @@ import logging
 from decimal import Decimal, InvalidOperation
 from typing import Any, Literal
 
+import io
+import smtplib
+from email.message import EmailMessage
+from xml.sax.saxutils import escape
+
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import mm
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle,
+)
+
 import razorpay
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from pydantic import AliasChoices, BaseModel, Field
@@ -696,3 +714,290 @@ async def razorpay_webhook(
     db.commit()
 
     return {"status": "received", "event": event_type}
+
+
+def _money(value: Any) -> str:
+    try:
+        amount = Decimal(str(value or "0"))
+        if not amount.is_finite():
+            raise InvalidOperation
+        return f"₹{amount:,.2f}"
+    except (InvalidOperation, ValueError, TypeError):
+        return "₹0.00"
+
+
+def _build_invoice_pdf(order: dict[str, Any]) -> bytes:
+    """Create a basic PDF invoice from the WooCommerce order."""
+    buffer = io.BytesIO()
+    styles = getSampleStyleSheet()
+
+    title_style = ParagraphStyle(
+        "InvoiceTitle",
+        parent=styles["Title"],
+        alignment=TA_CENTER,
+        textColor=colors.HexColor("#111827"),
+        spaceAfter=8,
+    )
+
+    story = [
+        Paragraph("INVOICE", title_style),
+        Paragraph(
+            f"Order #{escape(str(order.get('number') or order.get('id', '')))}",
+            styles["Heading2"],
+        ),
+        Paragraph(
+            f"Date: {escape(str(order.get('date_created') or 'N/A'))}",
+            styles["Normal"],
+        ),
+        Paragraph(
+            f"Status: {escape(str(order.get('status') or 'N/A').title())}",
+            styles["Normal"],
+        ),
+        Spacer(1, 8 * mm),
+        Paragraph("Billing Details", styles["Heading3"]),
+    ]
+
+    billing = order.get("billing") or {}
+    billing_lines = [
+        " ".join(
+            str(billing.get(key) or "")
+            for key in ("first_name", "last_name")
+        ).strip(),
+        billing.get("company") or "",
+        billing.get("address_1") or "",
+        billing.get("address_2") or "",
+        ", ".join(
+            str(billing.get(key) or "")
+            for key in ("city", "state", "postcode")
+            if billing.get(key)
+        ),
+        billing.get("country") or "",
+        billing.get("email") or "",
+        billing.get("phone") or "",
+    ]
+
+    for line in billing_lines:
+        if line:
+            story.append(Paragraph(escape(str(line)), styles["Normal"]))
+
+    story.extend([
+        Spacer(1, 8 * mm),
+        Paragraph("Order Items", styles["Heading3"]),
+    ])
+
+    rows = [["Product", "Qty", "Unit Price", "Line Total"]]
+
+    for item in order.get("line_items", []):
+        name = escape(str(item.get("name") or "Product"))
+        quantity = int(item.get("quantity") or 0)
+
+        try:
+            line_total = Decimal(str(item.get("total") or "0"))
+            unit_price = (
+                line_total / quantity if quantity > 0 else Decimal("0")
+            )
+        except (InvalidOperation, ValueError, TypeError, ZeroDivisionError):
+            line_total = Decimal("0")
+            unit_price = Decimal("0")
+
+        rows.append([
+            Paragraph(name, styles["BodyText"]),
+            str(quantity),
+            _money(unit_price),
+            _money(line_total),
+        ])
+
+    table = Table(
+        rows,
+        colWidths=[83 * mm, 17 * mm, 35 * mm, 35 * mm],
+        repeatRows=1,
+    )
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#111827")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#D1D5DB")),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("ALIGN", (1, 1), (-1, -1), "RIGHT"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 6),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+        ("TOPPADDING", (0, 0), (-1, -1), 7),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+    ]))
+    story.extend([table, Spacer(1, 8 * mm)])
+
+    subtotal = sum(
+        (
+            Decimal(str(item.get("subtotal") or "0"))
+            for item in order.get("line_items", [])
+        ),
+        Decimal("0.00"),
+    )
+
+    discount = Decimal(str(order.get("discount_total") or "0"))
+    shipping = Decimal(str(order.get("shipping_total") or "0"))
+    tax = Decimal(str(order.get("total_tax") or "0"))
+    total = Decimal(str(order.get("total") or "0"))
+
+    totals = [
+        ["Subtotal", _money(subtotal)],
+        ["Discount", f"-{_money(discount)}" if discount else _money(0)],
+        ["Shipping", _money(shipping)],
+        ["Tax", _money(tax)],
+        ["Order Total", _money(total)],
+    ]
+
+    totals_table = Table(totals, colWidths=[120 * mm, 50 * mm])
+    totals_table.setStyle(TableStyle([
+        ("ALIGN", (1, 0), (1, -1), "RIGHT"),
+        ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
+        ("LINEABOVE", (0, -1), (-1, -1), 1, colors.HexColor("#111827")),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+    ]))
+    story.append(totals_table)
+
+    SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=20 * mm,
+        leftMargin=20 * mm,
+        topMargin=18 * mm,
+        bottomMargin=18 * mm,
+        title=f"Invoice {order.get('number') or order.get('id', '')}",
+    ).build(story)
+
+    return buffer.getvalue()
+
+
+def _send_invoice_email(
+    recipient: str,
+    order_number: str,
+    pdf_bytes: bytes,
+) -> None:
+    """Send the invoice PDF using the configured SMTP account."""
+    settings = get_settings()
+
+    message = EmailMessage()
+    message["Subject"] = f"Invoice for Order #{order_number}"
+    message["From"] = settings.smtp_from_email
+    message["To"] = recipient
+    message.set_content(
+        f"Hello,\n\n"
+        f"Please find attached the invoice for order #{order_number}.\n\n"
+        f"Thank you for shopping with us."
+    )
+    message.add_attachment(
+        pdf_bytes,
+        maintype="application",
+        subtype="pdf",
+        filename=f"Invoice_{order_number}.pdf",
+    )
+
+    with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=30) as smtp:
+        smtp.ehlo()
+
+        if settings.smtp_starttls:
+            smtp.starttls()
+            smtp.ehlo()
+
+        if settings.smtp_username:
+            smtp.login(
+                settings.smtp_username,
+                settings.smtp_password.get_secret_value(),
+            )
+
+        smtp.send_message(message)
+
+    
+@router.post("/{woocommerce_order_id}/invoice/email")
+async def email_order_invoice(
+    woocommerce_order_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    """Email an invoice for a paid order belonging to the signed-in user."""
+
+    payment = db.scalar(
+        select(Payment).where(
+            Payment.woocommerce_order_id == woocommerce_order_id,
+            Payment.user_id == current_user.id,
+        )
+    )
+
+    if payment is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Order not found for this account.",
+        )
+
+    if payment.status != "paid":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An invoice is available after payment is confirmed.",
+        )
+
+    client = WooCommerceClient()
+    try:
+        order = await client.get_order(woocommerce_order_id)
+    except WooCommerceError:
+        logger.exception("Could not retrieve invoice order.")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Could not retrieve the order for the invoice.",
+        ) from None
+    finally:
+        await client.close()
+
+    # Use the email recorded on the actual WooCommerce order.
+    billing = order.get("billing") or {}
+    recipient = str(billing.get("email") or "").strip()
+
+    if not recipient:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="This order does not have a billing email address.",
+        )
+
+    if str(order.get("currency", "")).upper() != "INR":
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="This invoice currency is not supported.",
+        )
+
+    settings = get_settings()
+    if (
+        not settings.smtp_host
+        or not settings.smtp_from_email
+        or (
+            settings.smtp_username
+            and not settings.smtp_password.get_secret_value()
+        )
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Invoice email is not configured.",
+        )
+
+    order_number = str(order.get("number") or woocommerce_order_id)
+    pdf_bytes = _build_invoice_pdf(order)
+
+    try:
+        await asyncio.to_thread(
+            _send_invoice_email,
+            recipient,
+            order_number,
+            pdf_bytes,
+        )
+    except Exception:
+        logger.exception("Failed to email order invoice.")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Could not send the invoice email. Please try again.",
+        ) from None
+
+    return {
+        "status": "sent",
+        "message": "The invoice has been emailed to the billing address.",
+    }
+

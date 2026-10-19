@@ -325,3 +325,15 @@ class WooCommerceClient:
             )
 
         return result
+    
+    async def get_order(self, order_id: int) -> dict[str, Any]:
+        """Fetch an existing WooCommerce order."""
+        result = await self._request_json(
+            "GET",
+            f"orders/{order_id}",
+        )
+        if not isinstance(result, dict) or not result.get("id"):
+            raise WooCommerceError(
+                "WooCommerce did not return a valid order."
+            )
+        return result

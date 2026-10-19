@@ -37,6 +37,18 @@ class CheckoutService {
     }
   }
 
+  Future<void> emailInvoice(int orderId) async {
+    try {
+      await _dio.post<Map<String, dynamic>>('/payments/$orderId/invoice/email');
+    } on DioException catch (error) {
+      final message = error.response?.data is Map
+          ? (error.response!.data as Map)['detail']?.toString()
+          : null;
+
+      throw Exception(message ?? 'Unable to email the invoice.');
+    }
+  }
+
   Future<Map<String, dynamic>> verifyRazorpayPayment({
     required String razorpayOrderId,
     required String razorpayPaymentId,
