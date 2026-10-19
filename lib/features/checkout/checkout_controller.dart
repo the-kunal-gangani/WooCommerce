@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:magna_data_ai_ecommerce/core/services/checkout_services.dart';
 
@@ -229,15 +230,13 @@ class CheckoutController extends GetxController {
       }
       if (selectedPaymentMethod.value == 'cod') {
         await _checkoutService.placeOrder(checkoutData);
-        Get.off(
-          () => OrderConfirmationScreen(
-            checkoutData: checkoutData,
-            createdOrder: const <String, dynamic>{},
-            paymentResult: const <String, dynamic>{
-              'status': 'pending',
-              'method': 'cod',
-            },
-          ),
+        Get.offNamed(
+          AppRoutes.orderConfirmation,
+          arguments: {
+            'checkoutData': checkoutData,
+            'createdOrder': createdOrder,
+            'paymentResult': result,
+          },
         );
       }
     } on UnimplementedError catch (error) {
