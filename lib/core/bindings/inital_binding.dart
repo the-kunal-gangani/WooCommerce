@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:magna_data_ai_ecommerce/core/configs/app_config.dart';
@@ -23,6 +24,7 @@ class InitialBinding extends Bindings {
   void dependencies() {
     final apiClient = ApiClient();
     final fastApiClient = ApiClient(baseUrl: AppConfig.backendBaseUrl);
+    Get.put<Dio>(fastApiClient.dio, tag: 'fastApi', permanent: true);
 
     final secureStorage = SecureStorageService();
     final storage = StorageService();

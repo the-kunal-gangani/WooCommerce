@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
+
 import 'package:magna_data_ai_ecommerce/core/services/checkout_services.dart';
 
 import '../../core/services/cart_service.dart';
@@ -23,73 +25,49 @@ class CheckoutController extends GetxController {
   final postalCodeController = TextEditingController();
 
   final RxBool saveAddress = false.obs;
-
   final RxString selectedPaymentMethod = 'cod'.obs;
 
+  // Retained temporarily for compatibility with the existing UI.
+  // Never send raw card details to your backend.
   final cardNumberController = TextEditingController();
   final expiryController = TextEditingController();
   final cvvController = TextEditingController();
   final cardHolderController = TextEditingController();
 
   final RxBool savePaymentMethod = false.obs;
-
   final RxString selectedShippingMethod = 'standard'.obs;
+
   static const int standardShippingMinor = 0;
   static const int expressShippingMinor = 1500;
+  static const int temporaryCouponDiscountMinor = 2500;
 
-  int get shippingFeeMinor {
-    return selectedShippingMethod.value == 'express'
-        ? expressShippingMinor
-        : standardShippingMinor;
-  }
+  int get shippingFeeMinor => selectedShippingMethod.value == 'express'
+      ? expressShippingMinor
+      : standardShippingMinor;
 
   final couponController = TextEditingController();
   final RxBool couponApplied = false.obs;
   final RxString appliedCoupon = ''.obs;
 
-  static const int temporaryCouponDiscountMinor = 2500;
-
-  int get discountMinor {
-    return couponApplied.value ? temporaryCouponDiscountMinor : 0;
-  }
+  int get discountMinor =>
+      couponApplied.value ? temporaryCouponDiscountMinor : 0;
 
   final RxBool isPlacingOrder = false.obs;
   final RxBool showCardDetails = false.obs;
+
+  final Razorpay _razorpay = Razorpay();
+
   int get subtotalMinor => _cart.subtotalMinor;
+
   int get totalMinor {
-    final total = subtotalMinor + shippingFeeMinor - discountMinor;
-    return total < 0 ? 0 : total;
+    final value = subtotalMinor + shippingFeeMinor - discountMinor;
+    return value < 0 ? 0 : value;
   }
 
-  String get currencySymbol {
-    if (_cart.items.isNotEmpty) {
-      return _cart.items.first.currencySymbol;
-    }
-    return '₹';
-  }
+  String get currencySymbol =>
+      _cart.items.isNotEmpty ? _cart.items.first.currencySymbol : '₹';
 
-  int get minorUnit {
-    if (_cart.items.isNotEmpty) {
-      return _cart.items.first.minorUnit;
-    }
-    return 2;
-  }
-
-  double get subtotal {
-    return subtotalMinor / _minorUnitDivisor;
-  }
-
-  double get shippingFee {
-    return shippingFeeMinor / _minorUnitDivisor;
-  }
-
-  double get discount {
-    return discountMinor / _minorUnitDivisor;
-  }
-
-  double get total {
-    return totalMinor / _minorUnitDivisor;
-  }
+  int get minorUnit => _cart.items.isNotEmpty ? _cart.items.first.minorUnit : 2;
 
   int get _minorUnitDivisor {
     var divisor = 1;
@@ -99,150 +77,24 @@ class CheckoutController extends GetxController {
     return divisor;
   }
 
-  void selectShippingMethod(String method) {
-    if (method != 'standard' && method != 'express') {
-      return;
-    }
-    selectedShippingMethod.value = method;
-  }
+  double get subtotal => subtotalMinor / _minorUnitDivisor;
+  double get shippingFee => shippingFeeMinor / _minorUnitDivisor;
+  double get discount => discountMinor / _minorUnitDivisor;
+  double get total => totalMinor / _minorUnitDivisor;
 
-  void selectPaymentMethod(String method) {
-    selectedPaymentMethod.value = method;
-    showCardDetails.value = method == 'card';
-  }
+  @override
+  void onInit() {
+    super.onInit();
 
-  void applyCoupon() {
-    final code = couponController.text.trim().toUpperCase();
-    if (code.isEmpty) {
-      Get.snackbar(
-        'Coupon',
-        'Please enter a coupon code.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return;
-    }
-    if (code != 'MAGNA25') {
-      couponApplied.value = false;
-      appliedCoupon.value = '';
-      Get.snackbar(
-        'Invalid coupon',
-        'This coupon is not valid.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return;
-    }
-    couponApplied.value = true;
-    appliedCoupon.value = code;
-    Get.snackbar(
-      'Coupon applied',
-      'Your coupon has been applied.',
-      snackPosition: SnackPosition.BOTTOM,
-    );
-  }
-
-  void removeCoupon() {
-    couponApplied.value = false;
-    appliedCoupon.value = '';
-    couponController.clear();
-  }
-
-  bool _validateAddress() {
-    final form = addressFormKey.currentState;
-    if (form == null) {
-      return false;
-    }
-    return form.validate();
-  }
-
-  bool _validatePayment() {
-    if (selectedPaymentMethod.value == 'cod') {
-      return true;
-    }
-    if (selectedPaymentMethod.value == 'paypal') {
-      return true;
-    }
-    if (selectedPaymentMethod.value == 'card') {
-      if (cardNumberController.text.trim().isEmpty ||
-          expiryController.text.trim().isEmpty ||
-          cvvController.text.trim().isEmpty ||
-          cardHolderController.text.trim().isEmpty) {
-        Get.snackbar(
-          'Payment details',
-          'Please complete your card details.',
-          snackPosition: SnackPosition.BOTTOM,
-        );
-        return false;
-      }
-      return true;
-    }
-    return false;
-  }
-
-  Future<void> placeOrder() async {
-    if (isPlacingOrder.value) {
-      return;
-    }
-    if (_cart.items.isEmpty) {
-      Get.snackbar(
-        'Cart is empty',
-        'Add at least one product before checkout.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return;
-    }
-    if (!_validateAddress()) {
-      return;
-    }
-    if (!_validatePayment()) {
-      return;
-    }
-    isPlacingOrder.value = true;
-    try {
-      final address = CheckoutAddress(
-        fullName: fullNameController.text.trim(),
-        phone: phoneController.text.trim(),
-        address1: addressController.text.trim(),
-        city: cityController.text.trim(),
-        state: stateController.text.trim(),
-        postcode: postalCodeController.text.trim(),
-      );
-      final checkoutData = CheckoutData(
-        address: address,
-        items: List.unmodifiable(_cart.items),
-        paymentMethod: selectedPaymentMethod.value,
-        shippingMethod: selectedShippingMethod.value,
-        couponCode: couponApplied.value ? appliedCoupon.value : null,
-      );
-      await _checkoutService.placeOrder(checkoutData);
-      Get.off(() => const OrderConfirmationScreen());
-    } on UnimplementedError catch (e) {
-      Get.snackbar(
-        'Checkout not connected',
-        e.message ?? 'Checkout backend is not configured yet.',
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 4),
-      );
-    } catch (e) {
-      Get.snackbar(
-        'Unable to place order',
-        'Something went wrong. Please try again.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      isPlacingOrder.value = false;
-    }
-  }
-
-  void toggleSaveAddress(bool? value) {
-    saveAddress.value = value ?? false;
-  }
-
-  void toggleSavePayment(bool? value) {
-    savePaymentMethod.value = value ?? false;
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
   }
 
   @override
   void onClose() {
+    _razorpay.clear();
+
     fullNameController.dispose();
     phoneController.dispose();
     addressController.dispose();
@@ -258,5 +110,235 @@ class CheckoutController extends GetxController {
     couponController.dispose();
 
     super.onClose();
+  }
+
+  void selectShippingMethod(String method) {
+    if (method == 'standard' || method == 'express') {
+      selectedShippingMethod.value = method;
+    }
+  }
+
+  void selectPaymentMethod(String method) {
+    selectedPaymentMethod.value = method;
+    showCardDetails.value = false;
+  }
+
+  void applyCoupon() {
+    final code = couponController.text.trim().toUpperCase();
+
+    if (code.isEmpty) {
+      Get.snackbar(
+        'Coupon',
+        'Please enter a coupon code.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    if (code != 'MAGNA25') {
+      couponApplied.value = false;
+      appliedCoupon.value = '';
+
+      Get.snackbar(
+        'Invalid coupon',
+        'This coupon is not valid.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    couponApplied.value = true;
+    appliedCoupon.value = code;
+
+    Get.snackbar(
+      'Coupon applied',
+      'Your coupon has been applied.',
+      snackPosition: SnackPosition.BOTTOM,
+    );
+  }
+
+  void removeCoupon() {
+    couponApplied.value = false;
+    appliedCoupon.value = '';
+    couponController.clear();
+  }
+
+  bool _validateAddress() {
+    return addressFormKey.currentState?.validate() ?? false;
+  }
+
+  bool _validatePayment() {
+    switch (selectedPaymentMethod.value) {
+      case 'cod':
+      case 'card':
+        return true;
+
+      case 'paypal':
+        Get.snackbar(
+          'Payment unavailable',
+          'PayPal is not connected yet. Please choose another method.',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return false;
+
+      default:
+        Get.snackbar(
+          'Payment unavailable',
+          'Please select a supported payment method.',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return false;
+    }
+  }
+
+  Future<void> placeOrder() async {
+    if (isPlacingOrder.value) return;
+
+    if (_cart.items.isEmpty) {
+      Get.snackbar(
+        'Cart is empty',
+        'Add at least one product before checkout.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    if (!_validateAddress() || !_validatePayment()) return;
+
+    isPlacingOrder.value = true;
+
+    try {
+      final address = CheckoutAddress(
+        fullName: fullNameController.text.trim(),
+        phone: phoneController.text.trim(),
+        address1: addressController.text.trim(),
+        city: cityController.text.trim(),
+        state: stateController.text.trim(),
+        postcode: postalCodeController.text.trim(),
+      );
+
+      final checkoutData = CheckoutData(
+        address: address,
+        items: List.unmodifiable(_cart.items),
+        paymentMethod: selectedPaymentMethod.value,
+        shippingMethod: selectedShippingMethod.value,
+        couponCode: couponApplied.value ? appliedCoupon.value : null,
+      );
+
+      if (selectedPaymentMethod.value == 'card') {
+        final result = await _checkoutService.createRazorpayOrder(checkoutData);
+
+        final key = result['key_id']?.toString();
+        final orderId = result['razorpay_order_id']?.toString();
+        final amount = result['amount'];
+
+        if (key == null || orderId == null || amount == null) {
+          throw Exception('The server returned incomplete payment details.');
+        }
+
+        _razorpay.open({
+          'key': key,
+          'order_id': orderId,
+          'amount': amount,
+          'currency': result['currency'] ?? 'INR',
+          'name': 'Magna Data Store',
+          'description': 'Order payment',
+          'prefill': {'contact': phoneController.text.trim()},
+          'theme': {'color': '#2563EB'},
+        });
+
+        // Keep the checkout controller alive while Razorpay is open.
+        // The SDK callback will handle payment verification.
+        return;
+      }
+
+      if (selectedPaymentMethod.value == 'cod') {
+        // This requires a real COD implementation in CheckoutService.
+        await _checkoutService.placeOrder(checkoutData);
+
+        Get.off(() => const OrderConfirmationScreen());
+        return;
+      }
+    } on UnimplementedError catch (error) {
+      Get.snackbar(
+        'Checkout not connected',
+        error.message ?? 'This checkout method is not implemented yet.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 4),
+      );
+    } catch (error) {
+      Get.snackbar(
+        'Unable to continue checkout',
+        error.toString().replaceFirst('Exception: ', ''),
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 4),
+      );
+    } finally {
+      isPlacingOrder.value = false;
+    }
+  }
+
+  Future<void> _handlePaymentSuccess(PaymentSuccessResponse response) async {
+    final orderId = response.orderId;
+    final paymentId = response.paymentId;
+    final signature = response.signature;
+
+    if (orderId == null || paymentId == null || signature == null) {
+      Get.snackbar(
+        'Verification pending',
+        'Payment details are incomplete. Check the order status before trying again.',
+      );
+      return;
+    }
+
+    try {
+      final result = await _checkoutService.verifyRazorpayPayment(
+        razorpayOrderId: orderId,
+        razorpayPaymentId: paymentId,
+        razorpaySignature: signature,
+      );
+
+      if (result['status'] == 'paid') {
+        Get.off(() => const OrderConfirmationScreen());
+      } else {
+        Get.snackbar(
+          'Payment confirmation pending',
+          'The server has not confirmed this payment yet. Please do not pay again.',
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 5),
+        );
+      }
+    } catch (_) {
+      Get.snackbar(
+        'Verification pending',
+        'We could not confirm the payment yet. Check the order status before retrying.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 5),
+      );
+    }
+  }
+
+  void _handlePaymentError(PaymentFailureResponse response) {
+    Get.snackbar(
+      'Payment not completed',
+      response.message ?? 'You can try the payment again.',
+      snackPosition: SnackPosition.BOTTOM,
+    );
+  }
+
+  void _handleExternalWallet(ExternalWalletResponse response) {
+    Get.snackbar(
+      'External wallet',
+      response.walletName ?? 'Wallet selected',
+      snackPosition: SnackPosition.BOTTOM,
+    );
+  }
+
+  void toggleSaveAddress(bool? value) {
+    saveAddress.value = value ?? false;
+  }
+
+  void toggleSavePayment(bool? value) {
+    savePaymentMethod.value = value ?? false;
   }
 }

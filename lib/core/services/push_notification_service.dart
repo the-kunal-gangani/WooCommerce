@@ -12,6 +12,7 @@ import 'package:magna_data_ai_ecommerce/features/notifications/notifications_con
 import 'package:magna_data_ai_ecommerce/firebase_options.dart';
 
 const String _notificationHistoryKey = 'magna_app_notifications';
+
 /// Handles FCM messages when the application is in the background.
 /// This handler runs in a separate isolate, so it persists notification
 /// data directly instead of depending on GetX controllers.
@@ -112,7 +113,7 @@ class PushNotificationService extends GetxService {
       if (!permitted) {
         notificationsEnabled.value = false;
         await _storage.write(_preferenceKey, false);
-        Get.snackbar( 
+        Get.snackbar(
           'Permission required',
           'Allow notifications in your device settings to enable them.',
           snackPosition: SnackPosition.TOP,
