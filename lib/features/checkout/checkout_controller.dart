@@ -230,12 +230,16 @@ class CheckoutController extends GetxController {
       }
       if (selectedPaymentMethod.value == 'cod') {
         await _checkoutService.placeOrder(checkoutData);
+
         Get.offNamed(
           AppRoutes.orderConfirmation,
           arguments: {
             'checkoutData': checkoutData,
-            'createdOrder': createdOrder,
-            'paymentResult': result,
+            'createdOrder': <String, dynamic>{},
+            'paymentResult': <String, dynamic>{
+              'status': 'pending',
+              'method': 'cod',
+            },
           },
         );
       }

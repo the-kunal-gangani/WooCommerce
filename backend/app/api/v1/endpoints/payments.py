@@ -385,18 +385,18 @@ async def create_payment_order(
             for item in line_items
         )
         settings = get_settings()
-        return{
-            "woocommerce_order_id" : woo_order_id,
+        return {
+            "woocommerce_order_id": woo_order_id,
             "order_number": str(woo_order.get("number") or woo_order_id),
-            "razorpay_order_id" : razorpay_order_id,
-            "subtotal": str(subtotal),
-            "shipping_total": str(Decimal(woo_order.get("shipping_total","0") or "0")),
-            "decimal_total": str(Decimal(woo_order.get("decimal_total","0") or "0")),
-            "total_tax": str(Decimal(woo_order.get("total_tax","0") or "0")),
-            "total": str(Decimal(woo_order.get("total","0") or "0")),
+            "razorpay_order_id": razorpay_order_id,
+            "subtotal": str(woo_order.get("total", "0")),
+            "shipping_total": str(woo_order.get("shipping_total", "0")),
+            "discount_total": str(woo_order.get("discount_total", "0")),
+            "total_tax": str(woo_order.get("total_tax", "0")),
+            "total": str(woo_order.get("total", "0")),
             "amount": amount_minor,
             "currency": "INR",
-            "key_id": settings.razorpay_key_id
+            "key_id": settings.razorpay_key_id,
         }
 
     except HTTPException:
