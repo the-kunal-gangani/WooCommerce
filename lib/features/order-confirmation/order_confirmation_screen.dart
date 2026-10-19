@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
+import 'package:magna_data_ai_ecommerce/data/models/checkout_data.dart';
 
 class OrderConfirmationScreen extends StatelessWidget {
-  const OrderConfirmationScreen({super.key});
+  const OrderConfirmationScreen({
+    super.key,
+    required this.checkoutData,
+    required this.createdOrder,
+    required this.paymentResult,
+  });
+
+  final CheckoutData checkoutData;
+  final Map<String, dynamic> createdOrder;
+  final Map<String, dynamic> paymentResult;
 
   static const background = Color(0xFFF7F9FC);
   static const navy = Color(0xFF111827);
@@ -13,33 +24,263 @@ class OrderConfirmationScreen extends StatelessWidget {
   static const success = Color(0xFF16A34A);
   static const border = Color(0xFFE5EAF1);
 
+  String _stringValue(dynamic value, {String fallback = ''}) {
+    if (value == null) return fallback;
+    final result = value.toString().trim();
+    return result.isEmpty ? fallback : result;
+  }
+
+  double? _numberValue(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+
+    return double.tryParse(value.toString().replaceAll(',', '').trim());
+  }
+
+  // Supports responses that wrap their result in "data".
+  Map<String, dynamic> get _order {
+    final data = createdOrder['data'];
+    if (data is Map) {
+      return Map<String, dynamic>.from(data);
+    }
+    return createdOrder;
+  }
+
+  Map<String, dynamic> get _payment {
+    final data = paymentResult['data'];
+    if (data is Map) {
+      return Map<String, dynamic>.from(data);
+    }
+    return paymentResult;
+  }
+
+  String get _paymentStatus {
+    final status = _stringValue(
+      _payment['status'],
+      fallback: _stringValue(paymentResult['status']),
+    ).toLowerCase();
+
+    if (status == 'paid' || status == 'captured') return 'paid';
+    if (status == 'pending' || status == 'created') return 'pending';
+
+    if (checkoutData.paymentMethod == 'cod') {
+      return 'pending';
+    }
+
+    return status.isEmpty ? 'pending' : status;
+  }
+
+  bool get _isPaid => _paymentStatus == 'paid';
+
+  bool get _isCod => checkoutData.paymentMethod == 'cod';
+
+  String get _orderNumber {
+    final id =
+        _order['woocommerce_order_id'] ??
+        _order['order_number'] ??
+        _order['orderNumber'] ??
+        _order['order_id'] ??
+        _order['id'];
+
+    if (id == null || id.toString().trim().isEmpty) {
+      return 'Available in your order history';
+    }
+
+    return '#$id';
+  }
+
+  String get _currency {
+    return _stringValue(
+      _order['currency'],
+      fallback: _stringValue(createdOrder['currency'], fallback: 'INR'),
+    ).toUpperCase();
+  }
+
+  String get _currencySymbol {
+    switch (_currency) {
+      case 'INR':
+        return '₹';
+      case 'USD':
+        return '\$';
+      case 'EUR':
+        return '€';
+      case 'GBP':
+        return '£';
+      default:
+        return '$_currency ';
+    }
+  }
+
+  String _formatAmount(double value) {
+    return '$_currencySymbol${value.toStringAsFixed(2)}';
+  }
+
+  // WooCommerce commonly returns monetary amounts as decimal strings.
+  // Never use Flutter's estimated total as the amount actually paid.
+  double? get _orderTotal {
+    return _numberValue(
+      _order['total'] ?? _order['total_amount'] ?? _order['amount_total'],
+    );
+  }
+
+  double? get _subtotal {
+    return _numberValue(
+      _order['subtotal'] ??
+          _order['subtotal_amount'] ??
+          _order['line_items_subtotal'],
+    );
+  }
+
+  double? get _shippingTotal {
+    return _numberValue(
+      _order['shipping_total'] ??
+          _order['shipping'] ??
+          _order['shipping_amount'],
+    );
+  }
+
+  double? get _discountTotal {
+    return _numberValue(
+      _order['discount_total'] ??
+          _order['discount'] ??
+          _order['discount_amount'],
+    );
+  }
+
+  double? get _taxTotal {
+    return _numberValue(
+      _order['total_tax'] ?? _order['tax'] ?? _order['tax_total'],
+    );
+  }
+
+  String get _paymentMethodLabel {
+    if (_isCod) return 'Cash on delivery';
+    return _isPaid ? 'Razorpay · Paid' : 'Razorpay · Pending';
+  }
+
+  String get _statusTitle {
+    if (_isCod) return 'Order placed successfully!';
+    if (_isPaid) return 'Payment successful!';
+    return 'Order received';
+  }
+
+  String get _statusDescription {
+    if (_isCod) {
+      return 'Your order has been placed. Payment is due on delivery.';
+    }
+
+    if (_isPaid) {
+      return 'Thank you for shopping with Magna Data Store.';
+    }
+
+    return 'Your order details are available, but payment confirmation '
+        'is still pending. Please do not pay again until you check the status.';
+  }
+
+  String get _shippingAddress {
+    final address = checkoutData.address;
+
+    return [
+      address.fullName,
+      address.address1,
+      address.city,
+      address.state,
+      address.postcode,
+    ].where((part) => part.trim().isNotEmpty).join(', ');
+  }
+
+  List<dynamic> get _items => checkoutData.items;
+
+  String _itemName(dynamic item) {
+    try {
+      final value = item.name;
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString();
+      }
+    } catch (_) {}
+
+    try {
+      final value = item.productName;
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString();
+      }
+    } catch (_) {}
+
+    try {
+      if (item is Map) {
+        return _stringValue(
+          item['name'] ?? item['product_name'] ?? item['productName'],
+          fallback: 'Product',
+        );
+      }
+    } catch (_) {}
+
+    return 'Product';
+  }
+
+  int _itemQuantity(dynamic item) {
+    try {
+      final value = item.quantity;
+      if (value is num) return value.toInt();
+    } catch (_) {}
+
+    try {
+      if (item is Map) {
+        final value = item['quantity'];
+        if (value is num) return value.toInt();
+        return int.tryParse(value.toString()) ?? 1;
+      }
+    } catch (_) {}
+
+    return 1;
+  }
+
+  double? _itemPrice(dynamic item) {
+    try {
+      final value = item.price;
+      if (value is num) return value.toDouble();
+    } catch (_) {}
+
+    try {
+      final value = item.priceAmount;
+      if (value is num) return value.toDouble();
+    } catch (_) {}
+
+    try {
+      if (item is Map) {
+        return _numberValue(
+          item['price'] ?? item['unit_price'] ?? item['regular_price'],
+        );
+      }
+    } catch (_) {}
+
+    return null;
+  }
+
+  String _itemDetails(dynamic item) {
+    final parts = <String>[];
+
+    try {
+      final value = item.color;
+      if (value != null && value.toString().trim().isNotEmpty) {
+        parts.add(value.toString());
+      }
+    } catch (_) {}
+
+    try {
+      if (item is Map) {
+        final value = item['color'] ?? item['variation_name'];
+        if (value != null && value.toString().trim().isNotEmpty) {
+          parts.add(value.toString());
+        }
+      }
+    } catch (_) {}
+
+    return parts.isEmpty ? 'Selected product' : parts.join(' · ');
+  }
+
   @override
   Widget build(BuildContext context) {
-    const String orderId = '#ORD-2026-98421';
-    const String estimatedDelivery = 'Wed, Oct 8 - Fri, Oct 10';
-    const double totalAmount = 651.10;
-
-    final items = [
-      {
-        'name': 'Wireless Headphones',
-        'color': 'Navy Blue',
-        'price': 199.99,
-        'quantity': 1,
-      },
-      {
-        'name': 'Ergonomic Mechanical Keyboard',
-        'color': 'Matte Black',
-        'price': 149.50,
-        'quantity': 2,
-      },
-      {
-        'name': 'Smart Fitness Watch',
-        'color': 'Silver',
-        'price': 89.99,
-        'quantity': 1,
-      },
-    ];
-
     return Scaffold(
       backgroundColor: background,
       body: Stack(
@@ -56,16 +297,13 @@ class OrderConfirmationScreen extends StatelessWidget {
                     children: [
                       _buildSuccessHeader(),
                       const SizedBox(height: 24),
-                      _buildOrderInfo(
-                        orderId: orderId,
-                        estimatedDelivery: estimatedDelivery,
-                      ),
+                      _buildOrderInfo(),
                       const SizedBox(height: 14),
                       _buildShippingCard(),
                       const SizedBox(height: 22),
-                      _buildItemsSection(items),
+                      _buildItemsSection(),
                       const SizedBox(height: 14),
-                      _buildPaymentSummary(totalAmount),
+                      _buildPaymentSummary(),
                       const SizedBox(height: 20),
                       _buildTrustMessage(),
                     ],
@@ -147,8 +385,10 @@ class OrderConfirmationScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(13),
               border: Border.all(color: border),
             ),
-            child: const Icon(
-              Icons.receipt_long_outlined,
+            child: Icon(
+              _isPaid
+                  ? Icons.receipt_long_outlined
+                  : Icons.shopping_bag_outlined,
               color: primary,
               size: 19,
             ),
@@ -159,10 +399,13 @@ class OrderConfirmationScreen extends StatelessWidget {
   }
 
   Widget _buildSuccessHeader() {
+    final Color statusColor = _isPaid || _isCod
+        ? success
+        : const Color(0xFFD97706);
+
     return Column(
       children: [
         const SizedBox(height: 12),
-
         Container(
           width: 82,
           height: 82,
@@ -172,7 +415,7 @@ class OrderConfirmationScreen extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                success.withValues(alpha: 0.14),
+                statusColor.withValues(alpha: 0.14),
                 primary.withValues(alpha: 0.10),
               ],
             ),
@@ -184,68 +427,76 @@ class OrderConfirmationScreen extends StatelessWidget {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: success.withValues(alpha: 0.12),
+                  color: statusColor.withValues(alpha: 0.12),
                   blurRadius: 18,
                   offset: const Offset(0, 6),
                 ),
               ],
             ),
-            child: const Icon(Icons.check_rounded, color: success, size: 36),
+            child: Icon(
+              _isPaid || _isCod
+                  ? Icons.check_rounded
+                  : Icons.hourglass_top_rounded,
+              color: statusColor,
+              size: 36,
+            ),
           ),
         ),
-
         const SizedBox(height: 17),
-
-        const Text(
-          'Order placed successfully!',
+        Text(
+          _statusTitle,
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: const TextStyle(
             color: navy,
             fontSize: 24,
             fontWeight: FontWeight.w800,
             letterSpacing: -0.6,
           ),
         ),
-
         const SizedBox(height: 7),
-
-        const Text(
-          'Thank you for shopping with Magna Data Store.',
+        Text(
+          _statusDescription,
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: const TextStyle(
             color: muted,
             fontSize: 12,
             height: 1.5,
             fontWeight: FontWeight.w500,
           ),
         ),
-
-        const SizedBox(height: 5),
-
-        const Text(
-          'A confirmation email has been sent to your inbox.',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: muted,
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: statusColor.withValues(alpha: 0.09),
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: Text(
+            _isPaid
+                ? 'PAYMENT VERIFIED'
+                : _isCod
+                ? 'CASH ON DELIVERY'
+                : 'PAYMENT PENDING',
+            style: TextStyle(
+              color: statusColor,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.5,
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildOrderInfo({
-    required String orderId,
-    required String estimatedDelivery,
-  }) {
+  Widget _buildOrderInfo() {
     return Row(
       children: [
         Expanded(
           child: _buildInfoCard(
             icon: Icons.receipt_long_outlined,
             label: 'Order number',
-            value: orderId,
+            value: _orderNumber,
             iconColor: primary,
           ),
         ),
@@ -254,7 +505,10 @@ class OrderConfirmationScreen extends StatelessWidget {
           child: _buildInfoCard(
             icon: Icons.local_shipping_outlined,
             label: 'Delivery',
-            value: estimatedDelivery,
+            value: _stringValue(
+              _order['estimated_delivery'] ?? _order['delivery_estimate'],
+              fallback: 'To be announced',
+            ),
             iconColor: violet,
           ),
         ),
@@ -336,6 +590,7 @@ class OrderConfirmationScreen extends StatelessWidget {
         ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 42,
@@ -351,11 +606,11 @@ class OrderConfirmationScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Shipping address',
                   style: TextStyle(
                     color: navy,
@@ -363,18 +618,37 @@ class OrderConfirmationScreen extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
-                  '123 Main Street, Apt 4B, New York, NY 10001',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  _shippingAddress.isEmpty
+                      ? 'No shipping address provided'
+                      : _shippingAddress,
+                  style: const TextStyle(
                     color: muted,
                     fontSize: 11,
-                    height: 1.4,
+                    height: 1.5,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
+                if (checkoutData.address.phone.trim().isNotEmpty) ...[
+                  const SizedBox(height: 7),
+                  Row(
+                    children: [
+                      const Icon(Icons.phone_outlined, size: 14, color: muted),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          checkoutData.address.phone,
+                          style: const TextStyle(
+                            color: muted,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -383,7 +657,7 @@ class OrderConfirmationScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildItemsSection(List<Map<String, dynamic>> items) {
+  Widget _buildItemsSection() {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       decoration: BoxDecoration(
@@ -421,27 +695,38 @@ class OrderConfirmationScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              Text(
-                'Items ordered (${items.length})',
-                style: const TextStyle(
-                  color: navy,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
+              Expanded(
+                child: Text(
+                  'Items ordered (${_items.length})',
+                  style: const TextStyle(
+                    color: navy,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          ...items.map(_buildItem),
+          if (_items.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Text(
+                'Order item details are unavailable.',
+                style: TextStyle(color: muted, fontSize: 12),
+              ),
+            )
+          else
+            ..._items.map(_buildItem),
         ],
       ),
     );
   }
 
-  Widget _buildItem(Map<String, dynamic> item) {
-    final price = item['price'] as double;
-    final quantity = item['quantity'] as int;
-    final total = price * quantity;
+  Widget _buildItem(dynamic item) {
+    final quantity = _itemQuantity(item);
+    final price = _itemPrice(item);
+    final lineTotal = price == null ? null : price * quantity;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 9),
@@ -467,7 +752,7 @@ class OrderConfirmationScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item['name'] as String,
+                  _itemName(item),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -479,10 +764,13 @@ class OrderConfirmationScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Qty $quantity  •  ${item['color']}',
+                  'Qty $quantity · ${_itemDetails(item)}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: muted,
                     fontSize: 10,
+                    height: 1.4,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -491,7 +779,7 @@ class OrderConfirmationScreen extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            '\$${total.toStringAsFixed(2)}',
+            lineTotal == null ? '—' : _formatAmount(lineTotal),
             style: const TextStyle(
               color: navy,
               fontSize: 12,
@@ -503,7 +791,13 @@ class OrderConfirmationScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPaymentSummary(double totalAmount) {
+  Widget _buildPaymentSummary() {
+    final total = _orderTotal;
+    final subtotal = _subtotal;
+    final shipping = _shippingTotal;
+    final discount = _discountTotal;
+    final tax = _taxTotal;
+
     return Container(
       padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
@@ -539,11 +833,21 @@ class OrderConfirmationScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          _summaryRow('Subtotal', '\$588.98'),
+          _summaryRow(
+            'Subtotal',
+            subtotal == null ? '—' : _formatAmount(subtotal),
+          ),
           const SizedBox(height: 8),
-          _summaryRow('Shipping', '\$12.00'),
+          _summaryRow(
+            'Shipping',
+            shipping == null ? '—' : _formatAmount(shipping),
+          ),
+          if (discount != null && discount > 0) ...[
+            const SizedBox(height: 8),
+            _summaryRow('Discount', '-${_formatAmount(discount)}'),
+          ],
           const SizedBox(height: 8),
-          _summaryRow('Tax', '\$50.12'),
+          _summaryRow('Tax', tax == null ? '—' : _formatAmount(tax)),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 13),
             child: Divider(height: 1, color: border),
@@ -552,7 +856,7 @@ class OrderConfirmationScreen extends StatelessWidget {
             children: [
               const Expanded(
                 child: Text(
-                  'Total paid',
+                  'Order total',
                   style: TextStyle(
                     color: navy,
                     fontSize: 15,
@@ -561,7 +865,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                 ),
               ),
               Text(
-                '\$${totalAmount.toStringAsFixed(2)}',
+                total == null ? 'Unavailable' : _formatAmount(total),
                 style: const TextStyle(
                   color: primary,
                   fontSize: 19,
@@ -570,6 +874,28 @@ class OrderConfirmationScreen extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          _summaryRow('Payment method', _paymentMethodLabel),
+          const SizedBox(height: 8),
+          _summaryRow(
+            'Payment status',
+            _isPaid
+                ? 'Paid'
+                : _isCod
+                ? 'Pay on delivery'
+                : 'Pending confirmation',
+          ),
+          if (total == null) ...[
+            const SizedBox(height: 10),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'The store has not returned its full order totals. '
+                'Check your order details for the final amount.',
+                style: TextStyle(color: muted, fontSize: 10, height: 1.4),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -577,6 +903,7 @@ class OrderConfirmationScreen extends StatelessWidget {
 
   Widget _summaryRow(String label, String value) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           child: Text(
@@ -588,12 +915,16 @@ class OrderConfirmationScreen extends StatelessWidget {
             ),
           ),
         ),
-        Text(
-          value,
-          style: const TextStyle(
-            color: navy,
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
+        const SizedBox(width: 12),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: const TextStyle(
+              color: navy,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
       ],
@@ -601,20 +932,32 @@ class OrderConfirmationScreen extends StatelessWidget {
   }
 
   Widget _buildTrustMessage() {
+    final message = _isPaid
+        ? 'Payment was confirmed by the server.'
+        : _isCod
+        ? 'Pay for your order when it is delivered.'
+        : 'Check your order status before making another payment.';
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: const Color(0xFFF1F5FF),
         borderRadius: BorderRadius.circular(15),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.verified_outlined, color: primary, size: 19),
-          SizedBox(width: 9),
+          Icon(
+            _isPaid || _isCod
+                ? Icons.verified_outlined
+                : Icons.info_outline_rounded,
+            color: primary,
+            size: 19,
+          ),
+          const SizedBox(width: 9),
           Expanded(
             child: Text(
-              'Your order is confirmed and securely processed.',
-              style: TextStyle(
+              message,
+              style: const TextStyle(
                 color: Color(0xFF40516B),
                 fontSize: 10,
                 height: 1.4,
@@ -650,7 +993,8 @@ class OrderConfirmationScreen extends StatelessWidget {
                 onPressed: () {
                   Get.snackbar(
                     'Track Order',
-                    'Order tracking will be available soon.',
+                    'Order tracking will be available once connected '
+                        'to your order history API.',
                     snackPosition: SnackPosition.BOTTOM,
                   );
                 },

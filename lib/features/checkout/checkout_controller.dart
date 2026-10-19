@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
-
 import 'package:magna_data_ai_ecommerce/core/services/checkout_services.dart';
 
 import '../../core/services/cart_service.dart';
@@ -11,54 +10,40 @@ import '../order-confirmation/order_confirmation_screen.dart';
 
 class CheckoutController extends GetxController {
   CheckoutController(this._cart, this._checkoutService);
-
   final CartService _cart;
   final CheckoutService _checkoutService;
-
   final addressFormKey = GlobalKey<FormState>();
-
   final fullNameController = TextEditingController();
   final phoneController = TextEditingController();
   final addressController = TextEditingController();
   final cityController = TextEditingController();
   final stateController = TextEditingController();
   final postalCodeController = TextEditingController();
-
   final RxBool saveAddress = false.obs;
   final RxString selectedPaymentMethod = 'cod'.obs;
-
-  // Retained temporarily for compatibility with the existing UI.
-  // Never send raw card details to your backend.
   final cardNumberController = TextEditingController();
   final expiryController = TextEditingController();
   final cvvController = TextEditingController();
   final cardHolderController = TextEditingController();
-
   final RxBool savePaymentMethod = false.obs;
   final RxString selectedShippingMethod = 'standard'.obs;
-
   static const int standardShippingMinor = 0;
   static const int expressShippingMinor = 1500;
   static const int temporaryCouponDiscountMinor = 2500;
-
-  int get shippingFeeMinor => selectedShippingMethod.value == 'express'
-      ? expressShippingMinor
-      : standardShippingMinor;
-
   final couponController = TextEditingController();
   final RxBool couponApplied = false.obs;
   final RxString appliedCoupon = ''.obs;
-
-  int get discountMinor =>
-      couponApplied.value ? temporaryCouponDiscountMinor : 0;
-
   final RxBool isPlacingOrder = false.obs;
   final RxBool showCardDetails = false.obs;
-
   final Razorpay _razorpay = Razorpay();
-
+  CheckoutData? _pendingCheckoutData;
+  Map<String, dynamic>? _createdOrder;
   int get subtotalMinor => _cart.subtotalMinor;
-
+  int get shippingFeeMinor => selectedShippingMethod.value == 'express'
+      ? expressShippingMinor
+      : standardShippingMinor;
+  int get discountMinor =>
+      couponApplied.value ? temporaryCouponDiscountMinor : 0;
   int get totalMinor {
     final value = subtotalMinor + shippingFeeMinor - discountMinor;
     return value < 0 ? 0 : value;
@@ -85,7 +70,6 @@ class CheckoutController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-
     _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
     _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
@@ -94,21 +78,17 @@ class CheckoutController extends GetxController {
   @override
   void onClose() {
     _razorpay.clear();
-
     fullNameController.dispose();
     phoneController.dispose();
     addressController.dispose();
     cityController.dispose();
     stateController.dispose();
     postalCodeController.dispose();
-
     cardNumberController.dispose();
     expiryController.dispose();
     cvvController.dispose();
     cardHolderController.dispose();
-
     couponController.dispose();
-
     super.onClose();
   }
 
@@ -125,7 +105,6 @@ class CheckoutController extends GetxController {
 
   void applyCoupon() {
     final code = couponController.text.trim().toUpperCase();
-
     if (code.isEmpty) {
       Get.snackbar(
         'Coupon',
@@ -134,11 +113,9 @@ class CheckoutController extends GetxController {
       );
       return;
     }
-
     if (code != 'MAGNA25') {
       couponApplied.value = false;
       appliedCoupon.value = '';
-
       Get.snackbar(
         'Invalid coupon',
         'This coupon is not valid.',
@@ -146,13 +123,12 @@ class CheckoutController extends GetxController {
       );
       return;
     }
-
     couponApplied.value = true;
     appliedCoupon.value = code;
-
     Get.snackbar(
       'Coupon applied',
-      'Your coupon has been applied.',
+      'Your coupon has been selected. The server must validate it '
+          'and calculate the actual discount.',
       snackPosition: SnackPosition.BOTTOM,
     );
   }
@@ -172,7 +148,6 @@ class CheckoutController extends GetxController {
       case 'cod':
       case 'card':
         return true;
-
       case 'paypal':
         Get.snackbar(
           'Payment unavailable',
@@ -180,7 +155,6 @@ class CheckoutController extends GetxController {
           snackPosition: SnackPosition.BOTTOM,
         );
         return false;
-
       default:
         Get.snackbar(
           'Payment unavailable',
@@ -193,7 +167,6 @@ class CheckoutController extends GetxController {
 
   Future<void> placeOrder() async {
     if (isPlacingOrder.value) return;
-
     if (_cart.items.isEmpty) {
       Get.snackbar(
         'Cart is empty',
@@ -202,11 +175,8 @@ class CheckoutController extends GetxController {
       );
       return;
     }
-
     if (!_validateAddress() || !_validatePayment()) return;
-
     isPlacingOrder.value = true;
-
     try {
       final address = CheckoutAddress(
         fullName: fullNameController.text.trim(),
@@ -216,7 +186,6 @@ class CheckoutController extends GetxController {
         state: stateController.text.trim(),
         postcode: postalCodeController.text.trim(),
       );
-
       final checkoutData = CheckoutData(
         address: address,
         items: List.unmodifiable(_cart.items),
@@ -224,40 +193,52 @@ class CheckoutController extends GetxController {
         shippingMethod: selectedShippingMethod.value,
         couponCode: couponApplied.value ? appliedCoupon.value : null,
       );
-
       if (selectedPaymentMethod.value == 'card') {
+        _pendingCheckoutData = null;
+        _createdOrder = null;
         final result = await _checkoutService.createRazorpayOrder(checkoutData);
-
         final key = result['key_id']?.toString();
-        final orderId = result['razorpay_order_id']?.toString();
+        final razorpayOrderId = result['razorpay_order_id']?.toString();
         final amount = result['amount'];
-
-        if (key == null || orderId == null || amount == null) {
+        if (key == null ||
+            key.isEmpty ||
+            razorpayOrderId == null ||
+            razorpayOrderId.isEmpty ||
+            amount == null) {
           throw Exception('The server returned incomplete payment details.');
         }
-
-        _razorpay.open({
-          'key': key,
-          'order_id': orderId,
-          'amount': amount,
-          'currency': result['currency'] ?? 'INR',
-          'name': 'Magna Data Store',
-          'description': 'Order payment',
-          'prefill': {'contact': phoneController.text.trim()},
-          'theme': {'color': '#2563EB'},
-        });
-
-        // Keep the checkout controller alive while Razorpay is open.
-        // The SDK callback will handle payment verification.
+        _pendingCheckoutData = checkoutData;
+        _createdOrder = Map<String, dynamic>.from(result);
+        try {
+          _razorpay.open({
+            'key': key,
+            'order_id': razorpayOrderId,
+            'amount': amount,
+            'currency': result['currency'] ?? 'INR',
+            'name': 'Magna Data Store',
+            'description': 'Order payment',
+            'prefill': {'contact': phoneController.text.trim()},
+            'theme': {'color': '#2563EB'},
+          });
+        } catch (_) {
+          _pendingCheckoutData = null;
+          _createdOrder = null;
+          rethrow;
+        }
         return;
       }
-
       if (selectedPaymentMethod.value == 'cod') {
-        // This requires a real COD implementation in CheckoutService.
         await _checkoutService.placeOrder(checkoutData);
-
-        Get.off(() => const OrderConfirmationScreen());
-        return;
+        Get.off(
+          () => OrderConfirmationScreen(
+            checkoutData: checkoutData,
+            createdOrder: const <String, dynamic>{},
+            paymentResult: const <String, dynamic>{
+              'status': 'pending',
+              'method': 'cod',
+            },
+          ),
+        );
       }
     } on UnimplementedError catch (error) {
       Get.snackbar(
@@ -279,39 +260,58 @@ class CheckoutController extends GetxController {
   }
 
   Future<void> _handlePaymentSuccess(PaymentSuccessResponse response) async {
-    final orderId = response.orderId;
+    final razorpayOrderId = response.orderId;
     final paymentId = response.paymentId;
     final signature = response.signature;
-
-    if (orderId == null || paymentId == null || signature == null) {
+    if (razorpayOrderId == null || paymentId == null || signature == null) {
       Get.snackbar(
         'Verification pending',
-        'Payment details are incomplete. Check the order status before trying again.',
+        'Payment details are incomplete. Check the order status '
+            'before trying again.',
+        snackPosition: SnackPosition.BOTTOM,
       );
       return;
     }
-
     try {
       final result = await _checkoutService.verifyRazorpayPayment(
-        razorpayOrderId: orderId,
+        razorpayOrderId: razorpayOrderId,
         razorpayPaymentId: paymentId,
         razorpaySignature: signature,
       );
-
-      if (result['status'] == 'paid') {
-        Get.off(() => const OrderConfirmationScreen());
-      } else {
+      if (result['status']?.toString().toLowerCase() != 'paid') {
         Get.snackbar(
           'Payment confirmation pending',
-          'The server has not confirmed this payment yet. Please do not pay again.',
+          'The server has not confirmed this payment yet. '
+              'Please do not pay again.',
           snackPosition: SnackPosition.BOTTOM,
           duration: const Duration(seconds: 5),
         );
+        return;
       }
+      final checkoutData = _pendingCheckoutData;
+      final createdOrder = _createdOrder;
+      if (checkoutData == null || createdOrder == null) {
+        Get.snackbar(
+          'Order details unavailable',
+          'Payment was verified, but checkout details are unavailable. '
+              'Please contact support before attempting another payment.',
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 5),
+        );
+        return;
+      }
+      Get.off(
+        () => OrderConfirmationScreen(
+          checkoutData: checkoutData,
+          createdOrder: Map<String, dynamic>.from(createdOrder),
+          paymentResult: Map<String, dynamic>.from(result),
+        ),
+      );
     } catch (_) {
       Get.snackbar(
         'Verification pending',
-        'We could not confirm the payment yet. Check the order status before retrying.',
+        'We could not confirm the payment yet. Check the order status '
+            'before retrying.',
         snackPosition: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 5),
       );
@@ -321,8 +321,11 @@ class CheckoutController extends GetxController {
   void _handlePaymentError(PaymentFailureResponse response) {
     Get.snackbar(
       'Payment not completed',
-      response.message ?? 'You can try the payment again.',
+      response.message ??
+          'Payment was not completed. Check your order status '
+              'before attempting another payment.',
       snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 5),
     );
   }
 

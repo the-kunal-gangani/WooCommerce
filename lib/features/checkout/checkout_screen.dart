@@ -646,7 +646,6 @@ class CheckoutScreen extends GetView<CheckoutController> {
             ],
           ),
           const SizedBox(height: 5),
-          // Only this checkbox listens to savePaymentMethod.
           Obx(
             () => _buildCheckbox(
               context: context,

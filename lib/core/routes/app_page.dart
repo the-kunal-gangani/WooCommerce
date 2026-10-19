@@ -196,7 +196,29 @@ class AppPages {
 
     GetPage(
       name: AppRoutes.orderConfirmation,
-      page: () => const OrderConfirmationScreen(),
+      page: () {
+        final arguments = Get.arguments as Map<String, dynamic>?;
+
+        if (arguments == null ||
+            arguments['checkoutData'] == null ||
+            arguments['createdOrder'] == null ||
+            arguments['paymentResult'] == null) {
+          throw ArgumentError(
+            'OrderConfirmationScreen requires checkoutData, '
+            'createdOrder, and paymentResult.',
+          );
+        }
+
+        return OrderConfirmationScreen(
+          checkoutData: arguments['checkoutData'],
+          createdOrder: Map<String, dynamic>.from(
+            arguments['createdOrder'] as Map,
+          ),
+          paymentResult: Map<String, dynamic>.from(
+            arguments['paymentResult'] as Map,
+          ),
+        );
+      },
     ),
 
     GetPage(
