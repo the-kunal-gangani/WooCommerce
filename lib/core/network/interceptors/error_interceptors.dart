@@ -1,10 +1,25 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../api_exception.dart';
 
 class ErrorInterceptor extends Interceptor {
   @override
+  @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
+    final response = err.response;
+
+    debugPrint('========== API ERROR ==========');
+    debugPrint('URL: ${err.requestOptions.uri}');
+    debugPrint('Method: ${err.requestOptions.method}');
+    debugPrint('Status: ${response?.statusCode}');
+    debugPrint('Response: ${response?.data}');
+    debugPrint(
+      'Authorization header present: '
+      '${err.requestOptions.headers.containsKey('Authorization')}',
+    );
+    debugPrint('===============================');
+
     handler.next(err.copyWith(error: _map(err)));
   }
 

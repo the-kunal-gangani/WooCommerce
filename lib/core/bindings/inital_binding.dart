@@ -1,9 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+
 import 'package:magna_data_ai_ecommerce/core/configs/app_config.dart';
 import 'package:magna_data_ai_ecommerce/core/locallization/language_controller.dart';
 import 'package:magna_data_ai_ecommerce/core/network/api_client.dart';
+import 'package:magna_data_ai_ecommerce/core/services/address_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/auth_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/cart_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/category_service.dart';
@@ -17,20 +19,27 @@ import 'package:magna_data_ai_ecommerce/core/services/secure_storage_service.dar
 import 'package:magna_data_ai_ecommerce/core/services/storage_services.dart';
 import 'package:magna_data_ai_ecommerce/features/favourites/favourites_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
-import 'package:magna_data_ai_ecommerce/core/services/address_service.dart';
 
 class InitialBinding extends Bindings {
   @override
   void dependencies() {
     final apiClient = ApiClient();
-    final fastApiClient = ApiClient(baseUrl: AppConfig.backendBaseUrl);
-    Get.put<Dio>(fastApiClient.dio, tag: 'fastApi', permanent: true);
-
     final secureStorage = SecureStorageService();
     final storage = StorageService();
     final getStorage = GetStorage();
+    late final AuthService authService;
+    final fastApiClient = ApiClient(
+      baseUrl: AppConfig.backendBaseUrl,
+      tokenProvider: () async => authService.accessToken,
+    );
+    authService = AuthService(fastApiClient, secureStorage, storage);
+    Get.put<ApiClient>(apiClient, permanent: true);
+    Get.put<ApiClient>(fastApiClient, tag: 'fastApi', permanent: true);
+    Get.put<Dio>(fastApiClient.dio, tag: 'fastApi', permanent: true);
+    Get.put<SecureStorageService>(secureStorage, permanent: true);
+    Get.put<StorageService>(storage, permanent: true);
+    Get.put<AuthService>(authService, permanent: true);
     final locationService = LocationService(storage);
-    final authService = AuthService(fastApiClient, secureStorage, storage);
     final addressService = AddressService(fastApiClient, authService);
     final productService = ProductService(apiClient);
     final categoryService = CategoryService(apiClient);
@@ -51,12 +60,7 @@ class InitialBinding extends Bindings {
       recentlyViewedService,
     );
 
-    Get.put<ApiClient>(apiClient, permanent: true);
-    Get.put<ApiClient>(fastApiClient, tag: 'fastApi', permanent: true);
-    Get.put<SecureStorageService>(secureStorage, permanent: true);
-    Get.put<StorageService>(storage, permanent: true);
     Get.put<LocationService>(locationService, permanent: true);
-    Get.put<AuthService>(authService, permanent: true);
     Get.put<ProductService>(productService, permanent: true);
     Get.put<CategoryService>(categoryService, permanent: true);
     Get.put<CartService>(cartService, permanent: true);
