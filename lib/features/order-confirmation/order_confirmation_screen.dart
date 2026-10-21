@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 import 'package:magna_data_ai_ecommerce/data/models/checkout_data.dart';
-import 'package:magna_data_ai_ecommerce/core/services/checkout_services.dart';
 import 'package:magna_data_ai_ecommerce/features/order-confirmation/invoice_email_action.dart';
 
 class OrderConfirmationScreen extends StatelessWidget {
@@ -39,7 +38,6 @@ class OrderConfirmationScreen extends StatelessWidget {
     return double.tryParse(value.toString().replaceAll(',', '').trim());
   }
 
-  // Supports responses that wrap their result in "data".
   Map<String, dynamic> get _order {
     final data = createdOrder['data'];
     if (data is Map) {
@@ -61,19 +59,15 @@ class OrderConfirmationScreen extends StatelessWidget {
       _payment['status'],
       fallback: _stringValue(paymentResult['status']),
     ).toLowerCase();
-
     if (status == 'paid' || status == 'captured') return 'paid';
     if (status == 'pending' || status == 'created') return 'pending';
-
     if (checkoutData.paymentMethod == 'cod') {
       return 'pending';
     }
-
     return status.isEmpty ? 'pending' : status;
   }
 
   bool get _isPaid => _paymentStatus == 'paid';
-
   bool get _isCod => checkoutData.paymentMethod == 'cod';
 
   String get _orderNumber {
@@ -83,11 +77,9 @@ class OrderConfirmationScreen extends StatelessWidget {
         _order['orderNumber'] ??
         _order['order_id'] ??
         _order['id'];
-
     if (id == null || id.toString().trim().isEmpty) {
       return 'Available in your order history';
     }
-
     return '#$id';
   }
 
@@ -96,11 +88,8 @@ class OrderConfirmationScreen extends StatelessWidget {
         _order['woocommerce_order_id'] ??
         _payment['woocommerce_order_id'] ??
         _order['order_id'];
-
     if (value is int && value > 0) return value;
-
     if (value is num && value > 0) return value.toInt();
-
     final parsed = int.tryParse(value?.toString() ?? '');
     return parsed != null && parsed > 0 ? parsed : null;
   }
@@ -131,8 +120,6 @@ class OrderConfirmationScreen extends StatelessWidget {
     return '$_currencySymbol${value.toStringAsFixed(2)}';
   }
 
-  // WooCommerce commonly returns monetary amounts as decimal strings.
-  // Never use Flutter's estimated total as the amount actually paid.
   double? get _orderTotal {
     return _numberValue(
       _order['total'] ?? _order['total_amount'] ?? _order['amount_total'],
@@ -184,18 +171,15 @@ class OrderConfirmationScreen extends StatelessWidget {
     if (_isCod) {
       return 'Your order has been placed. Payment is due on delivery.';
     }
-
     if (_isPaid) {
       return 'Thank you for shopping with Magna Data Store.';
     }
-
     return 'Your order details are available, but payment confirmation '
         'is still pending. Please do not pay again until you check the status.';
   }
 
   String get _shippingAddress {
     final address = checkoutData.address;
-
     return [
       address.fullName,
       address.address1,
@@ -214,14 +198,12 @@ class OrderConfirmationScreen extends StatelessWidget {
         return value.toString();
       }
     } catch (_) {}
-
     try {
       final value = item.productName;
       if (value != null && value.toString().trim().isNotEmpty) {
         return value.toString();
       }
     } catch (_) {}
-
     try {
       if (item is Map) {
         return _stringValue(
@@ -230,7 +212,6 @@ class OrderConfirmationScreen extends StatelessWidget {
         );
       }
     } catch (_) {}
-
     return 'Product';
   }
 
@@ -239,7 +220,6 @@ class OrderConfirmationScreen extends StatelessWidget {
       final value = item.quantity;
       if (value is num) return value.toInt();
     } catch (_) {}
-
     try {
       if (item is Map) {
         final value = item['quantity'];
@@ -247,7 +227,6 @@ class OrderConfirmationScreen extends StatelessWidget {
         return int.tryParse(value.toString()) ?? 1;
       }
     } catch (_) {}
-
     return 1;
   }
 
@@ -256,12 +235,10 @@ class OrderConfirmationScreen extends StatelessWidget {
       final value = item.price;
       if (value is num) return value.toDouble();
     } catch (_) {}
-
     try {
       final value = item.priceAmount;
       if (value is num) return value.toDouble();
     } catch (_) {}
-
     try {
       if (item is Map) {
         return _numberValue(
@@ -269,20 +246,17 @@ class OrderConfirmationScreen extends StatelessWidget {
         );
       }
     } catch (_) {}
-
     return null;
   }
 
   String _itemDetails(dynamic item) {
     final parts = <String>[];
-
     try {
       final value = item.color;
       if (value != null && value.toString().trim().isNotEmpty) {
         parts.add(value.toString());
       }
     } catch (_) {}
-
     try {
       if (item is Map) {
         final value = item['color'] ?? item['variation_name'];
@@ -291,7 +265,6 @@ class OrderConfirmationScreen extends StatelessWidget {
         }
       }
     } catch (_) {}
-
     return parts.isEmpty ? 'Selected product' : parts.join(' · ');
   }
 

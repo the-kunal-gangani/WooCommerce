@@ -162,6 +162,10 @@ class CartController extends GetxController {
     Get.back();
   }
 
+  Future<void> clearCartAfterOrder() async {
+    await _cart.clearCart();
+  }
+
   void clearError() {
     errorMessage.value = null;
   }

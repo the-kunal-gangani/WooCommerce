@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:magna_data_ai_ecommerce/core/services/checkout_services.dart';
-
 import '../../core/services/cart_service.dart';
 import '../../data/models/checkout_address.dart';
 import '../../data/models/checkout_data.dart';
@@ -230,7 +229,7 @@ class CheckoutController extends GetxController {
       }
       if (selectedPaymentMethod.value == 'cod') {
         await _checkoutService.placeOrder(checkoutData);
-
+        await _cart.clearCart();
         Get.offNamed(
           AppRoutes.orderConfirmation,
           arguments: {
@@ -303,6 +302,7 @@ class CheckoutController extends GetxController {
         );
         return;
       }
+      await _cart.clearCart();
       Get.off(
         () => OrderConfirmationScreen(
           checkoutData: checkoutData,
