@@ -448,7 +448,45 @@ class OrderTrackingScreen extends GetView<OrderTrackingController> {
           _detailRow('Courier', tracking.provider),
         if (tracking.number.isNotEmpty) ...[
           const SizedBox(height: 12),
-          _detailRow('Tracking number', tracking.number),
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Tracking number',
+                  style: TextStyle(color: _muted, fontSize: 12),
+                ),
+              ),
+              Flexible(
+                flex: 2,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        tracking.number,
+                        textAlign: TextAlign.end,
+                        style: const TextStyle(
+                          color: _navy,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      tooltip: 'Copy tracking number',
+                      onPressed: () => controller.copyTracking(tracking.number),
+                      icon: const Icon(
+                        Icons.copy_rounded,
+                        size: 17,
+                        color: _blue,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
         if (tracking.shippedAt != null) ...[
           const SizedBox(height: 12),
@@ -462,13 +500,7 @@ class OrderTrackingScreen extends GetView<OrderTrackingController> {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: () {
-                Get.snackbar(
-                  'Tracking link',
-                  'External link opening will be connected next.',
-                  snackPosition: SnackPosition.BOTTOM,
-                );
-              },
+              onPressed: () => controller.openTracking(tracking.link),
               icon: const Icon(Icons.open_in_new_rounded, size: 17),
               label: const Text('Track shipment'),
               style: OutlinedButton.styleFrom(

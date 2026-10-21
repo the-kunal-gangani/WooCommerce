@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/app_network_image.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/state_views.dart';
 import 'package:magna_data_ai_ecommerce/data/models/store_order.dart';
@@ -148,6 +149,26 @@ class OrderDetailsScreen extends GetView<OrderDetailsController> {
                   ? null
                   : () => controller.openTracking(shipment.link),
             ),
+            if (!order.status.isNegative) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () =>
+                      Get.toNamed(AppRoutes.orderTracking, arguments: order.id),
+                  icon: const Icon(Icons.local_shipping_outlined),
+                  label: const Text('View tracking details'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: OrderDetailsScreen.primary,
+                    side: const BorderSide(color: OrderDetailsScreen.border),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ],
       ),

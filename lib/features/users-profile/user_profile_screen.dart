@@ -355,7 +355,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: _buildQuickAction(
             icon: Icons.shopping_bag_outlined,
             title: 'Orders',
-            subtitle: 'Track your orders',
+            subtitle: 'View and track orders',
             onTap: () => Get.toNamed(AppRoutes.orders),
           ),
         ),
