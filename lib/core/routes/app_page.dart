@@ -34,6 +34,8 @@ import 'package:magna_data_ai_ecommerce/features/onboarding/onboarding_screen.da
 import 'package:magna_data_ai_ecommerce/features/order-confirmation/order_confirmation_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/order-details/order_details_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/order-details/order_details_screen.dart';
+import 'package:magna_data_ai_ecommerce/features/order-tracking/order_tracking_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/order-tracking/order_tracking_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/product-details/product_details_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/product-details/product_details_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/product-list/product_list_controller.dart';
@@ -305,5 +307,15 @@ class AppPages {
     ),
 
     GetPage(name: '/languages', page: () => const LanguagesPage()),
+
+    GetPage(
+      name: AppRoutes.orderTracking,
+      page: () => const OrderTrackingScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<OrderTrackingController>(
+          () => OrderTrackingController(Get.find<OrderService>()),
+        );
+      }),
+    ),
   ];
 }
