@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:phonepe_payment_sdk/phonepe_payment_sdk.dart';
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
+import 'package:magna_data_ai_ecommerce/core/configs/app_config.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:magna_data_ai_ecommerce/core/services/checkout_services.dart';
 
 import '../../core/services/cart_service.dart';
@@ -229,20 +232,57 @@ class CheckoutController extends GetxController {
           checkoutData,
         );
         final orderId = result['woocommerce_order_id'];
-        final redirectUrl = result['redirect_url']?.toString();
-        if (orderId is! int || redirectUrl == null || redirectUrl.isEmpty) {
+        final phonePeOrderId = result['phonepe_order_id']?.toString();
+        final phonePeToken = result['phonepe_token']?.toString();
+        final merchantId =
+            (result['merchant_id'] ?? AppConfig.phonePeMerchantId).toString();
+        if (orderId is! int ||
+            phonePeOrderId == null ||
+            phonePeOrderId.isEmpty ||
+            phonePeToken == null ||
+            phonePeToken.isEmpty ||
+            merchantId.isEmpty) {
           throw Exception('The server returned incomplete PhonePe details.');
         }
-        final launched = await launchUrl(
-          Uri.parse(redirectUrl),
-          mode: LaunchMode.externalApplication,
+        final flowId = 'magna$orderId';
+        final initialized = await PhonePePaymentSdk.init(
+          AppConfig.phonePeEnvironment,
+          merchantId,
+          flowId,
+          false,
         );
-        if (!launched) {
-          throw Exception('Unable to open the PhonePe checkout page.');
+        if (!initialized) {
+          throw Exception('PhonePe SDK initialization failed.');
+        }
+        final request = jsonEncode({
+          'orderId': phonePeOrderId,
+          'merchantId': merchantId,
+          'token': phonePeToken,
+          'paymentMode': {'type': 'PAY_PAGE'},
+        });
+        final sdkResponse = await PhonePePaymentSdk.startTransaction(
+          request,
+          AppConfig.phonePeAppSchema,
+        );
+        final sdkStatus = sdkResponse?['status']?.toString().toUpperCase();
+        if (sdkStatus != 'SUCCESS') {
+          final message = sdkStatus == 'INTERRUPTED'
+              ? 'PhonePe payment was cancelled.'
+              : sdkResponse?['error']?.toString() ??
+                    'PhonePe payment was not completed.';
+          Get.snackbar(
+            'Payment not completed',
+            message,
+            snackPosition: SnackPosition.BOTTOM,
+            duration: const Duration(seconds: 5),
+          );
+          return;
         }
         Map<String, dynamic> status = <String, dynamic>{};
         for (var attempt = 0; attempt < 12; attempt++) {
-          await Future<void>.delayed(const Duration(seconds: 5));
+          if (attempt > 0) {
+            await Future<void>.delayed(const Duration(seconds: 15));
+          }
           status = await _checkoutService.getPhonePePaymentStatus(orderId);
           if (status['payment_status']?.toString() != 'pending') break;
         }

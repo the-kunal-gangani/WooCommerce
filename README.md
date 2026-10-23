@@ -59,8 +59,19 @@ define('MAGNA_PHONEPE_ENVIRONMENT', 'PRODUCTION');
 define('MAGNA_PHONEPE_WEBHOOK_SECRET', '...');
 ```
 
-The Flutter PhonePe flow uses the server-created hosted checkout URL. PhonePe
-credentials and webhook secrets must never be included in the app.
+The Flutter PhonePe flow uses a server-created PhonePe SDK order token. Configure
+the non-secret app values at build time:
+
+```powershell
+flutter run `
+  --dart-define=PHONEPE_ENVIRONMENT=SANDBOX `
+  --dart-define=PHONEPE_MERCHANT_ID=your_phonepe_merchant_id `
+  --dart-define=PHONEPE_APP_SCHEMA=magnaDataStore
+```
+
+PhonePe credentials and webhook secrets must never be included in the app.
+The SDK fork is checked in under `third_party/phonepe_payment_sdk` because
+published SDK 3.0.2 references the removed `proguard-android.txt` file.
 
 ## Validate changes
 

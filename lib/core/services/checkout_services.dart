@@ -44,11 +44,13 @@ class CheckoutService {
       final result = response.data;
       if (result == null ||
           result['woocommerce_order_id'] == null ||
-          result['redirect_url'] == null ||
+          result['phonepe_order_id'] == null ||
+          result['phonepe_token'] == null ||
+          result['merchant_id'] == null ||
           result['amount'] == null ||
           result['currency'] == null ||
           result['total'] == null) {
-        throw Exception('The server returned incomplete PhonePe payment data.');
+        throw Exception('The server returned incomplete PhonePe SDK data.');
       }
       return result;
     } on DioException catch (error) {

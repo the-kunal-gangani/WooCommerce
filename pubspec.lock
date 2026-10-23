@@ -800,10 +800,9 @@ packages:
   phonepe_payment_sdk:
     dependency: "direct main"
     description:
-      name: phonepe_payment_sdk
-      sha256: "5381365fb5a4acac8ed6980201c6ff0d354352089f17d9cc521dadd85eee930f"
-      url: "https://pub.dev"
-    source: hosted
+      path: "third_party/phonepe_payment_sdk"
+      relative: true
+    source: path
     version: "3.0.2"
   platform:
     dependency: transitive

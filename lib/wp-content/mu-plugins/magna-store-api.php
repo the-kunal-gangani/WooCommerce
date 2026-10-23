@@ -740,15 +740,12 @@ function magna_store_create_phonepe_payment($request) {
     $order->save();
 
     $merchant_order_id = 'MAGNA-' . $order->get_id() . '-' . strtolower(wp_generate_password(10, false, false));
-    $payment = magna_store_phonepe_request('POST', 'checkout/v2/pay', array(
+    $payment = magna_store_phonepe_request('POST', 'checkout/v2/sdk/order', array(
         'merchantOrderId' => $merchant_order_id,
         'amount' => (int) $created['amount'],
         'expireAfter' => 1200,
         'paymentFlow' => array(
             'type' => 'PG_CHECKOUT',
-            'merchantUrls' => array(
-                'redirectUrl' => home_url('/'),
-            ),
         ),
         'metaInfo' => array('udf1' => (string) $order->get_id()),
     ));
@@ -756,9 +753,10 @@ function magna_store_create_phonepe_payment($request) {
         $order->update_status('failed', 'PhonePe payment initialization failed.');
         return $payment;
     }
-    $redirect_url = esc_url_raw($payment['redirectUrl'] ?? '');
-    if ($redirect_url === '') {
-        return new WP_Error('magna_phonepe_response', 'PhonePe returned no checkout URL.', array('status' => 502));
+    $phonepe_order_id = sanitize_text_field($payment['orderId'] ?? '');
+    $phonepe_token = sanitize_text_field($payment['token'] ?? '');
+    if ($phonepe_order_id === '' || $phonepe_token === '') {
+        return new WP_Error('magna_phonepe_response', 'PhonePe returned incomplete SDK order data.', array('status' => 502));
     }
     $order->update_meta_data('_magna_phonepe_merchant_order_id', $merchant_order_id);
     $order->update_meta_data('_magna_phonepe_amount', (string) $created['amount']);
@@ -766,7 +764,9 @@ function magna_store_create_phonepe_payment($request) {
     return array_merge($created, array(
         'payment_method' => 'phonepe',
         'phonepe_merchant_order_id' => $merchant_order_id,
-        'redirect_url' => $redirect_url,
+        'phonepe_order_id' => $phonepe_order_id,
+        'phonepe_token' => $phonepe_token,
+        'merchant_id' => MAGNA_PHONEPE_MERCHANT_ID,
     ));
 }
 
