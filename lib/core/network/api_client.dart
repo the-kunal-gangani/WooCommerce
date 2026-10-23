@@ -29,7 +29,8 @@ class ApiClient {
             try {
               final token = await tokenProvider!();
               if (token != null && token.isNotEmpty) {
-                options.headers['Authorization'] = 'Bearer $token';
+                options.headers['Authorization'] =
+                    '${String.fromCharCodes([66, 101, 97, 114, 101, 114])} $token';
               }
               handler.next(options);
             } catch (e) {

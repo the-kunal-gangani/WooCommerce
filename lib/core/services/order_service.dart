@@ -15,7 +15,7 @@ class OrderService {
     CancelToken? cancelToken,
   }) async {
     final response = await _client.get<dynamic>(
-      '/magna/v1/orders',
+      '/orders',
       query: {
         'page': page,
         'per_page': perPage,
@@ -23,15 +23,27 @@ class OrderService {
       },
       cancelToken: cancelToken,
     );
-    return PagedResult.fromResponse(
-      response,
+    final body = Map<String, dynamic>.from(response.data as Map);
+    final rawItems = body['items'];
+    final items = rawItems is List
+        ? rawItems
+              .whereType<Map>()
+              .map(
+                (item) => StoreOrder.fromJson(Map<String, dynamic>.from(item)),
+              )
+              .toList()
+        : <StoreOrder>[];
+
+    return PagedResult<StoreOrder>(
+      items: items,
+      total: int.tryParse('${body['total']}') ?? items.length,
+      totalPages: int.tryParse('${body['total_pages']}') ?? 1,
       page: page,
-      parse: StoreOrder.fromJson,
     );
   }
 
   Future<StoreOrder> fetchOrder(int id) async {
-    final response = await _client.get<dynamic>('/magna/v1/orders/$id');
+    final response = await _client.get<dynamic>('/orders/$id');
     return StoreOrder.fromJson(Map<String, dynamic>.from(response.data as Map));
   }
 }

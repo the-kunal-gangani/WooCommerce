@@ -48,11 +48,7 @@ class InitialBinding extends Bindings {
     final favouriteService = FavouriteService(storage);
     final recentlyViewedService = RecentlyViewedService(getStorage);
     final favouriteController = FavouriteController(favouriteService);
-    final wpClient = ApiClient(
-      baseUrl: '${AppConfig.baseUrl}/wp-json',
-      cookieProvider: () => null,
-    );
-    final orderService = OrderService(wpClient);
+    final orderService = OrderService(fastApiClient);
     final homeController = HomeController(
       productService,
       categoryService,

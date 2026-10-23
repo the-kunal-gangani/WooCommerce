@@ -337,3 +337,87 @@ class WooCommerceClient:
                 "WooCommerce did not return a valid order."
             )
         return result
+
+    async def get_orders(
+        self,
+        *,
+        customer_id: int,
+        page: int = 1,
+        per_page: int = 10,
+        status: str | None = None,
+    ) -> dict[str, Any]:
+        """Fetch orders for one WooCommerce customer."""
+        params: dict[str, Any] = {
+            "customer": customer_id,
+            "page": page,
+            "per_page": per_page,
+            "orderby": "date",
+            "order": "desc",
+        }
+        if status:
+            params["status"] = status
+
+        result = await self._request_with_headers(
+            "GET",
+            "orders",
+            params=params,
+        )
+        orders = result["data"]
+        if not isinstance(orders, list):
+            raise WooCommerceError(
+                "WooCommerce returned an unexpected order response."
+            )
+
+        return {
+            "items": orders,
+            "total": result["total"],
+            "total_pages": result["total_pages"],
+        }
+
+    async def _request_with_headers(
+        self,
+        method: str,
+        endpoint: str,
+        *,
+        params: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Make an authenticated request while retaining pagination headers."""
+        if not self._configured:
+            raise WooCommerceConfigurationError(
+                "WooCommerce credentials are not configured."
+            )
+
+        try:
+            response = await self._client.request(
+                method,
+                endpoint,
+                params=params,
+            )
+            response.raise_for_status()
+        except httpx.TimeoutException as exc:
+            raise WooCommerceError("WooCommerce request timed out.") from exc
+        except httpx.HTTPStatusError as exc:
+            raise WooCommerceError(
+                "WooCommerce returned an unsuccessful response."
+            ) from exc
+        except httpx.RequestError as exc:
+            raise WooCommerceError(
+                "Unable to connect to WooCommerce."
+            ) from exc
+
+        try:
+            data = response.json()
+            total = int(response.headers.get("X-WC-Total", "0"))
+            total_pages = int(
+                response.headers.get("X-WC-TotalPages", "0")
+            )
+        except (ValueError, TypeError) as exc:
+            raise WooCommerceError(
+                "WooCommerce returned an invalid order response."
+            ) from exc
+
+        return {
+            "data": data,
+            "total": total,
+            "total_pages": total_pages,
+        }
