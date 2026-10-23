@@ -243,7 +243,7 @@ class OrderTrackingScreen extends GetView<OrderTrackingController> {
       _OrderTimelineStep(
         title: 'Order placed',
         description: 'Your order has been received.',
-        date: _formatTimelineDate(order.createdAt),
+        date: shipmentDate == null ? null : _formatTimelineDate(shipmentDate),
         state: _TimelineStepState.completed,
         icon: Icons.receipt_long_outlined,
       ),
@@ -275,7 +275,9 @@ class OrderTrackingScreen extends GetView<OrderTrackingController> {
             _OrderTimelineStep(
               title: 'Shipment information available',
               description: 'Tracking details have been added. Check the carrier for the latest shipment updates.',
-              date: shipmentDate?.let(_formatTimelineDate),
+              date: shipmentDate == null
+                  ? null
+                  : _formatTimelineDate(shipmentDate),
               state: _TimelineStepState.information,
               icon: Icons.local_shipping_outlined,
             ),
