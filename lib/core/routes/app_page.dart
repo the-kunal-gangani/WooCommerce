@@ -115,26 +115,14 @@ class AppPages {
       name: AppRoutes.productList,
       page: () => const ProductListScreen(),
       binding: BindingsBuilder(() {
-        final args = Get.arguments as ProductListArgs;
+        final args = Get.arguments is ProductListArgs
+            ? Get.arguments as ProductListArgs
+            : const ProductListArgs(title: 'Search', searchMode: true);
         Get.lazyPut<ProductListController>(
           () => ProductListController(
             Get.find<ProductService>(),
             Get.find<CategoryService>(),
             args,
-          ),
-        );
-      }),
-    ),
-
-    GetPage(
-      name: AppRoutes.productList,
-      page: () => const ProductListScreen(),
-      binding: BindingsBuilder(() {
-        Get.lazyPut<ProductListController>(
-          () => ProductListController(
-            Get.find<ProductService>(),
-            Get.find<CategoryService>(),
-            const ProductListArgs(title: 'Search', searchMode: true),
           ),
         );
       }),

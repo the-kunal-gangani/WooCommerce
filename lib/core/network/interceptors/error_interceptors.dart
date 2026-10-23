@@ -5,20 +5,19 @@ import '../api_exception.dart';
 
 class ErrorInterceptor extends Interceptor {
   @override
-  @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    final response = err.response;
-
-    debugPrint('========== API ERROR ==========');
-    debugPrint('URL: ${err.requestOptions.uri}');
-    debugPrint('Method: ${err.requestOptions.method}');
-    debugPrint('Status: ${response?.statusCode}');
-    debugPrint('Response: ${response?.data}');
-    debugPrint(
-      'Authorization header present: '
-      '${err.requestOptions.headers.containsKey('Authorization')}',
-    );
-    debugPrint('===============================');
+    if (kDebugMode) {
+      final response = err.response;
+      debugPrint('========== API ERROR ==========');
+      debugPrint('URL: ${err.requestOptions.uri}');
+      debugPrint('Method: ${err.requestOptions.method}');
+      debugPrint('Status: ${response?.statusCode}');
+      debugPrint(
+        'Authorization header present: '
+        '${err.requestOptions.headers.containsKey('Authorization')}',
+      );
+      debugPrint('===============================');
+    }
 
     handler.next(err.copyWith(error: _map(err)));
   }
@@ -62,6 +61,7 @@ class ErrorInterceptor extends Interceptor {
     if (data is Map) {
       message = data['message']?.toString();
       code = data['code']?.toString();
+      message ??= data['detail']?.toString();
       final nested = data['data'];
       if (nested is Map) {
         message ??= nested['message']?.toString();

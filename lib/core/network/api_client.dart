@@ -29,7 +29,7 @@ class ApiClient {
             try {
               final token = await tokenProvider!();
               if (token != null && token.isNotEmpty) {
-                options.headers['Authorization'] ??= 'Bearer $token';
+                options.headers['Authorization'] = 'Bearer $token';
               }
               handler.next(options);
             } catch (e) {

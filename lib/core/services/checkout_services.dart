@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 import '../../data/models/checkout_data.dart';
@@ -15,7 +14,6 @@ class CheckoutService {
         data: data.toJson(),
       );
       final result = response.data;
-      debugPrint('CREATE ORDER RESPONSE: $result');
       if (result == null ||
           result['razorpay_order_id'] == null ||
           result['key_id'] == null ||

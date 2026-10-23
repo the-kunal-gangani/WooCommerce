@@ -469,7 +469,7 @@ async def verify_payment(
         select(Payment).where(
             Payment.razorpay_order_id == payload.razorpay_order_id,
             Payment.user_id == current_user.id,
-        )
+        ).with_for_update()
     )
 
     if payment is None:
@@ -661,7 +661,7 @@ async def razorpay_webhook(
     payment = db.scalar(
         select(Payment).where(
             Payment.razorpay_order_id == razorpay_order_id
-        )
+        ).with_for_update()
     )
 
     if payment is None:
@@ -1000,4 +1000,3 @@ async def email_order_invoice(
         "status": "sent",
         "message": "The invoice has been emailed to the billing address.",
     }
-
