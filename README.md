@@ -1,43 +1,22 @@
 # Magna Data Store
 
-Flutter commerce application with a FastAPI backend and WooCommerce integration.
+Flutter commerce application integrated with WordPress and WooCommerce.
 
 ## Architecture
 
 - `lib/`: Flutter client, organized by shared core services, data models, and features.
-- `backend/app/`: FastAPI API, JWT authentication, PostgreSQL persistence, Razorpay integration, and WooCommerce client.
-- `lib/wp-content/mu-plugins/`: WordPress order-history REST extension.
+- `lib/wp-content/mu-plugins/`: WordPress REST API extension for app authentication, addresses, orders, checkout, payments, and devices.
 
-The Flutter client uses WooCommerce for catalog browsing and the FastAPI backend for authentication, addresses, notifications, checkout, payment verification, and invoice delivery.
+The Flutter client uses the public WooCommerce Store API for catalog browsing and the custom WordPress API for authenticated customer operations. Privileged WooCommerce and Razorpay credentials remain on WordPress.
 
 ## Prerequisites
 
 - Flutter/Dart compatible with the SDK constraint in `pubspec.yaml`
 - Android Studio/JDK 17 for Android builds
-- Python 3.11+ and PostgreSQL for the backend
-- WooCommerce REST API credentials
-- Razorpay credentials for checkout
-- SMTP credentials for invoice email
+- WordPress administrator access
+- WooCommerce and Razorpay configuration on WordPress
+- An SMTP/mail delivery configuration on WordPress
 - Firebase configuration for push notifications
-
-## Run the backend
-
-```powershell
-cd backend
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-Copy-Item .env.example .env
-```
-
-Configure `backend/.env`, especially `DATABASE_URL`, `JWT_SECRET_KEY`, WooCommerce credentials, and Razorpay credentials. Then run migrations and the API:
-
-```powershell
-alembic upgrade head
-uvicorn app.main:app --reload
-```
-
-Health check: `http://127.0.0.1:8000/health`
 
 ## Run the Flutter client
 
@@ -50,18 +29,29 @@ The default endpoints target the configured production services. Override them f
 
 ```powershell
 flutter run `
-  --dart-define=STORE_BASE_URL=https://serverboat.com `
-  --dart-define=BACKEND_BASE_URL=http://10.0.2.2:8000/api/v1
+  --dart-define=STORE_BASE_URL=https://serverboat.com
 ```
 
-Use `http://127.0.0.1:8000/api/v1` for a desktop/web client running on the same machine. Android emulators should use `10.0.2.2`.
+The same `STORE_BASE_URL` value is used by desktop, web, and mobile clients.
+
+## WordPress setup
+
+Copy `lib/wp-content/mu-plugins/magna-store-api.php` to the WordPress `wp-content/mu-plugins/` directory. Ensure WooCommerce is active.
+
+Define these constants in `wp-config.php` before enabling Razorpay checkout:
+
+```php
+define('MAGNA_RAZORPAY_KEY_ID', 'rzp_...');
+define('MAGNA_RAZORPAY_KEY_SECRET', '...');
+```
+
+The payment implementation calls Razorpay server-side through WordPress. Never put these constants in Flutter.
 
 ## Validate changes
 
 ```powershell
 flutter analyze
 flutter test
-python -m compileall -q backend\app
 ```
 
 ## Security and deployment notes
@@ -69,5 +59,5 @@ python -m compileall -q backend\app
 - Keep WooCommerce, JWT, Razorpay, database, and SMTP secrets in environment variables or a deployment secret manager.
 - Never put WooCommerce consumer credentials in the Flutter application.
 - Use a production Android signing key before releasing an APK.
-- Configure Razorpay webhooks to call `/api/v1/payments/webhook`.
+- Configure Razorpay webhooks according to the WordPress payment integration.
 - Do not enable verbose request/response logging in production.

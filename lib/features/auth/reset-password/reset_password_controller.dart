@@ -58,7 +58,11 @@ class ResetPasswordController extends GetxController {
 
     isLoading.value = true;
     try {
-      await _authService.requestPasswordReset(email);
+      await _authService.resetPassword(
+        email: email,
+        key: code,
+        password: password,
+      );
       Get.offAllNamed(AppRoutes.login);
       Get.snackbar(
         'Password updated',

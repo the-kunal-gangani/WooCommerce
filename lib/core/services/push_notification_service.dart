@@ -231,7 +231,7 @@ class PushNotificationService extends GetxService {
     final token = _fcmToken;
     if (token == null || token.isEmpty) return;
     if (!Get.isRegistered<AuthService>() ||
-        !Get.isRegistered<ApiClient>(tag: 'fastApi')) {
+        !Get.isRegistered<ApiClient>(tag: 'wordpress')) {
       if (kDebugMode) {
         debugPrint('FCM registration deferred: API services are unavailable.');
       }
@@ -256,7 +256,7 @@ class PushNotificationService extends GetxService {
             TargetPlatform.fuchsia => 'fuchsia',
           };
     try {
-      final api = Get.find<ApiClient>(tag: 'fastApi');
+      final api = Get.find<ApiClient>(tag: 'wordpress');
       await api.dio.post<dynamic>(
         '/notifications/devices/register',
         data: {
@@ -267,7 +267,7 @@ class PushNotificationService extends GetxService {
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
       if (kDebugMode) {
-        debugPrint('FCM device registration synced with FastAPI.');
+        debugPrint('FCM device registration synced with WordPress.');
       }
     } on DioException catch (error) {
       if (kDebugMode) {

@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import '../../data/models/checkout_data.dart';
 
 class CheckoutService {
-  CheckoutService() : _dio = Get.find<Dio>(tag: 'fastApi');
+  CheckoutService() : _dio = Get.find<Dio>(tag: 'wordpress');
   final Dio _dio;
 
   Future<Map<String, dynamic>> createRazorpayOrder(CheckoutData data) async {

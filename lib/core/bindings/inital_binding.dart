@@ -1,5 +1,5 @@
-import 'package:dio/dio.dart';
 import 'package:get/get.dart';
+import 'package:dio/dio.dart';
 import 'package:get_storage/get_storage.dart';
 
 import 'package:magna_data_ai_ecommerce/core/configs/app_config.dart';
@@ -28,19 +28,19 @@ class InitialBinding extends Bindings {
     final storage = StorageService();
     final getStorage = GetStorage();
     late final AuthService authService;
-    final fastApiClient = ApiClient(
-      baseUrl: AppConfig.backendBaseUrl,
+    final wpApiClient = ApiClient(
+      baseUrl: '${AppConfig.baseUrl}${AppConfig.magnaApiPath}',
       tokenProvider: () async => authService.accessToken,
     );
-    authService = AuthService(fastApiClient, secureStorage, storage);
+    authService = AuthService(wpApiClient, secureStorage, storage);
     Get.put<ApiClient>(apiClient, permanent: true);
-    Get.put<ApiClient>(fastApiClient, tag: 'fastApi', permanent: true);
-    Get.put<Dio>(fastApiClient.dio, tag: 'fastApi', permanent: true);
+    Get.put<ApiClient>(wpApiClient, tag: 'wordpress', permanent: true);
+    Get.put<Dio>(wpApiClient.dio, tag: 'wordpress', permanent: true);
     Get.put<SecureStorageService>(secureStorage, permanent: true);
     Get.put<StorageService>(storage, permanent: true);
     Get.put<AuthService>(authService, permanent: true);
     final locationService = LocationService(storage);
-    final addressService = AddressService(fastApiClient, authService);
+    final addressService = AddressService(wpApiClient, authService);
     final productService = ProductService(apiClient);
     final categoryService = CategoryService(apiClient);
     final cartService = CartService(storage, productService);
@@ -48,7 +48,7 @@ class InitialBinding extends Bindings {
     final favouriteService = FavouriteService(storage);
     final recentlyViewedService = RecentlyViewedService(getStorage);
     final favouriteController = FavouriteController(favouriteService);
-    final orderService = OrderService(fastApiClient);
+    final orderService = OrderService(wpApiClient);
     final homeController = HomeController(
       productService,
       categoryService,
