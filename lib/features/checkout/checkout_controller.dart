@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:magna_data_ai_ecommerce/core/services/checkout_services.dart';
+
 import '../../core/services/cart_service.dart';
 import '../../data/models/checkout_address.dart';
 import '../../data/models/checkout_data.dart';
@@ -148,13 +150,8 @@ class CheckoutController extends GetxController {
       case 'cod':
       case 'card':
         return true;
-      case 'paypal':
-        Get.snackbar(
-          'Payment unavailable',
-          'PayPal is not connected yet. Please choose another method.',
-          snackPosition: SnackPosition.BOTTOM,
-        );
-        return false;
+      case 'phonepe':
+        return true;
       default:
         Get.snackbar(
           'Payment unavailable',
@@ -225,6 +222,48 @@ class CheckoutController extends GetxController {
           _createdOrder = null;
           rethrow;
         }
+        return;
+      }
+      if (selectedPaymentMethod.value == 'phonepe') {
+        final result = await _checkoutService.createPhonePePayment(
+          checkoutData,
+        );
+        final orderId = result['woocommerce_order_id'];
+        final redirectUrl = result['redirect_url']?.toString();
+        if (orderId is! int || redirectUrl == null || redirectUrl.isEmpty) {
+          throw Exception('The server returned incomplete PhonePe details.');
+        }
+        final launched = await launchUrl(
+          Uri.parse(redirectUrl),
+          mode: LaunchMode.externalApplication,
+        );
+        if (!launched) {
+          throw Exception('Unable to open the PhonePe checkout page.');
+        }
+        Map<String, dynamic> status = <String, dynamic>{};
+        for (var attempt = 0; attempt < 12; attempt++) {
+          await Future<void>.delayed(const Duration(seconds: 5));
+          status = await _checkoutService.getPhonePePaymentStatus(orderId);
+          if (status['payment_status']?.toString() != 'pending') break;
+        }
+        if (status['payment_status']?.toString() != 'paid') {
+          Get.snackbar(
+            'Payment confirmation pending',
+            'PhonePe has not confirmed this payment yet. Please check your '
+                'order history before trying again.',
+            snackPosition: SnackPosition.BOTTOM,
+            duration: const Duration(seconds: 6),
+          );
+          return;
+        }
+        await _cart.clearCart();
+        Get.off(
+          () => OrderConfirmationScreen(
+            checkoutData: checkoutData,
+            createdOrder: Map<String, dynamic>.from(result),
+            paymentResult: Map<String, dynamic>.from(status),
+          ),
+        );
         return;
       }
       if (selectedPaymentMethod.value == 'cod') {

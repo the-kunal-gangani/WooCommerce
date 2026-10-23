@@ -128,6 +128,24 @@ function magna_store_register_routes() {
         'permission_callback' => 'magna_store_authenticated',
     ));
 
+    register_rest_route('magna/v1', '/payments/phonepe/create', array(
+        'methods' => WP_REST_Server::CREATABLE,
+        'callback' => 'magna_store_create_phonepe_payment',
+        'permission_callback' => 'magna_store_authenticated',
+    ));
+
+    register_rest_route('magna/v1', '/payments/phonepe/status/(?P<id>\d+)', array(
+        'methods' => WP_REST_Server::READABLE,
+        'callback' => 'magna_store_phonepe_status',
+        'permission_callback' => 'magna_store_authenticated',
+    ));
+
+    register_rest_route('magna/v1', '/payments/phonepe/webhook', array(
+        'methods' => WP_REST_Server::CREATABLE,
+        'callback' => 'magna_store_phonepe_webhook',
+        'permission_callback' => '__return_true',
+    ));
+
     register_rest_route('magna/v1', '/payments/(?P<id>\d+)/invoice/email', array(
         'methods' => WP_REST_Server::CREATABLE,
         'callback' => 'magna_store_email_invoice',
@@ -496,6 +514,114 @@ function magna_store_register_device($request) {
     return array('message' => 'Device registration updated successfully.', 'enabled' => !empty($body['enabled']));
 }
 
+function magna_store_razorpay_request($method, $path, $body = null) {
+    if (!defined('MAGNA_RAZORPAY_KEY_ID') || !defined('MAGNA_RAZORPAY_KEY_SECRET')) {
+        return new WP_Error('magna_payment_config', 'Payment gateway is not configured.', array('status' => 503));
+    }
+    $args = array(
+        'method' => $method,
+        'timeout' => 20,
+        'headers' => array(
+            'Authorization' => 'Basic ' . base64_encode(MAGNA_RAZORPAY_KEY_ID . ':' . MAGNA_RAZORPAY_KEY_SECRET),
+            'Content-Type' => 'application/json',
+        ),
+    );
+    if ($body !== null) $args['body'] = wp_json_encode($body);
+    $response = wp_remote_request('https://api.razorpay.com/v1/' . ltrim($path, '/'), $args);
+    if (is_wp_error($response)) return $response;
+    $code = wp_remote_retrieve_response_code($response);
+    $data = json_decode(wp_remote_retrieve_body($response), true);
+    if ($code < 200 || $code >= 300 || !is_array($data)) {
+        return new WP_Error('magna_payment_gateway', 'Payment gateway request failed.', array('status' => 502));
+    }
+    return $data;
+}
+
+function magna_store_create_payment_order($request) {
+    $created = magna_store_create_order($request);
+    if (is_wp_error($created)) return $created;
+    $gateway = magna_store_razorpay_request('POST', 'orders', array(
+        'amount' => (int) $created['amount'],
+        'currency' => (string) $created['currency'],
+        'receipt' => 'wc-' . $created['woocommerce_order_id'],
+        'notes' => array('woocommerce_order_id' => (string) $created['woocommerce_order_id']),
+    ));
+    if (is_wp_error($gateway)) return $gateway;
+    update_post_meta((int) $created['woocommerce_order_id'], '_magna_razorpay_order_id', sanitize_text_field($gateway['id'] ?? ''));
+    return array_merge($created, array(
+        'razorpay_order_id' => sanitize_text_field($gateway['id'] ?? ''),
+        'key_id' => defined('MAGNA_RAZORPAY_KEY_ID') ? MAGNA_RAZORPAY_KEY_ID : '',
+    ));
+}
+
+function magna_store_verify_payment($request) {
+    $user = magna_store_current_user();
+    $body = magna_store_request_body($request);
+    $order_id = sanitize_text_field($body['razorpay_order_id'] ?? '');
+    $payment_id = sanitize_text_field($body['razorpay_payment_id'] ?? '');
+    $signature = sanitize_text_field($body['razorpay_signature'] ?? '');
+    if (!defined('MAGNA_RAZORPAY_KEY_SECRET') || !$order_id || !$payment_id || !$signature) {
+        return new WP_Error('magna_invalid_payment', 'Invalid payment verification request.', array('status' => 400));
+    }
+    $expected = hash_hmac('sha256', $order_id . '|' . $payment_id, MAGNA_RAZORPAY_KEY_SECRET);
+    if (!hash_equals($expected, $signature)) {
+        return new WP_Error('magna_invalid_signature', 'Invalid payment signature.', array('status' => 400));
+    }
+    $payments = magna_store_razorpay_request('GET', 'payments/' . rawurlencode($payment_id));
+    if (is_wp_error($payments)) return $payments;
+    $notes = $payments['notes'] ?? array();
+    $wc_id = absint($notes['woocommerce_order_id'] ?? 0);
+    $order = $wc_id ? wc_get_order($wc_id) : false;
+    if (!$order || (int) $order->get_customer_id() !== (int) $user->ID) {
+        return new WP_Error('magna_order_not_found', 'Order not found.', array('status' => 404));
+    }
+    if ((int) $payments['amount'] !== (int) round((float) $order->get_total() * 100) ||
+        (string) ($payments['currency'] ?? '') !== (string) $order->get_currency()) {
+        return new WP_Error('magna_payment_mismatch', 'Payment amount or currency does not match the order.', array('status' => 400));
+    }
+    if (($payments['status'] ?? '') === 'captured') {
+        $order->payment_complete($payment_id);
+        $order->save();
+        return array('status' => 'paid', 'woocommerce_order_id' => $wc_id);
+    }
+    return array('status' => sanitize_text_field($payments['status'] ?? 'pending'), 'woocommerce_order_id' => $wc_id);
+}
+
+function magna_store_email_invoice($request) {
+    $user = magna_store_current_user();
+    $order = wc_get_order((int) $request['id']);
+    if (!$order || (int) $order->get_customer_id() !== (int) $user->ID) {
+        return new WP_Error('magna_order_not_found', 'Order not found.', array('status' => 404));
+    }
+    if (!class_exists('\Dompdf\Dompdf')) {
+        return new WP_Error(
+            'magna_invoice_dependency',
+            'Install a WordPress PDF renderer before enabling invoice email.',
+            array('status' => 503)
+        );
+    }
+    $dompdf = new \Dompdf\Dompdf();
+    $dompdf->loadHtml(
+        '<h1>Invoice #' . esc_html($order->get_order_number()) . '</h1>' .
+        '<p>Total: ' . esc_html($order->get_formatted_order_total()) . '</p>'
+    );
+    $dompdf->render();
+    $path = wp_tempnam('magna-invoice-' . $order->get_id() . '.pdf');
+    file_put_contents($path, $dompdf->output());
+    $sent = wp_mail(
+        $order->get_billing_email(),
+        'Invoice #' . $order->get_order_number(),
+        'Please find your invoice attached.',
+        array('Content-Type: text/plain; charset=UTF-8'),
+        array($path)
+    );
+    wp_delete_file($path);
+    if (!$sent) {
+        return new WP_Error('magna_invoice_failed', 'Unable to send the invoice.', array('status' => 502));
+    }
+    return array('status' => 'sent');
+}
+
 function magna_store_create_order($request) {
     $user = magna_store_current_user();
     $body = magna_store_request_body($request);
@@ -507,109 +633,6 @@ function magna_store_create_order($request) {
             return new WP_Error('magna_invalid_product', 'One or more products are unavailable.', array('status' => 400));
         }
 
-        function magna_store_razorpay_request($method, $path, $body = null) {
-            if (!defined('MAGNA_RAZORPAY_KEY_ID') || !defined('MAGNA_RAZORPAY_KEY_SECRET')) {
-                return new WP_Error('magna_payment_config', 'Payment gateway is not configured.', array('status' => 503));
-            }
-            $args = array(
-                'method' => $method,
-                'timeout' => 20,
-                'headers' => array(
-                    'Authorization' => 'Basic ' . base64_encode(MAGNA_RAZORPAY_KEY_ID . ':' . MAGNA_RAZORPAY_KEY_SECRET),
-                    'Content-Type' => 'application/json',
-                ),
-            );
-            if ($body !== null) $args['body'] = wp_json_encode($body);
-            $response = wp_remote_request('https://api.razorpay.com/v1/' . ltrim($path, '/'), $args);
-            if (is_wp_error($response)) return $response;
-            $code = wp_remote_retrieve_response_code($response);
-            $data = json_decode(wp_remote_retrieve_body($response), true);
-            if ($code < 200 || $code >= 300 || !is_array($data)) {
-                return new WP_Error('magna_payment_gateway', 'Payment gateway request failed.', array('status' => 502));
-            }
-            return $data;
-        }
-
-        function magna_store_create_payment_order($request) {
-            $created = magna_store_create_order($request);
-            if (is_wp_error($created)) return $created;
-            $gateway = magna_store_razorpay_request('POST', 'orders', array(
-                'amount' => (int) $created['amount'],
-                'currency' => (string) $created['currency'],
-                'receipt' => 'wc-' . $created['woocommerce_order_id'],
-                'notes' => array('woocommerce_order_id' => (string) $created['woocommerce_order_id']),
-            ));
-            if (is_wp_error($gateway)) return $gateway;
-            update_post_meta((int) $created['woocommerce_order_id'], '_magna_razorpay_order_id', sanitize_text_field($gateway['id'] ?? ''));
-            return array_merge($created, array(
-                'razorpay_order_id' => sanitize_text_field($gateway['id'] ?? ''),
-                'key_id' => defined('MAGNA_RAZORPAY_KEY_ID') ? MAGNA_RAZORPAY_KEY_ID : '',
-            ));
-        }
-
-        function magna_store_verify_payment($request) {
-            $user = magna_store_current_user();
-            $body = magna_store_request_body($request);
-            $order_id = sanitize_text_field($body['razorpay_order_id'] ?? '');
-            $payment_id = sanitize_text_field($body['razorpay_payment_id'] ?? '');
-            $signature = sanitize_text_field($body['razorpay_signature'] ?? '');
-            if (!defined('MAGNA_RAZORPAY_KEY_SECRET') || !$order_id || !$payment_id || !$signature) {
-                return new WP_Error('magna_invalid_payment', 'Invalid payment verification request.', array('status' => 400));
-            }
-            $expected = hash_hmac('sha256', $order_id . '|' . $payment_id, MAGNA_RAZORPAY_KEY_SECRET);
-            if (!hash_equals($expected, $signature)) {
-                return new WP_Error('magna_invalid_signature', 'Invalid payment signature.', array('status' => 400));
-            }
-            $payments = magna_store_razorpay_request('GET', 'payments/' . rawurlencode($payment_id));
-            if (is_wp_error($payments)) return $payments;
-            $notes = $payments['notes'] ?? array();
-            $wc_id = absint($notes['woocommerce_order_id'] ?? 0);
-            $order = $wc_id ? wc_get_order($wc_id) : false;
-            if (!$order || (int) $order->get_customer_id() !== (int) $user->ID) {
-                return new WP_Error('magna_order_not_found', 'Order not found.', array('status' => 404));
-            }
-            if (($payments['status'] ?? '') === 'captured') {
-                $order->payment_complete($payment_id);
-                $order->save();
-                return array('status' => 'paid', 'woocommerce_order_id' => $wc_id);
-            }
-            return array('status' => sanitize_text_field($payments['status'] ?? 'pending'), 'woocommerce_order_id' => $wc_id);
-        }
-
-        function magna_store_email_invoice($request) {
-            $user = magna_store_current_user();
-            $order = wc_get_order((int) $request['id']);
-            if (!$order || (int) $order->get_customer_id() !== (int) $user->ID) {
-                return new WP_Error('magna_order_not_found', 'Order not found.', array('status' => 404));
-            }
-            if (!class_exists('\Dompdf\Dompdf')) {
-                return new WP_Error(
-                    'magna_invoice_dependency',
-                    'Install a WordPress PDF renderer before enabling invoice email.',
-                    array('status' => 503)
-                );
-            }
-            $dompdf = new \Dompdf\Dompdf();
-            $dompdf->loadHtml(
-                '<h1>Invoice #' . esc_html($order->get_order_number()) . '</h1>' .
-                '<p>Total: ' . esc_html($order->get_formatted_order_total()) . '</p>'
-            );
-            $dompdf->render();
-            $path = wp_tempnam('magna-invoice-' . $order->get_id() . '.pdf');
-            file_put_contents($path, $dompdf->output());
-            $sent = wp_mail(
-                $order->get_billing_email(),
-                'Invoice #' . $order->get_order_number(),
-                'Please find your invoice attached.',
-                array('Content-Type: text/plain; charset=UTF-8'),
-                array($path)
-            );
-            wp_delete_file($path);
-            if (!$sent) {
-                return new WP_Error('magna_invoice_failed', 'Unable to send the invoice.', array('status' => 502));
-            }
-            return array('status' => 'sent');
-        }
         $items[] = array('product_id' => $product_id, 'quantity' => $quantity);
     }
     if (!$items) return new WP_Error('magna_empty_cart', 'Your cart is empty.', array('status' => 422));
@@ -635,4 +658,188 @@ function magna_store_create_order($request) {
         'currency' => $order->get_currency(),
         'amount' => (int) round((float) $order->get_total() * 100),
     );
+}
+
+function magna_store_phonepe_config() {
+    $required = array(
+        'MAGNA_PHONEPE_CLIENT_ID',
+        'MAGNA_PHONEPE_CLIENT_SECRET',
+        'MAGNA_PHONEPE_CLIENT_VERSION',
+        'MAGNA_PHONEPE_MERCHANT_ID',
+    );
+    foreach ($required as $constant) {
+        if (!defined($constant) || constant($constant) === '') {
+            return new WP_Error('magna_phonepe_config', 'PhonePe is not configured.', array('status' => 503));
+        }
+    }
+    return array(
+        'environment' => defined('MAGNA_PHONEPE_ENVIRONMENT') ? MAGNA_PHONEPE_ENVIRONMENT : 'PRODUCTION',
+        'client_id' => MAGNA_PHONEPE_CLIENT_ID,
+        'client_secret' => MAGNA_PHONEPE_CLIENT_SECRET,
+        'client_version' => MAGNA_PHONEPE_CLIENT_VERSION,
+        'merchant_id' => MAGNA_PHONEPE_MERCHANT_ID,
+    );
+}
+
+function magna_store_phonepe_request($method, $path, $body = null, $query = '') {
+    $config = magna_store_phonepe_config();
+    if (is_wp_error($config)) return $config;
+    $sandbox = strtoupper($config['environment']) === 'SANDBOX';
+    $base = $sandbox
+        ? 'https://api-preprod.phonepe.com/apis/pg-sandbox'
+        : 'https://api.phonepe.com/apis/pg';
+    $token_url = $sandbox
+        ? $base . '/v1/oauth/token'
+        : 'https://api.phonepe.com/apis/identity-manager/v1/oauth/token';
+    $token_response = wp_remote_post($token_url, array(
+        'timeout' => 20,
+        'headers' => array('Content-Type' => 'application/x-www-form-urlencoded'),
+        'body' => array(
+            'client_id' => $config['client_id'],
+            'client_version' => $config['client_version'],
+            'client_secret' => $config['client_secret'],
+            'grant_type' => 'client_credentials',
+        ),
+    ));
+    if (is_wp_error($token_response)) return $token_response;
+    $token_data = json_decode(wp_remote_retrieve_body($token_response), true);
+    if (wp_remote_retrieve_response_code($token_response) < 200 ||
+        wp_remote_retrieve_response_code($token_response) >= 300 ||
+        !is_array($token_data) ||
+        empty($token_data['access_token'])) {
+        return new WP_Error('magna_phonepe_auth', 'PhonePe authorization failed.', array('status' => 502));
+    }
+    $headers = array(
+        'Authorization' => 'O-' . sanitize_text_field($token_data['access_token']),
+        'Content-Type' => 'application/json',
+        'X-MERCHANT-ID' => $config['merchant_id'],
+    );
+    $args = array('method' => $method, 'timeout' => 20, 'headers' => $headers);
+    if ($body !== null) $args['body'] = wp_json_encode($body);
+    $response = wp_remote_request($base . '/' . ltrim($path, '/') . $query, $args);
+    if (is_wp_error($response)) return $response;
+    $data = json_decode(wp_remote_retrieve_body($response), true);
+    $code = wp_remote_retrieve_response_code($response);
+    if ($code < 200 || $code >= 300 || !is_array($data)) {
+        return new WP_Error('magna_phonepe_gateway', 'PhonePe request failed.', array('status' => 502));
+    }
+    return $data;
+}
+
+function magna_store_create_phonepe_payment($request) {
+    $created = magna_store_create_order($request);
+    if (is_wp_error($created)) return $created;
+    $order = wc_get_order((int) $created['woocommerce_order_id']);
+    if (!$order) return new WP_Error('magna_order_not_found', 'Order not found.', array('status' => 404));
+    if (strtoupper($order->get_currency()) !== 'INR') {
+        return new WP_Error('magna_phonepe_currency', 'PhonePe checkout requires an INR order.', array('status' => 400));
+    }
+    $order->set_payment_method('phonepe');
+    $order->set_payment_method_title('PhonePe');
+    $order->update_status('pending');
+    $order->save();
+
+    $merchant_order_id = 'MAGNA-' . $order->get_id() . '-' . strtolower(wp_generate_password(10, false, false));
+    $payment = magna_store_phonepe_request('POST', 'checkout/v2/pay', array(
+        'merchantOrderId' => $merchant_order_id,
+        'amount' => (int) $created['amount'],
+        'expireAfter' => 1200,
+        'paymentFlow' => array(
+            'type' => 'PG_CHECKOUT',
+            'merchantUrls' => array(
+                'redirectUrl' => home_url('/'),
+            ),
+        ),
+        'metaInfo' => array('udf1' => (string) $order->get_id()),
+    ));
+    if (is_wp_error($payment)) {
+        $order->update_status('failed', 'PhonePe payment initialization failed.');
+        return $payment;
+    }
+    $redirect_url = esc_url_raw($payment['redirectUrl'] ?? '');
+    if ($redirect_url === '') {
+        return new WP_Error('magna_phonepe_response', 'PhonePe returned no checkout URL.', array('status' => 502));
+    }
+    $order->update_meta_data('_magna_phonepe_merchant_order_id', $merchant_order_id);
+    $order->update_meta_data('_magna_phonepe_amount', (string) $created['amount']);
+    $order->save();
+    return array_merge($created, array(
+        'payment_method' => 'phonepe',
+        'phonepe_merchant_order_id' => $merchant_order_id,
+        'redirect_url' => $redirect_url,
+    ));
+}
+
+function magna_store_apply_phonepe_status($order, $status) {
+    $state = strtoupper(sanitize_text_field($status['state'] ?? ''));
+    $amount = (int) ($status['amount'] ?? 0);
+    $expected_amount = (int) round((float) $order->get_total() * 100);
+    if (strtoupper($order->get_currency()) !== 'INR') {
+        return new WP_Error('magna_payment_currency', 'PhonePe payment currency does not match the order.', array('status' => 400));
+    }
+    if ($amount !== $expected_amount) {
+        return new WP_Error('magna_payment_mismatch', 'PhonePe amount does not match the order.', array('status' => 400));
+    }
+    if ($state === 'COMPLETED') {
+        $details = (array) ($status['paymentDetails'] ?? array());
+        $transaction_id = sanitize_text_field($details[0]['transactionId'] ?? '');
+        if (!$order->is_paid()) $order->payment_complete($transaction_id);
+        $order->save();
+        return 'paid';
+    }
+    if ($state === 'FAILED') {
+        if (!$order->is_paid()) $order->update_status('failed');
+        return 'failed';
+    }
+    return 'pending';
+}
+
+function magna_store_phonepe_status($request) {
+    $user = magna_store_current_user();
+    $order = wc_get_order((int) $request['id']);
+    if (!$order || (int) $order->get_customer_id() !== (int) $user->ID) {
+        return new WP_Error('magna_order_not_found', 'Order not found.', array('status' => 404));
+    }
+    $merchant_order_id = $order->get_meta('_magna_phonepe_merchant_order_id');
+    if (!$merchant_order_id) {
+        return new WP_Error('magna_phonepe_order_not_found', 'PhonePe payment was not initialized.', array('status' => 404));
+    }
+    $status = magna_store_phonepe_request(
+        'GET',
+        'checkout/v2/order/' . rawurlencode($merchant_order_id) . '/status',
+        null,
+        '?details=true'
+    );
+    if (is_wp_error($status)) return $status;
+    $payment_status = magna_store_apply_phonepe_status($order, $status);
+    if (is_wp_error($payment_status)) return $payment_status;
+    return array(
+        'woocommerce_order_id' => $order->get_id(),
+        'payment_status' => $payment_status,
+        'order_status' => $order->get_status(),
+    );
+}
+
+function magna_store_phonepe_webhook($request) {
+    if (!defined('MAGNA_PHONEPE_WEBHOOK_SECRET') || MAGNA_PHONEPE_WEBHOOK_SECRET === '') {
+        return new WP_Error('magna_phonepe_webhook_config', 'PhonePe webhook is not configured.', array('status' => 503));
+    }
+    $raw_body = $request->get_body();
+    $signature = $request->get_header('x-phonepe-checksum-signature');
+    $expected = hash_hmac('sha256', $raw_body, MAGNA_PHONEPE_WEBHOOK_SECRET);
+    if (!$signature || !hash_equals($expected, $signature)) {
+        return new WP_Error('magna_phonepe_webhook_auth', 'Invalid PhonePe webhook signature.', array('status' => 401));
+    }
+    $body = json_decode($raw_body, true);
+    $payload = (array) ($body['payload'] ?? array());
+    $merchant_order_id = sanitize_text_field($payload['merchantOrderId'] ?? '');
+    if (!$merchant_order_id) {
+        return new WP_Error('magna_phonepe_webhook_payload', 'Invalid PhonePe webhook payload.', array('status' => 400));
+    }
+    $orders = wc_get_orders(array('limit' => 1, 'meta_key' => '_magna_phonepe_merchant_order_id', 'meta_value' => $merchant_order_id));
+    $order = $orders ? $orders[0] : false;
+    if (!$order) return new WP_Error('magna_order_not_found', 'Order not found.', array('status' => 404));
+    $payment_status = magna_store_apply_phonepe_status($order, $payload);
+    if (is_wp_error($payment_status)) return $payment_status;
+    return array('received' => true, 'payment_status' => $payment_status);
 }

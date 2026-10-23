@@ -483,9 +483,9 @@ class CheckoutScreen extends GetView<CheckoutController> {
           ),
           const SizedBox(height: 10),
           _buildPaymentOption(
-            value: 'paypal',
-            title: 'PayPal',
-            subtitle: 'Pay securely with your PayPal account',
+            value: 'phonepe',
+            title: 'PhonePe',
+            subtitle: 'Pay securely with UPI, cards, or net banking',
             icon: Icons.account_balance_wallet_outlined,
           ),
           const SizedBox(height: 10),

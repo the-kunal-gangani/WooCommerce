@@ -54,6 +54,7 @@ dependencies:
   url_launcher: ^6.3.3
   firebase_core: ^5.0.0
   firebase_messaging: ^17.0.0
+  phonepe_payment_sdk: ^3.0.2
 
 dev_dependencies:
   flutter_test:

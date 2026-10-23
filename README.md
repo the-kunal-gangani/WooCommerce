@@ -14,7 +14,7 @@ The Flutter client uses the public WooCommerce Store API for catalog browsing an
 - Flutter/Dart compatible with the SDK constraint in `pubspec.yaml`
 - Android Studio/JDK 17 for Android builds
 - WordPress administrator access
-- WooCommerce and Razorpay configuration on WordPress
+- WooCommerce, Razorpay, and PhonePe configuration on WordPress
 - An SMTP/mail delivery configuration on WordPress
 - Firebase configuration for push notifications
 
@@ -47,6 +47,21 @@ define('MAGNA_RAZORPAY_KEY_SECRET', '...');
 
 The payment implementation calls Razorpay server-side through WordPress. Never put these constants in Flutter.
 
+PhonePe is an additional payment method, not a replacement for Razorpay. Configure
+the following server-side constants when enabling PhonePe:
+
+```php
+define('MAGNA_PHONEPE_CLIENT_ID', '...');
+define('MAGNA_PHONEPE_CLIENT_SECRET', '...');
+define('MAGNA_PHONEPE_CLIENT_VERSION', '...');
+define('MAGNA_PHONEPE_MERCHANT_ID', '...');
+define('MAGNA_PHONEPE_ENVIRONMENT', 'PRODUCTION');
+define('MAGNA_PHONEPE_WEBHOOK_SECRET', '...');
+```
+
+The Flutter PhonePe flow uses the server-created hosted checkout URL. PhonePe
+credentials and webhook secrets must never be included in the app.
+
 ## Validate changes
 
 ```powershell
@@ -56,8 +71,8 @@ flutter test
 
 ## Security and deployment notes
 
-- Keep WooCommerce, JWT, Razorpay, database, and SMTP secrets in environment variables or a deployment secret manager.
+- Keep WooCommerce, JWT, Razorpay, PhonePe, database, and SMTP secrets in environment variables or a deployment secret manager.
 - Never put WooCommerce consumer credentials in the Flutter application.
 - Use a production Android signing key before releasing an APK.
-- Configure Razorpay webhooks according to the WordPress payment integration.
+- Configure PhonePe webhooks to call `/wp-json/magna/v1/payments/phonepe/webhook` over HTTPS.
 - Do not enable verbose request/response logging in production.

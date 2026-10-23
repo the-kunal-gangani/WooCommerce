@@ -35,6 +35,44 @@ class CheckoutService {
     }
   }
 
+  Future<Map<String, dynamic>> createPhonePePayment(CheckoutData data) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/payments/phonepe/create',
+        data: data.toJson(),
+      );
+      final result = response.data;
+      if (result == null ||
+          result['woocommerce_order_id'] == null ||
+          result['redirect_url'] == null ||
+          result['amount'] == null ||
+          result['currency'] == null ||
+          result['total'] == null) {
+        throw Exception('The server returned incomplete PhonePe payment data.');
+      }
+      return result;
+    } on DioException catch (error) {
+      final message = error.response?.data is Map
+          ? (error.response!.data as Map)['detail']?.toString()
+          : null;
+      throw Exception(message ?? 'Unable to initialize PhonePe payment.');
+    }
+  }
+
+  Future<Map<String, dynamic>> getPhonePePaymentStatus(int orderId) async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/payments/phonepe/status/$orderId',
+      );
+      return response.data ?? <String, dynamic>{};
+    } on DioException catch (error) {
+      final message = error.response?.data is Map
+          ? (error.response!.data as Map)['detail']?.toString()
+          : null;
+      throw Exception(message ?? 'Unable to check PhonePe payment status.');
+    }
+  }
+
   Future<void> emailInvoice(int orderId) async {
     try {
       await _dio.post<Map<String, dynamic>>('/payments/$orderId/invoice/email');
