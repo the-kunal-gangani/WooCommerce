@@ -218,169 +218,294 @@ class OrderTrackingScreen extends GetView<OrderTrackingController> {
   }
 
   Widget _buildTimeline(StoreOrder order) {
-    final cancelled = order.status.isNegative;
-    final shipped = controller.hasShipmentDate;
-    final completed = controller.isCompleted;
+    const blue = Color(0xFF2563EB);
+    const green = Color(0xFF15803D);
+    const red = Color(0xFFB91C1C);
+    const violet = Color(0xFF6D4AFF);
+    // const amber = Color(0xFFB45309);
+    const muted = Color(0xFF9CA3AF);
+    const textColor = Color(0xFF111827);
+    const secondary = Color(0xFF687386);
+    const border = Color(0xFFE5EAF2);
 
-    final placedDate = order.createdAt;
-    final shippedDate = controller.shipmentDate;
+    final status = order.status;
 
-    final steps = [
-      _TimelineStep(
+    final shipmentDates = order.tracking
+        .where((item) => item.shippedAt != null)
+        .map((item) => item.shippedAt!)
+        .toList();
+
+    final DateTime? shipmentDate = shipmentDates.isEmpty
+        ? null
+        : shipmentDates.first;
+
+    final steps = <_OrderTimelineStep>[
+      _OrderTimelineStep(
         title: 'Order placed',
-        description: 'Your order was created successfully.',
-        date: placedDate == null
-            ? null
-            : formatOrderDate(placedDate, withTime: true),
-        complete: placedDate != null,
-      ),
-      _TimelineStep(
-        title: 'In transit',
-        description: shipped
-            ? 'Shipment information has been recorded.'
-            : 'Shipment confirmation is not available yet.',
-        date: shippedDate == null
-            ? null
-            : formatOrderDate(shippedDate, withTime: true),
-        complete: shipped,
-      ),
-      _TimelineStep(
-        title: 'Order completed',
-        description: completed
-            ? 'WooCommerce marks this order as completed.'
-            : 'Waiting for order completion.',
-        date: null,
-        complete: completed,
+        description: 'Your order has been received.',
+        date: _formatTimelineDate(order.createdAt),
+        state: _TimelineStepState.completed,
+        icon: Icons.receipt_long_outlined,
       ),
     ];
 
+    switch (status) {
+      case OrderStatus.pending:
+        steps.add(
+          _OrderTimelineStep(
+            title: 'Payment pending',
+            description: 'Your order is awaiting payment confirmation.',
+            state: _TimelineStepState.current,
+            icon: Icons.payments_outlined,
+          ),
+        );
+        break;
+
+      case OrderStatus.processing:
+        steps.add(
+          _OrderTimelineStep(
+            title: 'Order processing',
+            description: 'We are preparing your order.',
+            state: _TimelineStepState.current,
+            icon: Icons.inventory_2_outlined,
+          ),
+        );
+        if (order.tracking.isNotEmpty) {
+          steps.add(
+            _OrderTimelineStep(
+              title: 'Shipment information available',
+              description: 'Tracking details have been added. Check the carrier for the latest shipment updates.',
+              date: shipmentDate?.let(_formatTimelineDate),
+              state: _TimelineStepState.information,
+              icon: Icons.local_shipping_outlined,
+            ),
+          );
+        } else {
+          steps.add(
+            _OrderTimelineStep(
+              title: 'Shipment pending',
+              description: 'Tracking details will appear when available.',
+              state: _TimelineStepState.upcoming,
+              icon: Icons.local_shipping_outlined,
+            ),
+          );
+        }
+        break;
+      case OrderStatus.onHold:
+        steps.add(
+          _OrderTimelineStep(
+            title: 'Order on hold',
+            description: 'Processing is temporarily paused. Please check back for updates.',
+            state: _TimelineStepState.current,
+            icon: Icons.pause_circle_outline,
+          ),
+        );
+        break;
+      case OrderStatus.completed:
+        steps.add(
+          _OrderTimelineStep(
+            title: 'Order completed',
+            description: 'WooCommerce has marked this order as completed.',
+            state: _TimelineStepState.completed,
+            icon: Icons.check_circle_outline,
+          ),
+        );
+        break;
+
+      case OrderStatus.cancelled:
+        steps.add(
+          _OrderTimelineStep(
+            title: 'Order cancelled',
+            description: 'This order has been cancelled.',
+            state: _TimelineStepState.negative,
+            icon: Icons.cancel_outlined,
+          ),
+        );
+        break;
+      case OrderStatus.failed:
+        steps.add(
+          _OrderTimelineStep(
+            title: 'Order failed',
+            description: 'The order could not be completed. Contact support if you need assistance.',
+            state: _TimelineStepState.negative,
+            icon: Icons.error_outline,
+          ),
+        );
+        break;
+      case OrderStatus.refunded:
+        steps.add(
+          _OrderTimelineStep(
+            title: 'Order refunded',
+            description: 'WooCommerce has marked this order as refunded.',
+            state: _TimelineStepState.refund,
+            icon: Icons.currency_exchange,
+          ),
+        );
+        break;
+
+      case OrderStatus.unknown:
+        steps.add(
+          _OrderTimelineStep(
+            title: order.statusLabel.isNotEmpty
+                ? order.statusLabel
+                : 'Status unavailable',
+            description: 'We could not determine the next step for this order.',
+            state: _TimelineStepState.information,
+            icon: Icons.info_outline,
+          ),
+        );
+        break;
+    }
+
+    Color colorFor(_TimelineStepState state) {
+      switch (state) {
+        case _TimelineStepState.completed:
+          return green;
+        case _TimelineStepState.current:
+          return blue;
+        case _TimelineStepState.information:
+          return violet;
+        case _TimelineStepState.negative:
+          return red;
+        case _TimelineStepState.refund:
+          return violet;
+        case _TimelineStepState.upcoming:
+          return muted;
+      }
+    }
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: _border),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Tracking updates',
+            'Order timeline',
             style: TextStyle(
-              color: _navy,
               fontSize: 17,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w700,
+              color: textColor,
             ),
           ),
           const SizedBox(height: 6),
           const Text(
-            'Follow the latest available order information.',
-            style: TextStyle(color: _muted, fontSize: 12),
+            'Updates based on your current order status.',
+            style: TextStyle(fontSize: 12, color: secondary),
           ),
-          const SizedBox(height: 24),
-          if (cancelled)
+          const SizedBox(height: 22),
+          for (var i = 0; i < steps.length; i++)
+            _buildTimelineStep(
+              step: steps[i],
+              color: colorFor(steps[i].state),
+              isLast: i == steps.length - 1,
+              connectorColor: border,
+            ),
+          if (status == OrderStatus.completed) ...[
+            const SizedBox(height: 10),
             Container(
-              width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: order.status.color.withValues(alpha: 0.08),
+                color: const Color(0xFFF0FDF4),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Text(
-                'Order status: ${order.displayStatus}. '
-                'The standard delivery timeline may not apply.',
-                style: TextStyle(
-                  color: order.status.color,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
+              child: const Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline, color: green, size: 18),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'No confirmed delivery timestamp is available in the current order data.',
+                      style: TextStyle(
+                        color: Color(0xFF166534),
+                        fontSize: 12,
+                        height: 1.45,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          for (var i = 0; i < steps.length; i++)
-            _buildTimelineStep(steps[i], isLast: i == steps.length - 1),
-          if (completed)
-            const Padding(
-              padding: EdgeInsets.only(top: 8),
-              child: Text(
-                'Note: completed does not include a recorded delivery time.',
-                style: TextStyle(color: _muted, fontSize: 11),
-              ),
-            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildTimelineStep(_TimelineStep step, {required bool isLast}) {
-    final color = step.complete ? _blue : const Color(0xFFD8DEE9);
+  Widget _buildTimelineStep({
+    required _OrderTimelineStep step,
+    required Color color,
+    required bool isLast,
+    required Color connectorColor,
+  }) {
+    const secondary = Color(0xFF687386);
+    const navy = Color(0xFF111827);
 
     return IntrinsicHeight(
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SizedBox(
-            width: 32,
+            width: 34,
             child: Column(
               children: [
                 Container(
-                  width: 30,
-                  height: 30,
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
-                    color: step.complete
-                        ? _blue.withValues(alpha: 0.10)
-                        : const Color(0xFFF1F4F9),
+                    color: color.withValues(alpha: 0.10),
                     shape: BoxShape.circle,
-                    border: Border.all(color: step.complete ? _blue : _border),
+                    border: Border.all(color: color.withValues(alpha: 0.25)),
                   ),
-                  child: Icon(
-                    step.complete ? Icons.check_rounded : Icons.circle_outlined,
-                    color: color,
-                    size: 17,
-                  ),
+                  child: Icon(step.icon, size: 17, color: color),
                 ),
                 if (!isLast)
                   Expanded(
                     child: Container(
                       width: 2,
-                      constraints: const BoxConstraints(minHeight: 54),
-                      color: step.complete
-                          ? _blue.withValues(alpha: 0.35)
-                          : _border,
+                      margin: const EdgeInsets.symmetric(vertical: 5),
+                      color: connectorColor,
                     ),
                   ),
               ],
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 26, top: 2),
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     step.title,
                     style: TextStyle(
-                      color: step.complete ? _navy : _muted,
+                      color: navy,
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 4),
                   Text(
                     step.description,
                     style: const TextStyle(
-                      color: _muted,
+                      color: secondary,
                       fontSize: 12,
                       height: 1.45,
                     ),
                   ),
                   if (step.date != null) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 5),
                     Text(
                       step.date!,
-                      style: const TextStyle(
-                        color: _blue,
+                      style: TextStyle(
+                        color: color,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -393,6 +518,17 @@ class OrderTrackingScreen extends GetView<OrderTrackingController> {
         ],
       ),
     );
+  }
+
+  String _formatTimelineDate(DateTime date) {
+    final localDate = date.toLocal();
+    final day = localDate.day.toString().padLeft(2, '0');
+    final month = localDate.month.toString().padLeft(2, '0');
+    final year = localDate.year;
+    final hour = localDate.hour.toString().padLeft(2, '0');
+    final minute = localDate.minute.toString().padLeft(2, '0');
+
+    return '$day/$month/$year • $hour:$minute';
   }
 
   Widget _buildShipmentDetails(StoreOrder order) {
@@ -622,16 +758,41 @@ class OrderTrackingScreen extends GetView<OrderTrackingController> {
   }
 }
 
-class _TimelineStep {
-  const _TimelineStep({
+// class _TimelineStep {
+//   const _TimelineStep({
+//     required this.title,
+//     required this.description,
+//     required this.date,
+//     required this.complete,
+//   });
+
+//   final String title;
+//   final String description;
+//   final String? date;
+//   final bool complete;
+// }
+
+enum _TimelineStepState {
+  completed,
+  current,
+  information,
+  upcoming,
+  negative,
+  refund,
+}
+
+class _OrderTimelineStep {
+  const _OrderTimelineStep({
     required this.title,
     required this.description,
-    required this.date,
-    required this.complete,
+    required this.state,
+    required this.icon,
+    this.date,
   });
 
   final String title;
   final String description;
   final String? date;
-  final bool complete;
+  final _TimelineStepState state;
+  final IconData icon;
 }
