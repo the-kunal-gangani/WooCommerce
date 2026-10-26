@@ -658,9 +658,50 @@ function magna_store_send_order_sms($order, $event) {
     return true;
 }
 
+/**
+ * Create a Cash on Delivery order and send an order confirmation SMS.
+ */
+function magna_store_create_cod_order($request) {
+    $created = magna_store_create_order($request);
+
+    if (is_wp_error($created)) {
+        return $created;
+    }
+
+    $order_id = absint($created['woocommerce_order_id']);
+    $order = wc_get_order($order_id);
+
+    if (!$order) {
+        return new WP_Error(
+            'magna_order_not_found',
+            'Order was created, but could not be retrieved.',
+            array('status' => 500)
+        );
+    }
+
+    // SMS failure must not prevent a successfully created order
+    // from being returned to the Flutter application.
+    magna_store_send_order_sms($order, 'order_placed');
+
+    return $created;
+}
+
 function magna_store_create_payment_order($request) {
     $created = magna_store_create_order($request);
     if (is_wp_error($created)) return $created;
+    $order = wc_get_order((int) $created['woocommerce_order_id']);
+    if (!$order) {
+        return new WP_Error(
+            'magna_order_not_found',
+            'Order not found.',
+            array('status' => 404)
+        );
+    }
+
+    $order->set_payment_method('razorpay');
+    $order->set_payment_method_title('Razorpay');
+    $order->update_status('pending');
+    $order->save();
     $gateway = magna_store_razorpay_request('POST', 'orders', array(
         'amount' => (int) $created['amount'],
         'currency' => (string) $created['currency'],
@@ -907,7 +948,7 @@ function magna_store_apply_phonepe_status($order, $status) {
     }
     if ($state === 'COMPLETED') {
     $details = (array) ($status['paymentDetails'] ?? array());
-    $transaction_id = sanitize_text_field(
+    $transaction_id = sanitize_text_field(  
         $details[0]['transactionId'] ?? ''
     );
     if (!$order->is_paid()) {
