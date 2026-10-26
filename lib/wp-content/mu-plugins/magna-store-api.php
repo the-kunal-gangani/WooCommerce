@@ -112,7 +112,7 @@ function magna_store_register_routes() {
 
     register_rest_route('magna/v1', '/checkout/create-order', array(
         'methods' => WP_REST_Server::CREATABLE,
-        'callback' => 'magna_store_create_order',
+        'callback' => 'magna_store_create_cod_order',
         'permission_callback' => 'magna_store_authenticated',
     ));
 
@@ -537,6 +537,127 @@ function magna_store_razorpay_request($method, $path, $body = null) {
     return $data;
 }
 
+/**
+ * Send an SMS through Textbee for a WooCommerce order.
+ *
+ * $event must uniquely identify the notification type:
+ * - order_placed
+ * - payment_success
+ */
+function magna_store_send_order_sms($order, $event) {
+    if (!$order || !is_a($order, 'WC_Order')) {
+        return false;
+    }
+
+    if (
+        !defined('MAGNA_TEXTBEE_ENABLED') ||
+        MAGNA_TEXTBEE_ENABLED !== true ||
+        !defined('MAGNA_TEXTBEE_API_KEY') ||
+        MAGNA_TEXTBEE_API_KEY === ''
+    ) {
+        return false;
+    }
+
+    $event = sanitize_key($event);
+
+    if (!in_array($event, array('order_placed', 'payment_success'), true)) {
+        return false;
+    }
+
+    // Prevent repeated notifications for the same order and event.
+    $meta_key = '_magna_textbee_' . $event . '_sent';
+
+    if ($order->get_meta($meta_key)) {
+        return true;
+    }
+
+    $phone = (string) $order->get_billing_phone();
+
+    // Keep only digits and an optional leading plus sign.
+    $phone = preg_replace('/[^\d+]/', '', trim($phone));
+
+    // Default to India's country code when the number has 10 digits.
+    if (preg_match('/^\d{10}$/', $phone)) {
+        $phone = '+91' . $phone;
+    } elseif (preg_match('/^91\d{10}$/', $phone)) {
+        $phone = '+' . $phone;
+    }
+
+    // Reject malformed numbers rather than sending to an invalid recipient.
+    if (!preg_match('/^\+[1-9]\d{7,14}$/', $phone)) {
+        wc_get_logger()->warning(
+            'Textbee SMS skipped: invalid billing phone for order ' . $order->get_id(),
+            array('source' => 'magna-textbee')
+        );
+
+        return false;
+    }
+
+    $order_number = $order->get_order_number();
+    $total = html_entity_decode(
+        wp_strip_all_tags($order->get_formatted_order_total()),
+        ENT_QUOTES,
+        get_bloginfo('charset')
+    );
+
+    if ($event === 'order_placed') {
+        $message = sprintf(
+            'Magna Data Store: Your order #%s has been placed. Total: %s. Thank you for shopping with us!',
+            $order_number,
+            $total
+        );
+    } else {
+        $message = sprintf(
+            'Magna Data Store: Payment successful for order #%s. Amount: %s. Thank you for your purchase!',
+            $order_number,
+            $total
+        );
+    }
+
+    $response = wp_remote_post(
+        'https://api.textbee.dev/api/v1/gateway/send-sms',
+        array(
+            'timeout' => 15,
+            'headers' => array(
+                'x-api-key' => MAGNA_TEXTBEE_API_KEY,
+                'Content-Type' => 'application/json',
+            ),
+            'body' => wp_json_encode(array(
+                'recipients' => array($phone),
+                'message' => $message,
+            )),
+        )
+    );
+
+    if (is_wp_error($response)) {
+        wc_get_logger()->warning(
+            'Textbee request failed for order ' . $order->get_id() .
+            ': ' . $response->get_error_message(),
+            array('source' => 'magna-textbee')
+        );
+
+        return false;
+    }
+
+    $status_code = (int) wp_remote_retrieve_response_code($response);
+
+    if ($status_code < 200 || $status_code >= 300) {
+        wc_get_logger()->warning(
+            'Textbee returned HTTP ' . $status_code .
+            ' for order ' . $order->get_id(),
+            array('source' => 'magna-textbee')
+        );
+
+        return false;
+    }
+
+    // Record success only after Textbee accepts the request.
+    $order->update_meta_data($meta_key, current_time('mysql'));
+    $order->save();
+
+    return true;
+}
+
 function magna_store_create_payment_order($request) {
     $created = magna_store_create_order($request);
     if (is_wp_error($created)) return $created;
@@ -580,10 +701,14 @@ function magna_store_verify_payment($request) {
         return new WP_Error('magna_payment_mismatch', 'Payment amount or currency does not match the order.', array('status' => 400));
     }
     if (($payments['status'] ?? '') === 'captured') {
-        $order->payment_complete($payment_id);
-        $order->save();
-        return array('status' => 'paid', 'woocommerce_order_id' => $wc_id);
-    }
+    $order->payment_complete($payment_id);
+    $order->save();
+    magna_store_send_order_sms($order, 'payment_success');
+    return array(
+        'status' => 'paid',
+        'woocommerce_order_id' => $wc_id
+    );
+}
     return array('status' => sanitize_text_field($payments['status'] ?? 'pending'), 'woocommerce_order_id' => $wc_id);
 }
 
@@ -781,18 +906,24 @@ function magna_store_apply_phonepe_status($order, $status) {
         return new WP_Error('magna_payment_mismatch', 'PhonePe amount does not match the order.', array('status' => 400));
     }
     if ($state === 'COMPLETED') {
-        $details = (array) ($status['paymentDetails'] ?? array());
-        $transaction_id = sanitize_text_field($details[0]['transactionId'] ?? '');
-        if (!$order->is_paid()) $order->payment_complete($transaction_id);
-        $order->save();
-        return 'paid';
+    $details = (array) ($status['paymentDetails'] ?? array());
+    $transaction_id = sanitize_text_field(
+        $details[0]['transactionId'] ?? ''
+    );
+    if (!$order->is_paid()) {
+        $order->payment_complete($transaction_id);
     }
+    $order->save();
+    magna_store_send_order_sms($order, 'payment_success');
+    return 'paid';
+}
     if ($state === 'FAILED') {
         if (!$order->is_paid()) $order->update_status('failed');
         return 'failed';
     }
     return 'pending';
 }
+
 
 function magna_store_phonepe_status($request) {
     $user = magna_store_current_user();
