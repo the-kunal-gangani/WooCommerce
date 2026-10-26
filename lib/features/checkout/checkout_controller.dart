@@ -231,12 +231,14 @@ class CheckoutController extends GetxController {
         final result = await _checkoutService.createPhonePePayment(
           checkoutData,
         );
-        final orderId = result['woocommerce_order_id'];
+        final orderId = int.tryParse(
+          result['woocommerce_order_id']?.toString() ?? '',
+        );
         final phonePeOrderId = result['phonepe_order_id']?.toString();
         final phonePeToken = result['phonepe_token']?.toString();
         final merchantId =
             (result['merchant_id'] ?? AppConfig.phonePeMerchantId).toString();
-        if (orderId is! int ||
+        if (orderId == null ||
             phonePeOrderId == null ||
             phonePeOrderId.isEmpty ||
             phonePeToken == null ||
@@ -265,44 +267,52 @@ class CheckoutController extends GetxController {
           AppConfig.phonePeAppSchema,
         );
         final sdkStatus = sdkResponse?['status']?.toString().toUpperCase();
-        if (sdkStatus != 'SUCCESS') {
-          final message = sdkStatus == 'INTERRUPTED'
-              ? 'PhonePe payment was cancelled.'
-              : sdkResponse?['error']?.toString() ??
-                    'PhonePe payment was not completed.';
-          Get.snackbar(
-            'Payment not completed',
-            message,
-            snackPosition: SnackPosition.BOTTOM,
-            duration: const Duration(seconds: 5),
-          );
-          return;
-        }
-        Map<String, dynamic> status = <String, dynamic>{};
-        for (var attempt = 0; attempt < 12; attempt++) {
-          if (attempt > 0) {
-            await Future<void>.delayed(const Duration(seconds: 15));
-          }
-          status = await _checkoutService.getPhonePePaymentStatus(orderId);
-          if (status['payment_status']?.toString() != 'pending') break;
-        }
-        if (status['payment_status']?.toString() != 'paid') {
+        // The backend, not the SDK result alone, determines the final status.
+        final status = await _pollPhonePePaymentStatus(orderId);
+        if (status == null) {
           Get.snackbar(
             'Payment confirmation pending',
-            'PhonePe has not confirmed this payment yet. Please check your '
-                'order history before trying again.',
+            'We could not confirm the payment with the server. '
+                'Please check your order history before trying again.',
             snackPosition: SnackPosition.BOTTOM,
             duration: const Duration(seconds: 6),
           );
           return;
         }
-        await _cart.clearCart();
-        Get.off(
-          () => OrderConfirmationScreen(
-            checkoutData: checkoutData,
-            createdOrder: Map<String, dynamic>.from(result),
-            paymentResult: Map<String, dynamic>.from(status),
-          ),
+        final paymentStatus = status['payment_status']
+            ?.toString()
+            .toLowerCase();
+        if (paymentStatus == 'paid') {
+          await _cart.clearCart();
+          Get.off(
+            () => OrderConfirmationScreen(
+              checkoutData: checkoutData,
+              createdOrder: Map<String, dynamic>.from(result),
+              paymentResult: Map<String, dynamic>.from(status),
+            ),
+          );
+          return;
+        }
+        if (paymentStatus == 'failed') {
+          Get.snackbar(
+            'Payment failed',
+            'The server confirmed that this payment failed. '
+                'Review your order before trying another payment.',
+            snackPosition: SnackPosition.BOTTOM,
+            duration: const Duration(seconds: 5),
+          );
+          return;
+        }
+        final message = sdkStatus == 'INTERRUPTED'
+            ? 'The payment flow was interrupted, but the final payment '
+                  'status is not yet confirmed.'
+            : 'The final payment status is not yet confirmed. '
+                  'Please check your order history before trying again.';
+        Get.snackbar(
+          'Payment confirmation pending',
+          message,
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 6),
         );
         return;
       }
@@ -398,6 +408,36 @@ class CheckoutController extends GetxController {
         duration: const Duration(seconds: 5),
       );
     }
+  }
+
+  Future<Map<String, dynamic>?> _pollPhonePePaymentStatus(int orderId) async {
+    const maxAttempts = 12;
+    Map<String, dynamic>? lastStatus;
+
+    for (var attempt = 0; attempt < maxAttempts; attempt++) {
+      if (attempt > 0) {
+        await Future<void>.delayed(const Duration(seconds: 5));
+      }
+
+      try {
+        final status = await _checkoutService.getPhonePePaymentStatus(orderId);
+
+        lastStatus = status;
+
+        final paymentStatus = status['payment_status']
+            ?.toString()
+            .toLowerCase();
+
+        if (paymentStatus == 'paid' || paymentStatus == 'failed') {
+          return status;
+        }
+      } catch (_) {
+        // A temporary network or server error does not prove
+        // that the payment failed. Continue checking.
+      }
+    }
+
+    return lastStatus;
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
