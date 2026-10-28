@@ -35,10 +35,32 @@ class CheckoutService {
     }
   }
 
+  String _extractErrorMessage(dynamic responseData, String fallback) {
+    if (responseData is Map) {
+      final message = responseData['message'] ?? responseData['detail'];
+
+      if (message != null && message.toString().trim().isNotEmpty) {
+        return message.toString();
+      }
+    }
+
+    if (responseData is List && responseData.isNotEmpty) {
+      final first = responseData.first;
+      if (first is Map) {
+        final message = first['message'] ?? first['detail'];
+        if (message != null && message.toString().trim().isNotEmpty) {
+          return message.toString();
+        }
+      }
+    }
+
+    return fallback;
+  }
+
   Future<Map<String, dynamic>> createPhonePePayment(CheckoutData data) async {
     try {
       final response = await _dio.post<Map<String, dynamic>>(
-        '/payments/phonepe/create',
+        'payments/phonepe/create',
         data: data.toJson(),
       );
       final result = response.data;
@@ -54,17 +76,19 @@ class CheckoutService {
       }
       return result;
     } on DioException catch (error) {
-      final message = error.response?.data is Map
-          ? (error.response!.data as Map)['detail']?.toString()
-          : null;
-      throw Exception(message ?? 'Unable to initialize PhonePe payment.');
+      throw Exception(
+        _extractErrorMessage(
+          error.response?.data,
+          'Unable to initialize PhonePe payment.',
+        ),
+      );
     }
   }
 
   Future<Map<String, dynamic>> getPhonePePaymentStatus(int orderId) async {
     try {
       final response = await _dio.get<Map<String, dynamic>>(
-        '/payments/phonepe/status/$orderId',
+        'payments/phonepe/status/$orderId',
       );
       return response.data ?? <String, dynamic>{};
     } on DioException catch (error) {

@@ -64,12 +64,21 @@ class ApiClient {
   final Future<String?> Function()? tokenProvider;
   final String? Function()? _cookieProvider;
 
+  String _normalizePath(String path) {
+    if (Uri.tryParse(path)?.hasScheme == true) {
+      return path;
+    }
+
+    return path.startsWith('/') ? path.substring(1) : path;
+  }
+
   Future<Response<T>> get<T>(
     String path, {
     Map<String, dynamic>? query,
     Options? options,
     CancelToken? cancelToken,
   }) {
+    _normalizePath(path);
     return dio.get<T>(
       path,
       queryParameters: query,
@@ -85,6 +94,7 @@ class ApiClient {
     Options? options,
     CancelToken? cancelToken,
   }) {
+    _normalizePath(path);
     return dio.post<T>(
       path,
       data: data,
@@ -101,6 +111,7 @@ class ApiClient {
     Options? options,
     CancelToken? cancelToken,
   }) {
+    _normalizePath(path);
     return dio.put<T>(
       path,
       data: data,
@@ -117,6 +128,7 @@ class ApiClient {
     Options? options,
     CancelToken? cancelToken,
   }) {
+    _normalizePath(path);
     return dio.patch<T>(
       path,
       data: data,
@@ -133,6 +145,7 @@ class ApiClient {
     Options? options,
     CancelToken? cancelToken,
   }) {
+    _normalizePath(path); 
     return dio.delete<T>(
       path,
       data: data,

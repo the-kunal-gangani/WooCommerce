@@ -29,7 +29,7 @@ class InitialBinding extends Bindings {
     final getStorage = GetStorage();
     late final AuthService authService;
     final wpApiClient = ApiClient(
-      baseUrl: '${AppConfig.baseUrl}${AppConfig.magnaApiPath}',
+      baseUrl: '${AppConfig.baseUrl}${AppConfig.magnaApiPath}/',
       tokenProvider: () async => authService.accessToken,
     );
     authService = AuthService(wpApiClient, secureStorage, storage);
