@@ -876,9 +876,10 @@ function magna_store_phonepe_request($method, $path, $body = null, $query = '') 
         return new WP_Error('magna_phonepe_auth', 'PhonePe authorization failed.', array('status' => 502));
     }
     $headers = array(
-        'Authorization' => 'O-' . sanitize_text_field($token_data['access_token']),
+        'Authorization' => 'O-Bearer ' . sanitize_text_field(
+            $token_data['access_token']
+        ),
         'Content-Type' => 'application/json',
-        'X-MERCHANT-ID' => $config['merchant_id'],
     );
     $args = array('method' => $method, 'timeout' => 20, 'headers' => $headers);
     if ($body !== null) $args['body'] = wp_json_encode($body);
