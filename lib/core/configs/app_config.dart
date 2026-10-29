@@ -1,5 +1,6 @@
 class AppConfig {
   AppConfig._();
+
   static const String appName = 'Magna Data Store';
   static const String baseUrl = String.fromEnvironment(
     'STORE_BASE_URL',
@@ -7,6 +8,11 @@ class AppConfig {
   );
   static const String storeApiPath = '/wp-json/wc/store/v1';
   static const String magnaApiPath = '/wp-json/magna/v1';
+  static const String blogBaseUrl = String.fromEnvironment(
+    'BLOG_BASE_URL',
+    defaultValue: '',
+  );
+  static const String blogApiPath = '/wp-json/wp/v2';
   static const String phonePeEnvironment = String.fromEnvironment(
     'PHONEPE_ENVIRONMENT',
     defaultValue: 'SANDBOX',
