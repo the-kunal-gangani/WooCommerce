@@ -1,6 +1,5 @@
 import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/core/services/auth_service.dart';
-import 'package:magna_data_ai_ecommerce/core/services/blog_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/cart_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/category_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/checkout_services.dart';
@@ -19,7 +18,7 @@ import 'package:magna_data_ai_ecommerce/features/auth/login/login_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/register/register_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/reset-password/reset_password_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/reset-password/reset_password_screen.dart';
-import 'package:magna_data_ai_ecommerce/features/blog/blog_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/blog/blog_details_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/blog/blog_list_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/categories/categories_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/checkout/checkout_controller.dart';
@@ -309,14 +308,8 @@ class AppPages {
       }),
     ),
 
-    GetPage(
-      name: AppRoutes.blogDetails,
-      page: () => BlogListScreen(),
-      binding: BindingsBuilder(() {
-        Get.lazyPut<BlogController>(
-          () => BlogController(Get.find<BlogService>()),
-        );
-      }),
-    ),
+    GetPage(name: AppRoutes.blogs, page: () => BlogListScreen()),
+
+    GetPage(name: AppRoutes.blogDetails, page: () => const BlogDetailScreen()),
   ];
 }

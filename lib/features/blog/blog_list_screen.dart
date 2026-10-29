@@ -117,7 +117,7 @@ class BlogListScreen extends GetView<BlogController> {
   final ScrollController _scrollController = ScrollController();
 
   void _openPost(BlogPost post) {
-    Get.toNamed('/blog-details', arguments: post.id);
+    Get.toNamed('/blogDetails', arguments: post.id);
   }
 
   Widget _buildHeader() {
@@ -247,7 +247,6 @@ class BlogListScreen extends GetView<BlogController> {
           itemBuilder: (context, index) {
             final category = controller.categories[index];
             final selected = category.id == selectedId;
-
             return InkWell(
               borderRadius: BorderRadius.circular(30),
               onTap: () => controller.selectCategory(category.id),

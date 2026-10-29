@@ -7,6 +7,7 @@ import 'package:magna_data_ai_ecommerce/core/locallization/language_controller.d
 import 'package:magna_data_ai_ecommerce/core/network/api_client.dart';
 import 'package:magna_data_ai_ecommerce/core/services/address_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/auth_service.dart';
+import 'package:magna_data_ai_ecommerce/core/services/blog_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/cart_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/category_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/checkout_services.dart';
@@ -17,12 +18,15 @@ import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/recently_viewed_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/secure_storage_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/storage_services.dart';
+import 'package:magna_data_ai_ecommerce/features/blog/blog_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/favourites/favourites_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
 
 class InitialBinding extends Bindings {
   @override
   void dependencies() {
+    final blogService = BlogService();
+    final blogController = BlogController(blogService);
     final apiClient = ApiClient();
     final secureStorage = SecureStorageService();
     final storage = StorageService();
@@ -68,5 +72,7 @@ class InitialBinding extends Bindings {
     Get.put<OrderService>(orderService, permanent: true);
     Get.put<AddressService>(addressService, permanent: true);
     Get.lazyPut<LanguageController>(() => LanguageController(), fenix: true);
+    Get.put<BlogService>(blogService, permanent: true);
+    Get.put<BlogController>(blogController, permanent: true);
   }
 }
