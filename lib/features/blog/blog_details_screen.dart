@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/data/models/blog_post.dart';
 import 'package:magna_data_ai_ecommerce/features/blog/blog_controller.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 
 class BlogDetailScreen extends StatefulWidget {
   const BlogDetailScreen({super.key});
@@ -200,6 +202,8 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
                 ],
                 const SizedBox(height: 22),
                 _buildAuthorRow(post),
+                const SizedBox(height: 18),
+                _buildArticleActions(post),
                 const SizedBox(height: 22),
                 const Divider(color: _border, height: 1),
                 const SizedBox(height: 25),
@@ -451,6 +455,55 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
     );
   }
 
+  Future<void> _shareArticle(BlogPost post) async {
+    final title = _plainText(post.title);
+    final permalink = post.permalink?.trim() ?? '';
+    final shareText = permalink.isNotEmpty
+        ? '$title\n\nRead more: $permalink'
+        : '$title\n\nDiscover more articles in Magna Journal.';
+    try {
+      await SharePlus.instance.share(
+        ShareParams(title: title, text: shareText),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to share this article right now.'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _copyArticleLink(BlogPost post) async {
+    final permalink = post.permalink?.trim() ?? '';
+    if (permalink.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'The article link will be available when the blog is published.',
+          ),
+        ),
+      );
+      return;
+    }
+    try {
+      await Clipboard.setData(ClipboardData(text: permalink));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Article link copied to clipboard.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to copy the article link.')),
+      );
+    }
+  }
+
   Widget _buildTopBar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 20, 12),
@@ -596,6 +649,53 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
                 ),
               ),
             ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildArticleActions(BlogPost post) {
+    return Row(
+      children: [
+        Expanded(
+          child: FilledButton.icon(
+            onPressed: () => _shareArticle(post),
+            icon: const Icon(Icons.share_rounded, size: 18),
+            label: const Text('Share Article'),
+            style: FilledButton.styleFrom(
+              backgroundColor: _blue,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(13),
+              ),
+              textStyle: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () => _copyArticleLink(post),
+            icon: const Icon(Icons.link_rounded, size: 18),
+            label: const Text('Copy Link'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: _navy,
+              backgroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              side: const BorderSide(color: _border),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(13),
+              ),
+              textStyle: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
         ),
       ],

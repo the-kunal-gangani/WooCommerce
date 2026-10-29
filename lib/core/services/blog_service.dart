@@ -106,16 +106,17 @@ class BlogService {
         categoryId: categoryId,
       );
     }
-
     try {
+      final trimmedSearch = search?.trim();
       final response = await _dio.get<dynamic>(
         '${_apiBaseUrl}posts',
         queryParameters: {
           '_embed': '',
           'page': page,
           'per_page': perPage,
-          if (search?.trim().isNotEmpty ?? false) 'search': search!.trim(),
-          if (categoryId != null) 'categories': categoryId,
+          if (trimmedSearch != null && trimmedSearch.isNotEmpty)
+            'search': trimmedSearch,
+          'categories': ?categoryId,
         },
       );
       final data = response.data;

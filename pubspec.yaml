@@ -57,6 +57,7 @@ dependencies:
   phonepe_payment_sdk:
     path: third_party/phonepe_payment_sdk
   flutter_html: ^3.0.0
+  share_plus: ^13.3.1
 
 dev_dependencies:
   flutter_test:
