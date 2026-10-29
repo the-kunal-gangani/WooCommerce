@@ -23,7 +23,7 @@ class BlogService {
     defaultValue: '',
   );
 
-  static const int _mockCategoryId = 1;
+  // static const int _mockCategoryId = 1;
 
   bool get isMockMode => _blogBaseUrl.trim().isEmpty;
 
@@ -32,68 +32,63 @@ class BlogService {
     return '$base/wp-json/wp/v2/';
   }
 
-  static const List<BlogPost> _mockPosts = [
+  final List<BlogPost> _mockPosts = [
     BlogPost(
-      id: 1,
-      title: 'How to Choose the Right Products for Your Lifestyle',
-      slug: 'choose-products-for-your-lifestyle',
-      excerpt:
-          'A practical guide to choosing products that fit your daily needs, '
-          'preferences, and budget.',
-      content:
-          'Choosing the right product starts with understanding your needs. '
-          'Consider how you plan to use it, which features matter most, '
-          'and how it fits your budget.\n\n'
-          'Compare product specifications, review the materials and build '
-          'quality, and consider the long-term value before making a decision.\n\n'
-          'A thoughtful purchase is one that solves a real problem and '
-          'continues to serve you well over time.',
-      publishedAt: null,
-      authorName: 'Magna Editorial',
-      categoryIds: [_mockCategoryId],
+      id: 101,
+      title: 'How to Choose the Right Products for Your Needs',
+      slug: 'how-to-choose-the-right-products',
+      content: '''
+      Finding the right product can be challenging with so many options available.
+      Start by identifying your needs, comparing product features, checking reviews,
+      and setting a realistic budget before making your purchase.
+    ''',
+      excerpt: 'Learn how to evaluate product features, compare options, and make informed purchasing decisions.',
+      publishedAt: DateTime(2026, 10, 10),
+      featuredImageUrl: '',
+      authorName: 'Magna Editorial Team',
+      authorAvatarUrl: '',
+      categoryIds: [1],
       categoryNames: ['Shopping Guides'],
+      permalink: '',
+      commentCount: 0,
     ),
     BlogPost(
-      id: 2,
-      title: 'A Smarter Approach to Online Shopping',
-      slug: 'smarter-online-shopping',
-      excerpt:
-          'Learn how to compare options, evaluate product details, and '
-          'make more informed online purchases.',
-      content:
-          'Online shopping gives you access to a wide range of products, '
-          'but making a good choice requires more than looking at the price.\n\n'
-          'Read the product description carefully, check the specifications, '
-          'and understand the delivery and return policies before placing '
-          'an order.\n\n'
-          'Keep your requirements in mind while comparing products. '
-          'The best option is the one that offers the right balance of '
-          'quality, usefulness, and price.',
-      publishedAt: null,
-      authorName: 'Magna Editorial',
-      categoryIds: [_mockCategoryId],
+      id: 102,
+      title: '5 Tips for a Better Online Shopping Experience',
+      slug: 'tips-for-better-online-shopping',
+      content: '''
+      Online shopping becomes easier when you plan your purchases carefully.
+      Compare prices, read customer reviews, check delivery details, understand
+      return policies, and always review your order before completing payment.
+    ''',
+      excerpt: 'Discover five practical tips to make online shopping easier, safer, and more convenient.',
+      publishedAt: DateTime(2026, 10, 15),
+      featuredImageUrl: '',
+      authorName: 'Magna Editorial Team',
+      authorAvatarUrl: '',
+      categoryIds: [2],
       categoryNames: ['Tips & Advice'],
+      permalink: '',
+      commentCount: 0,
     ),
     BlogPost(
-      id: 3,
-      title: 'What to Look for Before Buying a New Product',
-      slug: 'what-to-check-before-buying',
-      excerpt:
-          'Use this simple checklist to evaluate features, quality, '
-          'compatibility, and value before you buy.',
-      content:
-          'Before buying a new product, start by listing the features '
-          'you actually need. This helps you avoid paying for features '
-          'you are unlikely to use.\n\n'
-          'Check dimensions, compatibility, materials, warranty details, '
-          'and any care or maintenance requirements.\n\n'
-          'Finally, compare similar products and review the available '
-          'purchase and support information. Taking a few extra minutes '
-          'can help you make a more confident decision.',
-      publishedAt: null,
-      authorName: 'Magna Editorial',
-      categoryIds: [_mockCategoryId],
+      id: 103,
+      title: 'A Practical Guide to Comparing Products Before Buying',
+      slug: 'guide-to-comparing-products',
+      content: '''
+      Comparing products helps you find the best fit for your requirements.
+      Consider specifications, quality, durability, warranty, customer feedback,
+      and overall value rather than choosing based on price alone.
+    ''',
+      excerpt: 'Understand which factors matter most when comparing products and deciding what to buy.',
+      publishedAt: DateTime(2026, 10, 20),
+      featuredImageUrl: '',
+      authorName: 'Magna Editorial Team',
+      authorAvatarUrl: '',
+      categoryIds: [3],
       categoryNames: ['Buying Guides'],
+      permalink: '',
+      commentCount: 0,
     ),
   ];
 
@@ -121,17 +116,13 @@ class BlogService {
           'per_page': perPage,
           if (search != null && search.trim().isNotEmpty)
             'search': search.trim(),
-          if (search?.trim().isNotEmpty ?? false)
-  'search': search!.trim(),
+          if (search?.trim().isNotEmpty ?? false) 'search': search!.trim(),
         },
       );
-
       final data = response.data;
-
       if (data is! List) {
         throw const FormatException('Unexpected WordPress posts response.');
       }
-
       return data
           .whereType<Map>()
           .map(

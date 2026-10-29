@@ -5,7 +5,7 @@ import 'package:magna_data_ai_ecommerce/data/models/blog_post.dart';
 import 'package:magna_data_ai_ecommerce/features/blog/blog_controller.dart';
 
 class BlogListScreen extends GetView<BlogController> {
-  BlogListScreen({super.key});
+  const BlogListScreen({super.key});
 
   static const Color _background = Color(0xFFF7F9FC);
   static const Color _navy = Color(0xFF111827);
@@ -20,7 +20,7 @@ class BlogListScreen extends GetView<BlogController> {
       backgroundColor: _background,
       body: SafeArea(
         child: CustomScrollView(
-          controller: _scrollController,
+          controller: controller.scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverToBoxAdapter(child: _buildHeader()),
@@ -113,8 +113,6 @@ class BlogListScreen extends GetView<BlogController> {
       ),
     );
   }
-
-  final ScrollController _scrollController = ScrollController();
 
   void _openPost(BlogPost post) {
     Get.toNamed('/blogDetails', arguments: post.id);

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/core/services/blog_service.dart';
 import 'package:magna_data_ai_ecommerce/data/models/blog_post.dart';
@@ -14,7 +15,8 @@ class BlogController extends GetxController {
   final RxString errorMessage = ''.obs;
   final RxString searchQuery = ''.obs;
   final RxnInt selectedCategoryId = RxnInt();
-  
+  final ScrollController scrollController = ScrollController();
+
   /// A list of available blog categories.
   final List<BlogCategory> categories = const [
     BlogCategory(id: null, name: 'All'),
@@ -32,6 +34,16 @@ class BlogController extends GetxController {
   void onInit() {
     super.onInit();
     loadPosts();
+    scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (!scrollController.hasClients) return;
+    final position = scrollController.position;
+    // Start loading before the user reaches the bottom.
+    if (position.pixels >= position.maxScrollExtent - 300) {
+      loadMorePosts();
+    }
   }
 
   /// Loads the first page, replacing the existing list.
@@ -136,6 +148,8 @@ class BlogController extends GetxController {
   @override
   void onClose() {
     _searchDebounce?.cancel();
+    scrollController.removeListener(_onScroll);
+    scrollController.dispose();
     super.onClose();
   }
 }
@@ -143,7 +157,8 @@ class BlogController extends GetxController {
 class BlogCategory {
   /// Creates a new blog category.
   const BlogCategory({required this.id, required this.name});
-  /// The unique identifier for the category. 
+
+  /// The unique identifier for the category.
   final int? id;
   final String name;
 }
