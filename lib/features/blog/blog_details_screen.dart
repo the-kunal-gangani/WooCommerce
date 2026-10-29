@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/data/models/blog_post.dart';
 import 'package:magna_data_ai_ecommerce/features/blog/blog_controller.dart';
+import 'package:flutter_html/flutter_html.dart';
 
 class BlogDetailScreen extends StatefulWidget {
   const BlogDetailScreen({super.key});
@@ -135,12 +136,11 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
 
   Widget _buildArticle(BlogPost post) {
     final title = _plainText(post.title);
-    final content = _plainText(post.content);
+    // final content = _plainText(post.content);
     final excerpt = _plainText(post.excerpt);
     final category = post.categoryNames.isNotEmpty
         ? post.categoryNames.first
         : 'MAGNA JOURNAL';
-
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
@@ -199,14 +199,64 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
                 const SizedBox(height: 22),
                 const Divider(color: _border, height: 1),
                 const SizedBox(height: 25),
-                if (content.isNotEmpty)
-                  SelectableText(
-                    content,
-                    style: const TextStyle(
-                      color: Color(0xFF374151),
-                      fontSize: 15,
-                      height: 1.85,
-                    ),
+                if (post.content.trim().isNotEmpty)
+                  Html(
+                    data: post.content,
+                    style: {
+                      'body': Style(
+                        margin: Margins.zero,
+                        padding: HtmlPaddings.zero,
+                        color: const Color(0xFF374151),
+                        fontSize: FontSize(15),
+                        lineHeight: const LineHeight(1.85),
+                      ),
+                      'p': Style(margin: Margins.only(bottom: 16)),
+                      'h1': Style(
+                        color: _navy,
+                        fontSize: FontSize(28),
+                        fontWeight: FontWeight.w800,
+                        margin: Margins.only(top: 24, bottom: 12),
+                      ),
+                      'h2': Style(
+                        color: _navy,
+                        fontSize: FontSize(23),
+                        fontWeight: FontWeight.w800,
+                        margin: Margins.only(top: 22, bottom: 10),
+                      ),
+                      'h3': Style(
+                        color: _navy,
+                        fontSize: FontSize(19),
+                        fontWeight: FontWeight.w700,
+                        margin: Margins.only(top: 18, bottom: 8),
+                      ),
+                      'ul': Style(
+                        margin: Margins.only(bottom: 16),
+                        padding: HtmlPaddings.only(left: 22),
+                      ),
+                      'ol': Style(
+                        margin: Margins.only(bottom: 16),
+                        padding: HtmlPaddings.only(left: 22),
+                      ),
+                      'li': Style(margin: Margins.only(bottom: 8)),
+                      'blockquote': Style(
+                        color: _muted,
+                        backgroundColor: const Color(0xFFF3F6FC),
+                        padding: HtmlPaddings.all(14),
+                        margin: Margins.only(top: 16, bottom: 16),
+                        border: const Border(
+                          left: BorderSide(color: _blue, width: 3),
+                        ),
+                      ),
+                      'a': Style(
+                        color: _blue,
+                        textDecoration: TextDecoration.underline,
+                      ),
+                      'img': Style(margin: Margins.only(top: 12, bottom: 12)),
+                      'strong': Style(
+                        color: _navy,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    },
                   )
                 else
                   const Text(
