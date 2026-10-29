@@ -215,11 +215,164 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
                   ),
                 const SizedBox(height: 32),
                 _buildEndOfArticle(),
+                const SizedBox(height: 32),
+                _buildRelatedArticles(post),
               ],
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildRelatedArticles(BlogPost currentPost) {
+    final relatedPosts = _controller.posts
+        .where((post) => post.id != currentPost.id)
+        .take(3)
+        .toList();
+
+    if (relatedPosts.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Continue Reading',
+          style: TextStyle(
+            color: _navy,
+            fontSize: 21,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.4,
+          ),
+        ),
+        const SizedBox(height: 6),
+        const Text(
+          'More ideas and guides from Magna Journal.',
+          style: TextStyle(color: _muted, fontSize: 13, height: 1.5),
+        ),
+        const SizedBox(height: 18),
+        ...relatedPosts.map(_buildRelatedArticleCard),
+      ],
+    );
+  }
+
+  Widget _buildRelatedArticleCard(BlogPost post) {
+    final category = post.categoryNames.isNotEmpty
+        ? post.categoryNames.first
+        : 'MAGNA JOURNAL';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () {
+            Get.toNamed('/blogDetails', arguments: post.id);
+          },
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: _border),
+            ),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(13),
+                  child: SizedBox(
+                    width: 88,
+                    height: 88,
+                    child: _buildRelatedArticleImage(post.featuredImageUrl),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        category.toUpperCase(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: _blue,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.6,
+                        ),
+                      ),
+                      const SizedBox(height: 7),
+                      Text(
+                        _plainText(post.title),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: _navy,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.schedule_rounded,
+                            color: _muted,
+                            size: 13,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            _readingTime(post.content),
+                            style: const TextStyle(color: _muted, fontSize: 11),
+                          ),
+                          const Spacer(),
+                          const Icon(
+                            Icons.arrow_forward_rounded,
+                            color: _blue,
+                            size: 17,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRelatedArticleImage(String? imageUrl) {
+    if (imageUrl == null || imageUrl.trim().isEmpty) {
+      return _imagePlaceholder();
+    }
+    return Image.network(
+      imageUrl,
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) {
+          return child;
+        }
+        return Container(
+          color: const Color(0xFFEEF2FF),
+          alignment: Alignment.center,
+          child: const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(color: _blue, strokeWidth: 2),
+          ),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        return _imagePlaceholder();
+      },
     );
   }
 

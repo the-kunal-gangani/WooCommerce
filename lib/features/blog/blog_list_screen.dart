@@ -34,7 +34,6 @@ class BlogListScreen extends GetView<BlogController> {
                   child: Center(child: CircularProgressIndicator(color: _blue)),
                 );
               }
-
               if (controller.errorMessage.value.isNotEmpty &&
                   controller.posts.isEmpty) {
                 return SliverFillRemaining(
@@ -42,16 +41,13 @@ class BlogListScreen extends GetView<BlogController> {
                   child: _buildErrorState(),
                 );
               }
-
               if (controller.posts.isEmpty) {
                 return SliverFillRemaining(
                   hasScrollBody: false,
                   child: _buildEmptyState(),
                 );
               }
-
               final posts = controller.posts.toList();
-
               return SliverPadding(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
                 sliver: SliverList(
@@ -65,9 +61,7 @@ class BlogListScreen extends GetView<BlogController> {
                         ),
                       );
                     }
-
                     final postIndex = index;
-
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 16),
                       child: _BlogArticleCard(
@@ -92,7 +86,6 @@ class BlogListScreen extends GetView<BlogController> {
                     ),
                   );
                 }
-
                 if (controller.errorMessage.value.isNotEmpty &&
                     controller.posts.isNotEmpty) {
                   return Padding(
@@ -104,7 +97,6 @@ class BlogListScreen extends GetView<BlogController> {
                     ),
                   );
                 }
-
                 return const SizedBox(height: 12);
               }),
             ),
@@ -210,7 +202,6 @@ class BlogListScreen extends GetView<BlogController> {
               if (controller.searchQuery.value.isEmpty) {
                 return const SizedBox.shrink();
               }
-
               return IconButton(
                 tooltip: 'Clear search',
                 onPressed: () {
@@ -236,7 +227,6 @@ class BlogListScreen extends GetView<BlogController> {
       height: 43,
       child: Obx(() {
         final selectedId = controller.selectedCategoryId.value;
-
         return ListView.separated(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           scrollDirection: Axis.horizontal,
@@ -291,7 +281,6 @@ class BlogListScreen extends GetView<BlogController> {
           ),
           Obx(() {
             final count = controller.posts.length;
-
             return Text(
               '$count ${count == 1 ? 'article' : 'articles'}',
               style: const TextStyle(
@@ -409,7 +398,6 @@ class BlogListScreen extends GetView<BlogController> {
 
   static String _formatDate(DateTime? date) {
     if (date == null) return 'EDITORIAL';
-
     const months = [
       'Jan',
       'Feb',
@@ -424,7 +412,6 @@ class BlogListScreen extends GetView<BlogController> {
       'Nov',
       'Dec',
     ];
-
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
@@ -432,7 +419,6 @@ class BlogListScreen extends GetView<BlogController> {
     final text = _plainText(content);
     final words = text.isEmpty ? 0 : text.split(' ').length;
     final minutes = (words / 200).ceil();
-
     return '${minutes < 1 ? 1 : minutes} min read';
   }
 
@@ -457,7 +443,6 @@ class BlogListScreen extends GetView<BlogController> {
         child: _imagePlaceholder(iconSize: iconSize),
       );
     }
-
     return Image.network(
       url,
       height: height,
@@ -487,7 +472,6 @@ class _FeaturedBlogCard extends StatelessWidget {
     final category = post.categoryNames.isNotEmpty
         ? post.categoryNames.first
         : 'Featured';
-
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(23),
@@ -632,10 +616,8 @@ class _FeaturedBlogCard extends StatelessWidget {
 
 class _BlogArticleCard extends StatelessWidget {
   const _BlogArticleCard({required this.post, required this.onTap});
-
   final BlogPost post;
   final VoidCallback onTap;
-
   @override
   Widget build(BuildContext context) {
     final title = BlogListScreen._plainText(post.title);
@@ -643,7 +625,6 @@ class _BlogArticleCard extends StatelessWidget {
     final category = post.categoryNames.isNotEmpty
         ? post.categoryNames.first
         : 'Article';
-
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(19),
