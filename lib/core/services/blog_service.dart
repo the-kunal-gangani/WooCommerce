@@ -121,8 +121,8 @@ class BlogService {
           'per_page': perPage,
           if (search != null && search.trim().isNotEmpty)
             'search': search.trim(),
-          if (categoryId != null)
-            'categories': categoryId,
+          if (search?.trim().isNotEmpty ?? false)
+  'search': search!.trim(),
         },
       );
 
