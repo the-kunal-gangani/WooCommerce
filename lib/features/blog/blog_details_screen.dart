@@ -20,6 +20,7 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
 
   late final BlogController _controller;
   late final Future<BlogPost> _postFuture;
+  late final Future<List<BlogPost>> _relatedPostsFuture;
 
   @override
   void initState() {
@@ -39,6 +40,9 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
           ? Future<BlogPost>.value(cachedPost)
           : _controller.getPostDetails(postId);
     }
+    _relatedPostsFuture = _postFuture.then(
+      (post) => _controller.getRelatedPosts(post),
+    );
   }
 
   @override
@@ -276,35 +280,56 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
   }
 
   Widget _buildRelatedArticles(BlogPost currentPost) {
-    final relatedPosts = _controller.posts
-        .where((post) => post.id != currentPost.id)
-        .take(3)
-        .toList();
+    return FutureBuilder<List<BlogPost>>(
+      future: _relatedPostsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: Center(
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(color: _blue, strokeWidth: 2),
+              ),
+            ),
+          );
+        }
 
-    if (relatedPosts.isEmpty) {
-      return const SizedBox.shrink();
-    }
+        if (snapshot.hasError) {
+          return const SizedBox.shrink();
+        }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Continue Reading',
-          style: TextStyle(
-            color: _navy,
-            fontSize: 21,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.4,
-          ),
-        ),
-        const SizedBox(height: 6),
-        const Text(
-          'More ideas and guides from Magna Journal.',
-          style: TextStyle(color: _muted, fontSize: 13, height: 1.5),
-        ),
-        const SizedBox(height: 18),
-        ...relatedPosts.map(_buildRelatedArticleCard),
-      ],
+        final relatedPosts = snapshot.data ?? [];
+
+        if (relatedPosts.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Continue Reading',
+              style: TextStyle(
+                color: _navy,
+                fontSize: 21,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.4,
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'More ideas and guides from Magna Journal.',
+              style: TextStyle(color: _muted, fontSize: 13, height: 1.5),
+            ),
+            const SizedBox(height: 18),
+            ...relatedPosts
+                .where((post) => post.id != currentPost.id)
+                .map(_buildRelatedArticleCard),
+          ],
+        );
+      },
     );
   }
 

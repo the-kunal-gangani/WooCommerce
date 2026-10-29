@@ -141,6 +141,18 @@ class BlogController extends GetxController {
     return _blogService.getPostById(postId);
   }
 
+  /// Loads related articles for a specific blog post.
+  Future<List<BlogPost>> getRelatedPosts(BlogPost post, {int limit = 3}) {
+    final categoryId = post.categoryIds.isNotEmpty
+        ? post.categoryIds.first
+        : null;
+    return _blogService.getRelatedPosts(
+      postId: post.id,
+      categoryId: categoryId,
+      limit: limit,
+    );
+  }
+
   String _friendlyError(Object error) {
     return error.toString().replaceFirst('Exception: ', '').trim();
   }

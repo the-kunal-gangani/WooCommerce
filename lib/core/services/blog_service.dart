@@ -114,9 +114,8 @@ class BlogService {
           '_embed': '',
           'page': page,
           'per_page': perPage,
-          if (search != null && search.trim().isNotEmpty)
-            'search': search.trim(),
           if (search?.trim().isNotEmpty ?? false) 'search': search!.trim(),
+          if (categoryId != null) 'categories': categoryId,
         },
       );
       final data = response.data;
@@ -170,13 +169,37 @@ class BlogService {
     int? categoryId,
     int limit = 3,
   }) async {
-    final posts = await getPosts(
-      page: 1,
-      perPage: limit + 1,
-      categoryId: categoryId,
-    );
-
-    return posts.where((post) => post.id != postId).take(limit).toList();
+    if (limit <= 0) return [];
+    final relatedPosts = <int, BlogPost>{};
+    // Prioritize posts from the same category.
+    if (categoryId != null) {
+      final categoryPosts = await getPosts(
+        page: 1,
+        perPage: limit + 1,
+        categoryId: categoryId,
+      );
+      for (final post in categoryPosts) {
+        if (post.id != postId) {
+          relatedPosts.putIfAbsent(post.id, () => post);
+        }
+        if (relatedPosts.length >= limit) break;
+      }
+    }
+    // Fill any remaining slots with other recent posts.
+    if (relatedPosts.length < limit) {
+      final fallbackPosts = await getPosts(
+        page: 1,
+        perPage: (limit * 3 + 1).clamp(10, 100).toInt(),
+      );
+      for (final post in fallbackPosts) {
+        if (post.id != postId) {
+          relatedPosts.putIfAbsent(post.id, () => post);
+        }
+        if (relatedPosts.length >= limit) break;
+      }
+    }
+    // Category matches remain first, followed by fallback posts.
+    return relatedPosts.values.take(limit).toList();
   }
 
   List<BlogPost> _getMockPosts({
