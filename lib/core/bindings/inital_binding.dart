@@ -22,6 +22,7 @@ import 'package:magna_data_ai_ecommerce/core/services/wishlist_service.dart';
 import 'package:magna_data_ai_ecommerce/features/blog/blog_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/favourites/favourites_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/wishlist/wishlist_controller.dart';
 
 class InitialBinding extends Bindings {
   @override
@@ -81,6 +82,14 @@ class InitialBinding extends Bindings {
         Get.find<ProductService>(),
       ),
       permanent: true,
+    );
+    Get.lazyPut<WishlistController>(
+      () => WishlistController(
+        Get.find<WishlistService>(),
+        Get.find<AuthService>(),
+        Get.find<CartService>(),
+      ),
+      fenix: true,
     );
   }
 }
