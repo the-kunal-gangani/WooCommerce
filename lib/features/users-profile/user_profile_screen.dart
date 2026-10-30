@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 import 'package:magna_data_ai_ecommerce/core/services/auth_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/push_notification_service.dart';
-import 'package:magna_data_ai_ecommerce/features/main/main_shell_controller.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -364,8 +363,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: _buildQuickAction(
             icon: Icons.favorite_border_rounded,
             title: 'Wishlist',
-            subtitle: 'Your saved items',
-            onTap: () => Get.find<MainShellController>().goTo(2),
+            subtitle: 'Your Wishlisted items',
+            onTap: () => Get.toNamed(AppRoutes.wishlist),
           ),
         ),
       ],

@@ -6,6 +6,7 @@ import 'package:magna_data_ai_ecommerce/core/widgets/state_views.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product.dart';
 import 'package:magna_data_ai_ecommerce/features/favourites/favourites_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/product-details/product_details_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/wishlist/wishlist_controller.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
   const ProductDetailsScreen({super.key, required this.controllerTag});
@@ -19,6 +20,7 @@ class ProductDetailsScreen extends StatefulWidget {
 class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   late final ProductDetailsController controller;
   late final FavouriteController favController;
+  late final WishlistController wishlistController;
 
   // bool _isOpeningProduct = false;
   bool _isDescriptionExpanded = false;
@@ -35,6 +37,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     super.initState();
     controller = Get.find<ProductDetailsController>(tag: widget.controllerTag);
     favController = Get.find<FavouriteController>();
+    wishlistController = Get.find<WishlistController>();
   }
 
   // Future<void> _openRelatedProduct(Product product) async {
@@ -226,34 +229,46 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 if (images.isNotEmpty)
                   Positioned(
                     right: 18,
-                    bottom: images.length > 1 ? 82 : 20,
-                    child: IgnorePointer(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 9,
-                          vertical: 7,
+                    top: 50,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Smart Wishlist button
+                        Obx(() {
+                          final isInWishlist = wishlistController.contains(
+                            product.id,
+                          );
+
+                          return _HeroActionButton(
+                            icon: isInWishlist
+                                ? Icons.bookmark_added_rounded
+                                : Icons.bookmark_add_outlined,
+                            iconColor: isInWishlist ? primary : navy,
+                            onTap: () async {
+                              if (isInWishlist) {
+                                await wishlistController.removeProduct(product);
+                              } else {
+                                await wishlistController.addProduct(product);
+                              }
+                            },
+                          );
+                        }),
+
+                        const SizedBox(width: 10),
+
+                        // Existing Favourite button — unchanged functionality
+                        Obx(
+                          () => _HeroActionButton(
+                            icon: controller.isFavorite.value
+                                ? Icons.favorite_rounded
+                                : Icons.favorite_border_rounded,
+                            iconColor: controller.isFavorite.value
+                                ? const Color(0xFFE5484D)
+                                : navy,
+                            onTap: () => favController.toggleFavourite(product),
+                          ),
                         ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.92),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: border),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.zoom_in_rounded, size: 15, color: muted),
-                            SizedBox(width: 5),
-                            Text(
-                              'Pinch to zoom',
-                              style: TextStyle(
-                                color: muted,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      ],
                     ),
                   ),
               ],

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 import '../../data/models/product.dart';
@@ -58,9 +59,9 @@ class WishlistService extends GetxService {
         } on ApiException catch (e) {
           // Keep the saved ID if product details temporarily cannot load.
           // This prevents a temporary API error from deleting wishlist data.
-          print('Wishlist: unable to load product $id: ${e.message}');
+          debugPrint('Wishlist: unable to load product $id: ${e.message}');
         } catch (e) {
-          print('Wishlist: unexpected error loading product $id: $e');
+          debugPrint('Wishlist: unexpected error loading product $id: $e');
         }
       }
 

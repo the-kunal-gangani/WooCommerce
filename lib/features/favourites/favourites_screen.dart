@@ -24,7 +24,7 @@ class FavouriteScreen extends GetView<FavouriteController> {
         scrolledUnderElevation: 0,
         titleSpacing: 20,
         title: const Text(
-          'Wishlist',
+          'Favourites',
           style: TextStyle(
             color: navy,
             fontSize: 23,
@@ -179,7 +179,7 @@ class FavouriteScreen extends GetView<FavouriteController> {
             ),
             const SizedBox(height: 22),
             const Text(
-              'Your wishlist is empty',
+              'Your favourite list is empty',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: navy,

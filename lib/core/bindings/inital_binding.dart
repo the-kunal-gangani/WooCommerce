@@ -18,6 +18,7 @@ import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/recently_viewed_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/secure_storage_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/storage_services.dart';
+import 'package:magna_data_ai_ecommerce/core/services/wishlist_service.dart';
 import 'package:magna_data_ai_ecommerce/features/blog/blog_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/favourites/favourites_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
@@ -74,5 +75,12 @@ class InitialBinding extends Bindings {
     Get.lazyPut<LanguageController>(() => LanguageController(), fenix: true);
     Get.put<BlogService>(blogService, permanent: true);
     Get.put<BlogController>(blogController, permanent: true);
+    Get.put<WishlistService>(
+      WishlistService(
+        Get.find<ApiClient>(tag: 'wordpress'),
+        Get.find<ProductService>(),
+      ),
+      permanent: true,
+    );
   }
 }
