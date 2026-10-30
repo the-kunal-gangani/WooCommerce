@@ -30,11 +30,15 @@ class WishlistController extends GetxController {
     });
   }
 
-  Future<void> loadWishlist() async {
+  Future<void> loadWishlist({bool refresh = false}) async {
     isLoading.value = true;
     errorMessage.value = null;
     try {
-      await _wishlistService.loadWishlist();
+      if (refresh) {
+        await _wishlistService.refreshWishlist();
+      } else {
+        await _wishlistService.loadWishlist();
+      }
     } catch (e) {
       errorMessage.value = 'Unable to load your wishlist. Please try again.';
     } finally {

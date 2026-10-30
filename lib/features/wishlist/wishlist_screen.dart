@@ -57,7 +57,7 @@ class WishlistScreen extends GetView<WishlistController> {
         }
         return RefreshIndicator(
           color: _primary,
-          onRefresh: controller.loadWishlist,
+          onRefresh: () => controller.loadWishlist(refresh: true),
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
