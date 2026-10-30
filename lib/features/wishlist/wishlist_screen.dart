@@ -45,7 +45,6 @@ class WishlistScreen extends GetView<WishlistController> {
             child: CircularProgressIndicator(color: _primary),
           );
         }
-
         if (controller.errorMessage.value != null &&
             controller.products.isEmpty) {
           return _ErrorState(
@@ -53,11 +52,9 @@ class WishlistScreen extends GetView<WishlistController> {
             onRetry: controller.loadWishlist,
           );
         }
-
         if (controller.products.isEmpty) {
           return const _EmptyWishlist();
         }
-
         return RefreshIndicator(
           color: _primary,
           onRefresh: controller.loadWishlist,
@@ -125,7 +122,6 @@ class _WishlistProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final imageUrl = product.imageUrl;
-
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(18),

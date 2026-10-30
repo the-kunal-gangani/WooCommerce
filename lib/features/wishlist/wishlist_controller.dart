@@ -23,7 +23,6 @@ class WishlistController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!isClosed) {
         loadWishlist();
@@ -34,7 +33,6 @@ class WishlistController extends GetxController {
   Future<void> loadWishlist() async {
     isLoading.value = true;
     errorMessage.value = null;
-
     try {
       await _wishlistService.loadWishlist();
     } catch (e) {
@@ -46,9 +44,7 @@ class WishlistController extends GetxController {
 
   Future<void> addProduct(Product product) async {
     if (contains(product.id) || isMutating.contains(product.id)) return;
-
     isMutating.add(product.id);
-
     try {
       await _wishlistService.addProduct(product);
       _showMessage('Added to wishlist', product.name);
@@ -61,9 +57,7 @@ class WishlistController extends GetxController {
 
   Future<void> removeProduct(Product product) async {
     if (isMutating.contains(product.id)) return;
-
     isMutating.add(product.id);
-
     try {
       await _wishlistService.removeProduct(product.id);
       _showMessage('Removed from wishlist', product.name);
@@ -76,7 +70,6 @@ class WishlistController extends GetxController {
 
   Future<void> clearWishlist() async {
     if (products.isEmpty) return;
-
     final confirmed =
         await Get.dialog<bool>(
           AlertDialog(
@@ -97,11 +90,8 @@ class WishlistController extends GetxController {
           ),
         ) ??
         false;
-
     if (!confirmed) return;
-
     isLoading.value = true;
-
     try {
       await _wishlistService.clearWishlist();
       _showMessage('Wishlist cleared', 'Your saved products were removed.');
@@ -120,10 +110,8 @@ class WishlistController extends GetxController {
       );
       return;
     }
-
     try {
       final added = await _cartService.addProduct(product);
-
       if (added) {
         _showMessage('Added to cart', product.name);
       } else {
