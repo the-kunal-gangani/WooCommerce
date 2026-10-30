@@ -46,10 +46,15 @@ class PushNotificationService extends GetxService {
   String? _fcmToken;
   String? get fcmToken => _fcmToken;
   bool _initialized = false;
+  Worker? _authWorker;
   Future<PushNotificationService> initialize() async {
     if (_initialized) return this;
     _initialized = true;
     notificationsEnabled.value = _storage.read<bool>(_preferenceKey) ?? false;
+    if (Get.isRegistered<AuthService>()) {
+      final authService = Get.find<AuthService>();
+      _authWorker = ever(authService.user, (_) => syncTokenWithBackend());
+    }
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
     FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
     _messaging.onTokenRefresh.listen((token) {
@@ -70,6 +75,12 @@ class PushNotificationService extends GetxService {
       });
     }
     return this;
+  }
+
+  @override
+  void onClose() {
+    _authWorker?.dispose();
+    super.onClose();
   }
 
   /// Called by the Profile screen's notification switch.

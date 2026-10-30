@@ -3,6 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 
 import 'storage_services.dart';
+import '../utils/logger.dart';
 
 class LocationService extends GetxService {
   LocationService(this._storage);
@@ -80,7 +81,9 @@ class LocationService extends GetxService {
       city.value = detectedCity;
       await _storage.write(_cityKey, detectedCity);
       return detectedCity;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      printLog('Location detection failed: $e');
+      printLog('$stackTrace');
       return null;
     } finally {
       isLoading.value = false;

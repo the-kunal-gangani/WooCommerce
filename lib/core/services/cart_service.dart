@@ -362,7 +362,10 @@ class CartService extends GetxService {
       for (final value in raw) {
         if (value is Map) {
           try {
-            loaded.add(CartItem.fromJson(Map<String, dynamic>.from(value)));
+            final item = CartItem.fromJson(Map<String, dynamic>.from(value));
+            if (item.productId > 0 && item.quantity > 0) {
+              loaded.add(item);
+            }
           } catch (e) {
             printLog('Cart: failed to restore item: $e');
           }

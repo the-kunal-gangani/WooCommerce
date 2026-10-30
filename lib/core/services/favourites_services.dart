@@ -45,16 +45,16 @@ class FavouriteService extends GetxService {
   Future<void> _loadFavourites() async {
     final data = _storage.read<List<dynamic>>(_storageKey);
     if (data == null || data.isEmpty) return;
-    try {
-      final products = data
-          .map(
-            (item) => Product.fromJson(Map<String, dynamic>.from(item as Map)),
-          )
-          .toList();
-      favourites.assignAll(products);
-    } catch (e) {
-      favourites.clear();
+    final products = <Product>[];
+    for (final item in data) {
+      if (item is! Map) continue;
+      try {
+        products.add(Product.fromJson(Map<String, dynamic>.from(item)));
+      } catch (_) {
+        // Ignore one stale or malformed cached item without losing the list.
+      }
     }
+    favourites.assignAll(products);
   }
 
   Future<void> _persist() async {

@@ -60,6 +60,8 @@ class AuthService extends GetxService {
     required String password,
     bool rememberMe = false,
   }) async {
+    final previousToken = _accessToken;
+    final previousUser = user.value;
     try {
       final response = await _api.post<dynamic>(
         '/auth/login',
@@ -75,15 +77,14 @@ class AuthService extends GetxService {
       }
 
       _accessToken = token;
+      final currentUser = await _fetchCurrentUser();
+      user.value = currentUser;
       await _storage.write(_rememberMeKey, rememberMe);
       if (rememberMe) {
         await _secure.write(_tokenKey, token);
       } else {
         await _secure.delete(_tokenKey);
       }
-
-      final currentUser = await _fetchCurrentUser();
-      user.value = currentUser;
       if (rememberMe) {
         await _storage.write(_userKey, currentUser.toJson());
       } else {
@@ -91,10 +92,16 @@ class AuthService extends GetxService {
       }
       return currentUser;
     } on ApiException {
+      _accessToken = previousToken;
+      user.value = previousUser;
       rethrow;
     } on DioException catch (error) {
+      _accessToken = previousToken;
+      user.value = previousUser;
       throw _toApiException(error);
     } catch (error) {
+      _accessToken = previousToken;
+      user.value = previousUser;
       printLog('Login failed: $error');
       throw const ApiException(
         type: ApiErrorType.unknown,
