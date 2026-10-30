@@ -28,4 +28,5 @@ class AppRoutes {
   static const String orderTracking = '/orderTracking';
   static const String blogs = '/blogs';
   static const String blogDetails = '/blogDetails';
+  static const String wishlist = '/wishlist';
 }

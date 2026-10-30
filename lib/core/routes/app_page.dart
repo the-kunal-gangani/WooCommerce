@@ -8,6 +8,7 @@ import 'package:magna_data_ai_ecommerce/core/services/location_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/order_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/recently_viewed_service.dart';
+import 'package:magna_data_ai_ecommerce/core/services/wishlist_service.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product.dart';
 import 'package:magna_data_ai_ecommerce/features/add-to-cart/add_to_cart_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/add-to-cart/cart_controller.dart';
@@ -47,6 +48,8 @@ import 'package:magna_data_ai_ecommerce/features/recently-viewed/recently_viewed
 import 'package:magna_data_ai_ecommerce/features/users-profile/user_profile_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/main/main_shell.dart';
 import 'package:magna_data_ai_ecommerce/features/main/main_shell_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/wishlist/wishlist_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/wishlist/wishlist_screen.dart';
 
 import '../../features/splash/splash_controller.dart';
 import '../../features/splash/splash_screen.dart';
@@ -311,5 +314,19 @@ class AppPages {
     GetPage(name: AppRoutes.blogs, page: () => BlogListScreen()),
 
     GetPage(name: AppRoutes.blogDetails, page: () => const BlogDetailScreen()),
+
+    GetPage(
+      name: AppRoutes.wishlist,
+      page: () => const WishlistScreen(),
+      binding: BindingsBuilder(() {
+        Get.put(
+          WishlistController(
+            Get.find<WishlistService>(),
+            Get.find<AuthService>(),
+            Get.find<CartService>(),
+          ),
+        );
+      }),
+    ),
   ];
 }
