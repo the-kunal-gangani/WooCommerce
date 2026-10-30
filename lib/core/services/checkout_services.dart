@@ -135,8 +135,24 @@ class CheckoutService {
   }
 
   Future<void> placeOrder(CheckoutData data) async {
-    throw UnimplementedError(
-      'The COD order endpoint has not been implemented yet.',
-    );
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/checkout/create-order',
+        data: data.toJson(),
+      );
+      final result = response.data;
+      if (result == null ||
+          result['woocommerce_order_id'] == null ||
+          result['total'] == null) {
+        throw Exception('The server returned incomplete order details.');
+      }
+    } on DioException catch (error) {
+      throw Exception(
+        _extractErrorMessage(
+          error.response?.data,
+          'Unable to place your order.',
+        ),
+      );
+    }
   }
 }

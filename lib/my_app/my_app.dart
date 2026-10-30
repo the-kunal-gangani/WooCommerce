@@ -10,7 +10,9 @@ import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 import 'package:magna_data_ai_ecommerce/core/theme/app_theme.dart';
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, this.useInitialBinding = true});
+
+  final bool useInitialBinding;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +30,7 @@ class MyApp extends StatelessWidget {
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,
         themeMode: ThemeMode.system,
-        initialBinding: InitialBinding(),
+        initialBinding: useInitialBinding ? InitialBinding() : null,
         initialRoute: AppRoutes.splash,
         getPages: AppPages.pages,
       ),

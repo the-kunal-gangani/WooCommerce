@@ -47,6 +47,11 @@ define('MAGNA_RAZORPAY_KEY_SECRET', '...');
 
 The payment implementation calls Razorpay server-side through WordPress. Never put these constants in Flutter.
 
+Cash-on-delivery checkout is also handled by the WordPress API. Product
+availability, stock, address fields, shipping fees, coupons, and payment
+amounts are validated and calculated server-side; the client must not be
+treated as the source of truth for order totals.
+
 PhonePe is an additional payment method, not a replacement for Razorpay. Configure
 the following server-side constants when enabling PhonePe:
 

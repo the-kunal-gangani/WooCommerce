@@ -26,7 +26,17 @@ class CheckoutData {
       'shipping_method': shippingMethod,
       'coupon_code': couponCode,
       'customer_note': customerNote,
-      'items': items.map((item) => item.toJson()).toList(),
+      'items': items
+          .map(
+            (item) => {
+              'product_id': item.productId,
+              if (item.variationId != null) 'variation_id': item.variationId,
+              'quantity': item.quantity,
+              if (item.variationSelections.isNotEmpty)
+                'variation': item.variationSelections,
+            },
+          )
+          .toList(),
     };
   }
 }

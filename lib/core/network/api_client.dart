@@ -78,9 +78,9 @@ class ApiClient {
     Options? options,
     CancelToken? cancelToken,
   }) {
-    _normalizePath(path);
+    final normalizedPath = _normalizePath(path);
     return dio.get<T>(
-      path,
+      normalizedPath,
       queryParameters: query,
       options: options,
       cancelToken: cancelToken,
@@ -94,9 +94,9 @@ class ApiClient {
     Options? options,
     CancelToken? cancelToken,
   }) {
-    _normalizePath(path);
+    final normalizedPath = _normalizePath(path);
     return dio.post<T>(
-      path,
+      normalizedPath,
       data: data,
       queryParameters: query,
       options: options,
@@ -111,9 +111,9 @@ class ApiClient {
     Options? options,
     CancelToken? cancelToken,
   }) {
-    _normalizePath(path);
+    final normalizedPath = _normalizePath(path);
     return dio.put<T>(
-      path,
+      normalizedPath,
       data: data,
       queryParameters: query,
       options: options,
@@ -128,9 +128,9 @@ class ApiClient {
     Options? options,
     CancelToken? cancelToken,
   }) {
-    _normalizePath(path);
+    final normalizedPath = _normalizePath(path);
     return dio.patch<T>(
-      path,
+      normalizedPath,
       data: data,
       queryParameters: query,
       options: options,
@@ -145,9 +145,9 @@ class ApiClient {
     Options? options,
     CancelToken? cancelToken,
   }) {
-    _normalizePath(path); 
+    final normalizedPath = _normalizePath(path);
     return dio.delete<T>(
-      path,
+      normalizedPath,
       data: data,
       queryParameters: query,
       options: options,

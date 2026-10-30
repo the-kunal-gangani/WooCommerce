@@ -34,7 +34,6 @@ class CheckoutController extends GetxController {
   final RxString selectedShippingMethod = 'standard'.obs;
   static const int standardShippingMinor = 0;
   static const int expressShippingMinor = 1500;
-  static const int temporaryCouponDiscountMinor = 2500;
   final couponController = TextEditingController();
   final RxBool couponApplied = false.obs;
   final RxString appliedCoupon = ''.obs;
@@ -47,8 +46,7 @@ class CheckoutController extends GetxController {
   int get shippingFeeMinor => selectedShippingMethod.value == 'express'
       ? expressShippingMinor
       : standardShippingMinor;
-  int get discountMinor =>
-      couponApplied.value ? temporaryCouponDiscountMinor : 0;
+  int get discountMinor => 0;
   int get totalMinor {
     final value = subtotalMinor + shippingFeeMinor - discountMinor;
     return value < 0 ? 0 : value;
@@ -132,8 +130,7 @@ class CheckoutController extends GetxController {
     appliedCoupon.value = code;
     Get.snackbar(
       'Coupon applied',
-      'Your coupon has been selected. The server must validate it '
-          'and calculate the actual discount.',
+      'The coupon will be validated and calculated by the server.',
       snackPosition: SnackPosition.BOTTOM,
     );
   }
@@ -331,13 +328,6 @@ class CheckoutController extends GetxController {
           },
         );
       }
-    } on UnimplementedError catch (error) {
-      Get.snackbar(
-        'Checkout not connected',
-        error.message ?? 'This checkout method is not implemented yet.',
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 4),
-      );
     } catch (error) {
       Get.snackbar(
         'Unable to continue checkout',

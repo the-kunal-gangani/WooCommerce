@@ -11,6 +11,10 @@ class SplashController extends GetxController {
   @override
   Future<void> onReady() async {
     super.onReady();
+    if (!Get.isRegistered<AuthService>() ||
+        !Get.isRegistered<HomeController>()) {
+      return;
+    }
     await Future.wait([
       Get.find<AuthService>().restore(),
       _preloadHomeData(),

@@ -717,7 +717,11 @@ function magna_store_delete_address($request) {
     $items = is_array($items) ? array_values($items) : array();
     $index = magna_store_find_address($items, $request['id']);
     if ($index < 0) return new WP_Error('magna_address_not_found', 'Address not found.', array('status' => 404));
+    $was_default = !empty($items[$index]['is_default']);
     array_splice($items, $index, 1);
+    if ($was_default && !empty($items)) {
+        $items[0]['is_default'] = true;
+    }
     magna_store_save_addresses($user->ID, $items);
     return new WP_REST_Response(null, 204);
 }
@@ -739,9 +743,14 @@ function magna_store_register_device($request) {
     $body = magna_store_request_body($request);
     $token = sanitize_text_field($body['token'] ?? '');
     if ($token === '') return new WP_Error('magna_invalid_device', 'Device token is required.', array('status' => 422));
-    update_user_meta($user->ID, 'magna_fcm_token', $token);
-    update_user_meta($user->ID, 'magna_fcm_platform', sanitize_key($body['platform'] ?? 'unknown'));
-    update_user_meta($user->ID, 'magna_fcm_enabled', !empty($body['enabled']));
+    $devices = get_user_meta($user->ID, 'magna_fcm_devices', true);
+    $devices = is_array($devices) ? $devices : array();
+    $devices[$token] = array(
+        'platform' => sanitize_key($body['platform'] ?? 'unknown'),
+        'enabled' => !empty($body['enabled']),
+        'updated_at' => current_time('mysql'),
+    );
+    update_user_meta($user->ID, 'magna_fcm_devices', $devices);
     return array('message' => 'Device registration updated successfully.', 'enabled' => !empty($body['enabled']));
 }
 
@@ -968,7 +977,10 @@ function magna_store_verify_payment($request) {
     if (!$order || (int) $order->get_customer_id() !== (int) $user->ID) {
         return new WP_Error('magna_order_not_found', 'Order not found.', array('status' => 404));
     }
-    if ((int) $payments['amount'] !== (int) round((float) $order->get_total() * 100) ||
+    if ((string) $order->get_meta('_magna_razorpay_order_id') !== $order_id) {
+        return new WP_Error('magna_payment_order_mismatch', 'Payment does not match the order.', array('status' => 400));
+    }
+    if ((int) $payments['amount'] !== (int) round((float) $order->get_total() * (10 ** wc_get_price_decimals())) ||
         (string) ($payments['currency'] ?? '') !== (string) $order->get_currency()) {
         return new WP_Error('magna_payment_mismatch', 'Payment amount or currency does not match the order.', array('status' => 400));
     }
@@ -1004,7 +1016,12 @@ function magna_store_email_invoice($request) {
     );
     $dompdf->render();
     $path = wp_tempnam('magna-invoice-' . $order->get_id() . '.pdf');
-    file_put_contents($path, $dompdf->output());
+    if (!$path || false === file_put_contents($path, $dompdf->output())) {
+        if ($path) {
+            wp_delete_file($path);
+        }
+        return new WP_Error('magna_invoice_failed', 'Unable to create the invoice.', array('status' => 500));
+    }
     $sent = wp_mail(
         $order->get_billing_email(),
         'Invoice #' . $order->get_order_number(),
@@ -1025,23 +1042,62 @@ function magna_store_create_order($request) {
     $items = array();
     foreach ((array) ($body['items'] ?? array()) as $item) {
         $product_id = absint($item['product_id'] ?? 0);
-        $quantity = max(1, absint($item['quantity'] ?? 0));
-        if (!$product_id || !wc_get_product($product_id)) {
+        $variation_id = absint($item['variation_id'] ?? 0);
+        $quantity = absint($item['quantity'] ?? 0);
+        $product = $variation_id ? wc_get_product($variation_id) : wc_get_product($product_id);
+        $max_quantity = $product ? $product->get_max_purchase_quantity() : 0;
+        if (
+            !$product ||
+            $product->get_status() !== 'publish' ||
+            !$product->is_purchasable() ||
+            !$product->is_in_stock() ||
+            $quantity < 1 ||
+            ($max_quantity > 0 && $quantity > $max_quantity)
+        ) {
             return new WP_Error('magna_invalid_product', 'One or more products are unavailable.', array('status' => 400));
         }
-
-        $items[] = array('product_id' => $product_id, 'quantity' => $quantity);
+        if ($variation_id && (int) $product->get_parent_id() !== $product_id) {
+            return new WP_Error('magna_invalid_variation', 'One or more product options are invalid.', array('status' => 400));
+        }
+        $items[] = array(
+            'product' => $product,
+            'quantity' => $quantity,
+            'variation' => is_array($item['variation'] ?? null) ? $item['variation'] : array(),
+        );
     }
     if (!$items) return new WP_Error('magna_empty_cart', 'Your cart is empty.', array('status' => 422));
 
     $billing = (array) ($body['billing'] ?? array());
+    foreach (array('first_name', 'last_name', 'address_1', 'city', 'state', 'postcode', 'country', 'phone') as $field) {
+        if (empty($billing[$field])) {
+            return new WP_Error('magna_invalid_address', 'Complete billing and delivery address details are required.', array('status' => 422));
+        }
+    }
     $order = wc_create_order(array('customer_id' => $user->ID));
     if (is_wp_error($order)) return $order;
-    foreach ($items as $item) $order->add_product(wc_get_product($item['product_id']), $item['quantity']);
+    foreach ($items as $item) {
+        $order->add_product($item['product'], $item['quantity'], $item['variation']);
+    }
     $order->set_address(array_merge($billing, array('email' => $user->user_email)), 'billing');
     $order->set_address((array) ($body['shipping'] ?? $billing), 'shipping');
     $order->set_payment_method('cod');
     $order->set_payment_method_title('Cash on delivery');
+    if (sanitize_key($body['shipping_method'] ?? 'standard') === 'express') {
+        $order->add_fee('Express shipping', 15.00, false);
+    }
+    $coupon_code = sanitize_text_field($body['coupon_code'] ?? '');
+    if ($coupon_code !== '') {
+        $coupon = new WC_Coupon($coupon_code);
+        if (!$coupon->get_id()) {
+            $order->delete(true);
+            return new WP_Error('magna_invalid_coupon', 'This coupon is not valid.', array('status' => 422));
+        }
+        $coupon_result = $order->apply_coupon($coupon);
+        if (is_wp_error($coupon_result)) {
+            $order->delete(true);
+            return new WP_Error('magna_invalid_coupon', $coupon_result->get_error_message(), array('status' => 422));
+        }
+    }
     $order->calculate_totals();
     $order->save();
     return array(
@@ -1053,7 +1109,7 @@ function magna_store_create_order($request) {
         'total_tax' => (string) $order->get_total_tax(),
         'total' => (string) $order->get_total(),
         'currency' => $order->get_currency(),
-        'amount' => (int) round((float) $order->get_total() * 100),
+        'amount' => (int) round((float) $order->get_total() * (10 ** wc_get_price_decimals())),
     );
 }
 
@@ -1171,7 +1227,7 @@ function magna_store_create_phonepe_payment($request) {
 function magna_store_apply_phonepe_status($order, $status) {
     $state = strtoupper(sanitize_text_field($status['state'] ?? ''));
     $amount = (int) ($status['amount'] ?? 0);
-    $expected_amount = (int) round((float) $order->get_total() * 100);
+    $expected_amount = (int) round((float) $order->get_total() * (10 ** wc_get_price_decimals()));
     if (strtoupper($order->get_currency()) !== 'INR') {
         return new WP_Error('magna_payment_currency', 'PhonePe payment currency does not match the order.', array('status' => 400));
     }
