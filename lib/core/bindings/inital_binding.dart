@@ -77,16 +77,12 @@ class InitialBinding extends Bindings {
     Get.put<BlogService>(blogService, permanent: true);
     Get.put<BlogController>(blogController, permanent: true);
     Get.put<WishlistService>(
-      WishlistService(
-        Get.find<ApiClient>(tag: 'wordpress'),
-        Get.find<ProductService>(),
-      ),
+      WishlistService(Get.find<ProductService>(), Get.find<StorageService>()),
       permanent: true,
     );
     Get.lazyPut<WishlistController>(
       () => WishlistController(
         Get.find<WishlistService>(),
-        Get.find<AuthService>(),
         Get.find<CartService>(),
       ),
       fenix: true,

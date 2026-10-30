@@ -1,21 +1,23 @@
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:magna_data_ai_ecommerce/core/services/storage_services.dart';
 
 import '../../data/models/product.dart';
-import '../../core/network/api_client.dart';
-import '../../core/network/api_exception.dart';
 import 'product_services.dart';
 
 class WishlistService extends GetxService {
-  WishlistService(this._api, this._productService);
+  WishlistService(this._productService, this._storageService);
 
-  final ApiClient _api;
   final ProductService _productService;
+  final StorageService _storageService;
+
+  static const String _storageKey = 'smart_wishlist_product_ids';
 
   final RxList<Product> products = <Product>[].obs;
   final RxSet<int> productIds = <int>{}.obs;
 
   bool _isLoading = false;
+  bool _isInitialized = false;
 
   bool get isLoading => _isLoading;
   int get count => productIds.length;
@@ -23,26 +25,15 @@ class WishlistService extends GetxService {
 
   bool contains(int productId) => productIds.contains(productId);
 
-  /// Loads saved IDs from WordPress, then fetches current product details.
   Future<void> loadWishlist() async {
-    if (_isLoading) return;
+    if (_isLoading || _isInitialized) return;
 
     _isLoading = true;
 
     try {
-      final response = await _api.get<dynamic>('wishlist');
-      final data = response.data;
+      final storedIds = _storageService.read<List<dynamic>>(_storageKey) ?? [];
 
-      if (data is! Map) {
-        throw const FormatException('Invalid wishlist response.');
-      }
-
-      final rawIds = data['product_ids'];
-      if (rawIds is! List) {
-        throw const FormatException('Wishlist product IDs are missing.');
-      }
-
-      final ids = rawIds
+      final ids = storedIds
           .map((value) => int.tryParse(value.toString()))
           .whereType<int>()
           .where((id) => id > 0)
@@ -56,64 +47,53 @@ class WishlistService extends GetxService {
         try {
           final product = await _productService.fetchProduct(id);
           loadedProducts.add(product);
-        } on ApiException catch (e) {
-          // Keep the saved ID if product details temporarily cannot load.
-          // This prevents a temporary API error from deleting wishlist data.
-          debugPrint('Wishlist: unable to load product $id: ${e.message}');
         } catch (e) {
-          debugPrint('Wishlist: unexpected error loading product $id: $e');
+          // Retain the saved ID if product details cannot be fetched.
+          debugPrint('Wishlist: unable to load product $id: $e');
         }
       }
 
       products.assignAll(loadedProducts);
+      _isInitialized = true;
     } finally {
       _isLoading = false;
     }
   }
 
-  /// Adds a product on the server before updating the local state.
   Future<void> addProduct(Product product) async {
+    await loadWishlist();
+
     if (productIds.contains(product.id)) return;
 
-    final response = await _api.post<dynamic>(
-      'wishlist/items',
-      data: {'product_id': product.id},
-    );
-
-    _applyResponse(response.data);
+    productIds.add(product.id);
 
     if (!products.any((item) => item.id == product.id)) {
       products.add(product);
     }
+
+    await _persistIds();
   }
 
-  /// Removes a product on the server before updating the local state.
   Future<void> removeProduct(int productId) async {
-    final response = await _api.delete<dynamic>('wishlist/items/$productId');
+    await loadWishlist();
 
-    _applyResponse(response.data);
-
+    productIds.remove(productId);
     products.removeWhere((product) => product.id == productId);
+
+    await _persistIds();
   }
 
   Future<void> clearWishlist() async {
-    final response = await _api.delete<dynamic>('wishlist');
+    await loadWishlist();
 
-    _applyResponse(response.data);
+    productIds.clear();
     products.clear();
+
+    await _storageService.remove(_storageKey);
   }
 
-  void _applyResponse(dynamic response) {
-    if (response is! Map || response['product_ids'] is! List) {
-      throw const FormatException('Invalid wishlist API response.');
-    }
-
-    final ids = (response['product_ids'] as List)
-        .map((value) => int.tryParse(value.toString()))
-        .whereType<int>()
-        .where((id) => id > 0)
-        .toSet();
-
-    productIds.assignAll(ids);
+  Future<void> _persistIds() async {
+    final ids = productIds.toList()..sort();
+    await _storageService.write(_storageKey, ids);
   }
 }

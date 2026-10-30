@@ -322,7 +322,6 @@ class AppPages {
         Get.put(
           WishlistController(
             Get.find<WishlistService>(),
-            Get.find<AuthService>(),
             Get.find<CartService>(),
           ),
         );

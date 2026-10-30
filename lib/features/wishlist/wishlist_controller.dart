@@ -1,22 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-// import 'package:flutter/widgets.dart';
 
 import '../../core/routes/app_routes.dart';
-import '../../core/services/auth_service.dart';
 import '../../core/services/cart_service.dart';
 import '../../core/services/wishlist_service.dart';
 import '../../data/models/product.dart';
 
 class WishlistController extends GetxController {
-  WishlistController(
-    this._wishlistService,
-    this._authService,
-    this._cartService,
-  );
+  WishlistController(this._wishlistService, this._cartService);
 
   final WishlistService _wishlistService;
-  final AuthService _authService;
   final CartService _cartService;
 
   final isLoading = false.obs;
@@ -30,6 +23,7 @@ class WishlistController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!isClosed) {
         loadWishlist();
@@ -38,8 +32,6 @@ class WishlistController extends GetxController {
   }
 
   Future<void> loadWishlist() async {
-    if (!_requireLogin()) return;
-
     isLoading.value = true;
     errorMessage.value = null;
 
@@ -53,7 +45,6 @@ class WishlistController extends GetxController {
   }
 
   Future<void> addProduct(Product product) async {
-    if (!_requireLogin()) return;
     if (contains(product.id) || isMutating.contains(product.id)) return;
 
     isMutating.add(product.id);
@@ -62,19 +53,17 @@ class WishlistController extends GetxController {
       await _wishlistService.addProduct(product);
       _showMessage('Added to wishlist', product.name);
     } catch (e) {
-      _showMessage(
-        'Could not save product',
-        'Please check your connection and try again.',
-      );
+      _showMessage('Could not save product', 'Please try again.');
     } finally {
       isMutating.remove(product.id);
     }
   }
 
   Future<void> removeProduct(Product product) async {
-    if (!_requireLogin()) return;
     if (isMutating.contains(product.id)) return;
+
     isMutating.add(product.id);
+
     try {
       await _wishlistService.removeProduct(product.id);
       _showMessage('Removed from wishlist', product.name);
@@ -86,8 +75,8 @@ class WishlistController extends GetxController {
   }
 
   Future<void> clearWishlist() async {
-    if (!_requireLogin()) return;
     if (products.isEmpty) return;
+
     final confirmed =
         await Get.dialog<bool>(
           AlertDialog(
@@ -108,8 +97,11 @@ class WishlistController extends GetxController {
           ),
         ) ??
         false;
+
     if (!confirmed) return;
+
     isLoading.value = true;
+
     try {
       await _wishlistService.clearWishlist();
       _showMessage('Wishlist cleared', 'Your saved products were removed.');
@@ -121,7 +113,6 @@ class WishlistController extends GetxController {
   }
 
   Future<void> addToCart(Product product) async {
-    if (!_requireLogin()) return;
     if (!product.canBuy) {
       _showMessage(
         'Product unavailable',
@@ -148,22 +139,6 @@ class WishlistController extends GetxController {
 
   void openProduct(Product product) {
     Get.toNamed(AppRoutes.productDetails, arguments: product);
-  }
-
-  bool _requireLogin() {
-    if (_authService.isLoggedIn) return true;
-
-    Get.snackbar(
-      'Sign in required',
-      'Sign in to access your synchronized wishlist.',
-      snackPosition: SnackPosition.BOTTOM,
-      mainButton: TextButton(
-        onPressed: () => Get.toNamed(AppRoutes.login),
-        child: const Text('Sign in'),
-      ),
-    );
-
-    return false;
   }
 
   void _showMessage(String title, String message) {
