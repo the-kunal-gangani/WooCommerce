@@ -11,6 +11,56 @@ if (!defined('ABSPATH')) {
 
 add_action('rest_api_init', 'magna_store_register_routes');
 
+add_action('rest_api_init', function () {
+    register_rest_route('magna/v1', '/wishlist', [
+        [
+            'methods'             => WP_REST_Server::READABLE,
+            'callback'            => 'magna_store_get_wishlist',
+            'permission_callback' => 'magna_store_authenticated',
+        ],
+        [
+            'methods'             => WP_REST_Server::DELETABLE,
+            'callback'            => 'magna_store_clear_wishlist',
+            'permission_callback' => 'magna_store_authenticated',
+        ],
+    ]);
+
+    register_rest_route('magna/v1', '/wishlist/items', [
+        [
+            'methods'             => WP_REST_Server::CREATABLE,
+            'callback'            => 'magna_store_add_wishlist_item',
+            'permission_callback' => 'magna_store_authenticated',
+            'args'                => [
+                'product_id' => [
+                    'required'          => true,
+                    'type'              => 'integer',
+                    'sanitize_callback' => 'absint',
+                    'validate_callback' => function ($value) {
+                        return absint($value) > 0;
+                    },
+                ],
+            ],
+        ],
+    ]);
+
+    register_rest_route('magna/v1', '/wishlist/items/(?P<product_id>\d+)', [
+        [
+            'methods'             => WP_REST_Server::DELETABLE,
+            'callback'            => 'magna_store_remove_wishlist_item',
+            'permission_callback' => 'magna_store_authenticated',
+            'args'                => [
+                'product_id' => [
+                    'required'          => true,
+                    'sanitize_callback' => 'absint',
+                    'validate_callback' => function ($value) {
+                        return absint($value) > 0;
+                    },
+                ],
+            ],
+        ],
+    ]);
+});
+
 function magna_store_register_routes() {
     register_rest_route('magna/v1', '/auth/register', array(
         'methods' => WP_REST_Server::CREATABLE,
@@ -311,6 +361,187 @@ function magna_store_reset_password($request) {
     }
     reset_password($user, $password);
     return array('status' => 'reset');
+}
+
+/**
+ * Get the current user's saved wishlist product IDs.
+ */
+function magna_store_get_wishlist(WP_REST_Request $request) {
+    $user = magna_store_current_user();
+
+    if (!$user) {
+        return new WP_Error(
+            'magna_auth_required',
+            'Authentication is required.',
+            ['status' => 401]
+        );
+    }
+
+    $product_ids = get_user_meta(
+        $user->ID,
+        'magna_store_wishlist',
+        true
+    );
+
+    if (!is_array($product_ids)) {
+        $product_ids = [];
+    }
+
+    $product_ids = array_values(array_unique(array_filter(
+        array_map('absint', $product_ids),
+        function ($id) {
+            return $id > 0;
+        }
+    )));
+
+    return rest_ensure_response([
+        'product_ids' => $product_ids,
+        'count'       => count($product_ids),
+    ]);
+}
+
+
+/**
+ * Add a product to the current user's wishlist.
+ */
+function magna_store_add_wishlist_item(WP_REST_Request $request) {
+    $user = magna_store_current_user();
+
+    if (!$user) {
+        return new WP_Error(
+            'magna_auth_required',
+            'Authentication is required.',
+            ['status' => 401]
+        );
+    }
+
+    if (!function_exists('wc_get_product')) {
+        return new WP_Error(
+            'magna_woocommerce_unavailable',
+            'WooCommerce is unavailable.',
+            ['status' => 503]
+        );
+    }
+
+    $product_id = absint($request->get_param('product_id'));
+    $product = wc_get_product($product_id);
+
+    if (!$product || $product->get_status() !== 'publish') {
+        return new WP_Error(
+            'magna_wishlist_invalid_product',
+            'This product is unavailable.',
+            ['status' => 404]
+        );
+    }
+
+    $product_ids = get_user_meta(
+        $user->ID,
+        'magna_store_wishlist',
+        true
+    );
+
+    if (!is_array($product_ids)) {
+        $product_ids = [];
+    }
+
+    $product_ids = array_values(array_unique(array_filter(
+        array_map('absint', $product_ids),
+        function ($id) {
+            return $id > 0;
+        }
+    )));
+
+    // Adding an existing product must not create a duplicate.
+    if (!in_array($product_id, $product_ids, true)) {
+        $product_ids[] = $product_id;
+
+        update_user_meta(
+            $user->ID,
+            'magna_store_wishlist',
+            $product_ids
+        );
+    }
+
+    return rest_ensure_response([
+        'success'     => true,
+        'product_ids' => $product_ids,
+        'count'       => count($product_ids),
+    ]);
+}
+
+
+/**
+ * Remove one product from the current user's wishlist.
+ */
+function magna_store_remove_wishlist_item(WP_REST_Request $request) {
+    $user = magna_store_current_user();
+
+    if (!$user) {
+        return new WP_Error(
+            'magna_auth_required',
+            'Authentication is required.',
+            ['status' => 401]
+        );
+    }
+
+    $product_id = absint($request['product_id']);
+
+    $product_ids = get_user_meta(
+        $user->ID,
+        'magna_store_wishlist',
+        true
+    );
+
+    if (!is_array($product_ids)) {
+        $product_ids = [];
+    }
+
+    $product_ids = array_values(array_unique(array_filter(
+        array_map('absint', $product_ids),
+        function ($id) use ($product_id) {
+            return $id > 0 && $id !== $product_id;
+        }
+    )));
+
+    update_user_meta(
+        $user->ID,
+        'magna_store_wishlist',
+        $product_ids
+    );
+
+    return rest_ensure_response([
+        'success'     => true,
+        'product_ids' => $product_ids,
+        'count'       => count($product_ids),
+    ]);
+}
+
+
+/**
+ * Clear the current user's wishlist.
+ */
+function magna_store_clear_wishlist(WP_REST_Request $request) {
+    $user = magna_store_current_user();
+
+    if (!$user) {
+        return new WP_Error(
+            'magna_auth_required',
+            'Authentication is required.',
+            ['status' => 401]
+        );
+    }
+
+    update_user_meta(
+        $user->ID,
+        'magna_store_wishlist',
+        []
+    );
+
+    return rest_ensure_response([
+        'success'     => true,
+        'product_ids' => [],
+        'count'       => 0,
+    ]);
 }
 
 function magna_store_orders($request) {
