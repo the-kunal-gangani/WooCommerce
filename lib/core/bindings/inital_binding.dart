@@ -14,6 +14,7 @@ import 'package:magna_data_ai_ecommerce/core/services/checkout_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/favourites_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/location_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/order_service.dart';
+import 'package:magna_data_ai_ecommerce/core/services/product_review_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/recently_viewed_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/secure_storage_service.dart';
@@ -61,6 +62,7 @@ class InitialBinding extends Bindings {
       locationService,
       recentlyViewedService,
     );
+    // final reviewService = ProductReviewService(Get.find<ApiClient>());
 
     Get.put<LocationService>(locationService, permanent: true);
     Get.put<ProductService>(productService, permanent: true);
@@ -85,6 +87,11 @@ class InitialBinding extends Bindings {
         Get.find<WishlistService>(),
         Get.find<CartService>(),
       ),
+      fenix: true,
+    );
+
+    Get.lazyPut<ProductReviewService>(
+      () => ProductReviewService(Get.find<ApiClient>()),
       fenix: true,
     );
   }

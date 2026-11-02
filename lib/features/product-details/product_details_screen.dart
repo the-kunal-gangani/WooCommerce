@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
+import 'package:magna_data_ai_ecommerce/core/services/product_review_service.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/app_network_image.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/state_views.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product.dart';
 import 'package:magna_data_ai_ecommerce/features/favourites/favourites_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/product-details/product_details_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/product-details/product_review_dialog.dart';
 import 'package:magna_data_ai_ecommerce/features/wishlist/wishlist_controller.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
@@ -145,13 +147,12 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               child: _buildTags(product),
             ),
           ),
-        if (product.reviewCount > 0)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
-              child: _buildReviews(product),
-            ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+            child: _buildReviews(product),
           ),
+        ),
         Obx(() {
           final products = controller.relatedProducts.toList();
           if (products.isEmpty) {
@@ -817,6 +818,31 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         color: muted,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          showProductReviewDialog(
+                            productId: product.id,
+                            productName: product.name,
+                            context: context,
+                            reviewService: Get.find<ProductReviewService>(),
+                            onSubmittedSuccessfully: () {
+                              Get.snackbar(
+                                'Review Submitted',
+                                'Thank you for your review!',
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: Colors.green.shade600,
+                                colorText: Colors.white,
+                              );
+                            },
+                          );
+                        },
+                        icon: const Icon(Icons.rate_review_outlined),
+                        label: const Text('Write a Review'),
                       ),
                     ),
                   ],
