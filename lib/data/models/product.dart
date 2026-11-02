@@ -132,30 +132,19 @@ class Product {
   }
 
   bool get isVariable => type == 'variable';
-
   bool get isVariation => type == 'variation';
-
   bool get hasDiscount => onSale && prices.hasDiscount;
-
   String? get imageUrl => images.isEmpty ? null : images.first.src;
-
   String? get thumbnailUrl => images.isEmpty ? null : images.first.thumbnail;
-
   String get plainShortDescription => stripHtml(shortDescription);
-
   String get plainDescription => stripHtml(description);
-
   bool get canBuy => isPurchasable && (isInStock || isOnBackorder);
-
   bool get isLowStock => lowStockRemaining != null && lowStockRemaining! > 0;
-
   String get priceLabel => isVariable && prices.range != null
       ? prices.formattedRange
       : prices.formatted;
-
   ProductCategory? get primaryCategory =>
       categories.isEmpty ? null : categories.first;
-
   Map<String, dynamic> toJson() {
     final data = Map<String, dynamic>.from(raw);
     final images = data['images'];

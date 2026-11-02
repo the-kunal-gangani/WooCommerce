@@ -201,6 +201,233 @@ function magna_store_register_routes() {
         'callback' => 'magna_store_email_invoice',
         'permission_callback' => 'magna_store_authenticated',
     ));
+    
+    register_rest_route('magna/v1', '/products/(?P<product_id>\d+)/reviews', [
+        [
+            'methods'             => WP_REST_Server::READABLE,
+            'callback'            => 'magna_store_get_product_reviews',
+            'permission_callback' => '__return_true',
+            'args'                => [
+                'page' => [
+                    'default'           => 1,
+                    'sanitize_callback' => 'absint',
+                ],
+                'per_page' => [
+                    'default'           => 10,
+                    'sanitize_callback' => 'absint',
+                ],
+                'sort' => [
+                    'default'           => 'newest',
+                    'sanitize_callback' => 'sanitize_key',
+                ],
+            ],
+        ],
+        [
+            'methods'             => WP_REST_Server::CREATABLE,
+            'callback'            => 'magna_store_submit_product_review',
+            'permission_callback' => 'magna_store_authenticated',
+        ],
+    ]);
+}
+
+/**
+ * Return approved reviews for a product.
+ */
+function magna_store_get_product_reviews(WP_REST_Request $request) {
+    if (!function_exists('wc_get_product')) {
+        return new WP_Error(
+            'magna_woocommerce_unavailable',
+            'WooCommerce is unavailable.',
+            ['status' => 503]
+        );
+    }
+
+    $product_id = absint($request['product_id']);
+    $product = wc_get_product($product_id);
+
+    if (!$product || $product->get_status() !== 'publish') {
+        return new WP_Error(
+            'magna_review_product_not_found',
+            'Product not found.',
+            ['status' => 404]
+        );
+    }
+
+    $page = max(1, absint($request->get_param('page')));
+    $per_page = min(50, max(1, absint($request->get_param('per_page'))));
+
+    $sort = sanitize_key($request->get_param('sort'));
+
+    $orderby = 'comment_date_gmt';
+    $order = 'DESC';
+
+    if ($sort === 'highest') {
+        $orderby = 'meta_value_num';
+        $order = 'DESC';
+    } elseif ($sort === 'lowest') {
+        $orderby = 'meta_value_num';
+        $order = 'ASC';
+    }
+
+    $args = [
+        'post_id'      => $product_id,
+        'status'       => 'approve',
+        'type'         => 'review',
+        'number'       => $per_page,
+        'offset'       => ($page - 1) * $per_page,
+        'orderby'      => $orderby,
+        'order'        => $order,
+        'meta_key'     => 'rating',
+        'no_found_rows' => false,
+    ];
+
+    $reviews = get_comments($args);
+    $total = (int) get_comments([
+        'post_id' => $product_id,
+        'status'  => 'approve',
+        'type'    => 'review',
+        'count'   => true,
+    ]);
+
+    $items = [];
+
+    foreach ($reviews as $review) {
+        $items[] = [
+            'id'             => (int) $review->comment_ID,
+            'product_id'     => $product_id,
+            'rating'         => (int) get_comment_meta(
+                $review->comment_ID,
+                'rating',
+                true
+            ),
+            'review'         => wp_strip_all_tags($review->comment_content),
+            'reviewer'       => sanitize_text_field($review->comment_author),
+            'date_created'   => get_comment_date('c', $review),
+            'verified'       => wc_review_is_from_verified_owner($review->comment_ID),
+        ];
+    }
+
+    return rest_ensure_response([
+        'product_id' => $product_id,
+        'reviews'    => $items,
+        'page'       => $page,
+        'per_page'   => $per_page,
+        'total'      => $total,
+        'total_pages' => (int) ceil($total / $per_page),
+    ]);
+}
+
+/**
+ * Submit a review for the authenticated customer.
+ */
+function magna_store_submit_product_review(WP_REST_Request $request) {
+    $user = magna_store_current_user();
+    if (!$user) {
+        return new WP_Error(
+            'magna_auth_required',
+            'Please sign in to submit a review.',
+            ['status' => 401]
+        );
+    }
+    if (!function_exists('wc_get_product')) {
+        return new WP_Error(
+            'magna_woocommerce_unavailable',
+            'WooCommerce is unavailable.',
+            ['status' => 503]
+        );
+    }
+    $product_id = absint($request['product_id']);
+    $product = wc_get_product($product_id);
+    if (!$product || $product->get_status() !== 'publish') {
+        return new WP_Error(
+            'magna_review_product_not_found',
+            'Product not found.',
+            ['status' => 404]
+        );
+    }
+    $body = $request->get_json_params();
+    if (!is_array($body)) {
+        $body = [];
+    }
+    $rating = isset($body['rating']) ? (int) $body['rating'] : 0;
+    $review_text = sanitize_textarea_field($body['review'] ?? '');
+    if ($rating < 1 || $rating > 5) {
+        return new WP_Error(
+            'magna_invalid_rating',
+            'Rating must be between 1 and 5.',
+            ['status' => 422]
+        );
+    }
+    if (mb_strlen(trim($review_text)) > 5000) {
+        return new WP_Error(
+            'magna_review_too_long',
+            'Review must not exceed 5000 characters.',
+            ['status' => 422]
+        );
+    }
+    // Prevent duplicate reviews by the same authenticated user.
+    $existing = get_comments([
+        'post_id' => $product_id,
+        'user_id' => (int) $user->ID,
+        'type'    => 'review',
+        'status'  => 'all',
+        'number'  => 1,
+    ]);
+    if (!empty($existing)) {
+        return new WP_Error(
+            'magna_review_exists',
+            'You have already submitted a review for this product.',
+            ['status' => 409]
+        );
+    }
+    // Apply WooCommerce's verified-owner requirement if enabled.
+    $requires_verified = get_option(
+        'woocommerce_review_rating_verification_required',
+        'no'
+    ) === 'yes';
+    $email = (string) $user->user_email;
+    if (
+        $requires_verified &&
+        !wc_customer_bought_product($email, (int) $user->ID, $product_id)
+    ) {
+        return new WP_Error(
+            'magna_review_purchase_required',
+            'A verified purchase is required to review this product.',
+            ['status' => 403]
+        );
+    }
+    $comment_id = wp_new_comment([
+        'comment_post_ID'      => $product_id,
+        'comment_author'       => $user->display_name,
+        'comment_author_email' => $email,
+        'comment_content'      => $review_text,
+        'user_id'              => (int) $user->ID,
+        'comment_type'         => 'review',
+        'comment_parent'       => 0,
+        'comment_approved'     => 0,
+    ], true);
+    if (is_wp_error($comment_id) || !$comment_id) {
+        return new WP_Error(
+            'magna_review_submit_failed',
+            'Unable to submit your review. Please try again.',
+            ['status' => 500]
+        );
+    }
+    add_comment_meta($comment_id, 'rating', $rating, true);
+    $comment = get_comment($comment_id);
+    // WooCommerce/WordPress moderation determines whether it is published.
+    $approved = $comment && $comment->comment_approved === '1';
+    return new WP_REST_Response([
+        'success' => true,
+        'review'  => [
+            'id'     => (int) $comment_id,
+            'rating' => $rating,
+            'status' => $approved ? 'approved' : 'pending',
+        ],
+        'message' => $approved
+            ? 'Your review has been published.'
+            : 'Thank you! Your review is awaiting moderation.',
+    ], 201);
 }
 
 function magna_store_authenticated() {
