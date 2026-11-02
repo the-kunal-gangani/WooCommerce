@@ -18,7 +18,7 @@ class AddressService {
     _requireAuthentication();
     final response = await _apiClient.get(
       '/addresses',
-      query: {'address_type': ?addressType},
+      query: {if (addressType != null) 'address_type': addressType}, 
     );
     final data = Map<String, dynamic>.from(response.data as Map);
     final items = data['items'] as List<dynamic>? ?? const [];

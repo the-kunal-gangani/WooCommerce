@@ -256,113 +256,322 @@ class CheckoutScreen extends GetView<CheckoutController> {
   }
 
   Widget _buildAddressCard(BuildContext context) {
-    return _card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildTextField(
-            controller: controller.fullNameController,
-            label: 'Full Name',
-            hint: 'Enter your full name',
-            icon: Icons.person_outline_rounded,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter your name';
-              }
-              return null;
-            },
+    return Obx(() {
+      if (controller.isLoadingAddresses.value) {
+        return _card(
+          child: const Padding(
+            padding: EdgeInsets.symmetric(vertical: 22),
+            child: Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                valueColor: AlwaysStoppedAnimation<Color>(primary),
+              ),
+            ),
           ),
-          const SizedBox(height: 13),
-          _buildTextField(
-            controller: controller.phoneController,
-            label: 'Phone Number',
-            hint: 'Enter your phone number',
-            icon: Icons.phone_outlined,
-            keyboardType: TextInputType.phone,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter your phone number';
-              }
-              if (value.trim().length < 7) {
-                return 'Enter a valid phone number';
-              }
-              return null;
-            },
+        );
+      }
+
+      final hasSavedAddresses = controller.savedAddresses.isNotEmpty;
+      return _card(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (hasSavedAddresses) ...[
+              _buildSelectedAddressHeader(context),
+              const SizedBox(height: 16),
+            ],
+            _buildTextField(
+              controller: controller.fullNameController,
+              label: 'Full Name',
+              hint: 'Enter your full name',
+              icon: Icons.person_outline_rounded,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter your name';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 13),
+            _buildTextField(
+              controller: controller.phoneController,
+              label: 'Phone Number',
+              hint: 'Enter your phone number',
+              icon: Icons.phone_outlined,
+              keyboardType: TextInputType.phone,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter your phone number';
+                }
+                if (value.trim().length < 7) {
+                  return 'Enter a valid phone number';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 13),
+            _buildTextField(
+              controller: controller.addressController,
+              label: 'Street Address',
+              hint: 'House number, street, apartment...',
+              icon: Icons.home_outlined,
+              maxLines: 2,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter your address';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 13),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                    controller: controller.cityController,
+                    label: 'City',
+                    hint: 'City',
+                    icon: Icons.location_city_outlined,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Required';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(width: 11),
+                Expanded(
+                  child: _buildTextField(
+                    controller: controller.stateController,
+                    label: 'State',
+                    hint: 'State',
+                    icon: Icons.map_outlined,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Required';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 13),
+            _buildTextField(
+              controller: controller.postalCodeController,
+              label: 'Postal Code',
+              hint: 'Postal / ZIP code',
+              icon: Icons.markunread_mailbox_outlined,
+              keyboardType: TextInputType.number,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter postal code';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 7),
+            // Only this small widget listens to saveAddress.
+            Obx(
+              () => _buildCheckbox(
+                context: context,
+                value: controller.saveAddress.value,
+                onChanged: controller.toggleSaveAddress,
+                title: 'Save this address for future orders',
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _buildSelectedAddressHeader(BuildContext context) {
+    final selectedAddress = controller.selectedSavedAddress.value;
+    if (selectedAddress == null) {
+      return _buildAddressAction(
+        icon: Icons.add_location_alt_outlined,
+        title: 'Choose a saved address',
+        subtitle: 'Select an address or enter a different one below.',
+        onPressed: () => _showSavedAddressPicker(context),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.location_on_outlined, color: primary, size: 21),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    selectedAddress.label,
+                    style: const TextStyle(
+                      color: navy,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    selectedAddress.formattedAddress,
+                    style: const TextStyle(
+                      color: textSecondary,
+                      fontSize: 11,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            TextButton(
+              onPressed: () => _showSavedAddressPicker(context),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: const Text(
+                'Change',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+              ),
+            ),
+          ],
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+            onPressed: controller.clearSelectedAddress,
+            icon: const Icon(Icons.edit_location_alt_outlined, size: 15),
+            label: const Text('Enter a different address'),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.only(top: 8),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              textStyle: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
-          const SizedBox(height: 13),
-          _buildTextField(
-            controller: controller.addressController,
-            label: 'Street Address',
-            hint: 'House number, street, apartment...',
-            icon: Icons.home_outlined,
-            maxLines: 2,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter your address';
-              }
-              return null;
-            },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAddressAction({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onPressed,
+  }) {
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 18),
+      label: Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                color: textSecondary,
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+      style: OutlinedButton.styleFrom(
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        foregroundColor: primary,
+        side: const BorderSide(color: border),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+      ),
+    );
+  }
+
+  void _showSavedAddressPicker(BuildContext context) {
+    Get.bottomSheet<void>(
+      SafeArea(
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.75,
           ),
-          const SizedBox(height: 13),
-          Row(
+          padding: const EdgeInsets.all(20),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: _buildTextField(
-                  controller: controller.cityController,
-                  label: 'City',
-                  hint: 'City',
-                  icon: Icons.location_city_outlined,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Required';
-                    }
-                    return null;
-                  },
+              const Text(
+                'Choose delivery address',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF111827),
                 ),
               ),
-              const SizedBox(width: 11),
-              Expanded(
-                child: _buildTextField(
-                  controller: controller.stateController,
-                  label: 'State',
-                  hint: 'State',
-                  icon: Icons.map_outlined,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Required';
-                    }
-                    return null;
+              const SizedBox(height: 16),
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: controller.savedAddresses.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 10),
+                  itemBuilder: (context, index) {
+                    final address = controller.savedAddresses[index];
+                    final isSelected =
+                        controller.selectedSavedAddress.value?.id == address.id;
+                    return ListTile(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        side: BorderSide(
+                          color: isSelected
+                              ? const Color(0xFF2563EB)
+                              : const Color(0xFFE7EBF1),
+                        ),
+                      ),
+                      title: Text(
+                        address.label,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      subtitle: Text(
+                        '${address.fullName}\n${address.formattedAddress}',
+                      ),
+                      isThreeLine: true,
+                      trailing: isSelected
+                          ? const Icon(
+                              Icons.check_circle,
+                              color: Color(0xFF2563EB),
+                            )
+                          : null,
+                      onTap: () {
+                        controller.selectSavedAddress(address);
+                        Get.back();
+                      },
+                    );
                   },
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 13),
-          _buildTextField(
-            controller: controller.postalCodeController,
-            label: 'Postal Code',
-            hint: 'Postal / ZIP code',
-            icon: Icons.markunread_mailbox_outlined,
-            keyboardType: TextInputType.number,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter postal code';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 7),
-          // Only this small widget listens to saveAddress.
-          Obx(
-            () => _buildCheckbox(
-              context: context,
-              value: controller.saveAddress.value,
-              onChanged: controller.toggleSaveAddress,
-              title: 'Save this address for future orders',
-            ),
-          ),
-        ],
+        ),
       ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
     );
   }
 

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/data/models/saved_address.dart';
-
 import 'address_controller.dart';
 import 'address_form_screen.dart';
 
@@ -84,17 +83,14 @@ class MyAddressesScreen extends GetView<AddressController> {
         child: Obx(() {
           final addresses = controller.addresses.toList();
           final isLoading = controller.isLoading.value;
-
           if (isLoading && addresses.isEmpty) {
             return const Center(
               child: CircularProgressIndicator(color: _primary),
             );
           }
-
           if (addresses.isEmpty) {
             return _buildEmptyState(context);
           }
-
           return RefreshIndicator(
             color: _primary,
             backgroundColor: Colors.white,
@@ -140,7 +136,6 @@ class MyAddressesScreen extends GetView<AddressController> {
       ),
     );
   }
-
   // Widget _buildHeader(BuildContext context, int addressCount) {
   //   return Padding(
   //     padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),

@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:magna_data_ai_ecommerce/core/services/address_service.dart';
+import 'package:magna_data_ai_ecommerce/data/models/saved_address.dart';
 import 'package:phonepe_payment_sdk/phonepe_payment_sdk.dart';
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 import 'package:magna_data_ai_ecommerce/core/configs/app_config.dart';
@@ -40,6 +42,11 @@ class CheckoutController extends GetxController {
   final RxBool isPlacingOrder = false.obs;
   final RxBool showCardDetails = false.obs;
   final Razorpay _razorpay = Razorpay();
+  final AddressService _addressService = Get.find<AddressService>();
+  final RxList<SavedAddress> savedAddresses = <SavedAddress>[].obs;
+  final Rxn<SavedAddress> selectedSavedAddress = Rxn<SavedAddress>();
+  final RxBool isLoadingAddresses = false.obs;
+
   CheckoutData? _pendingCheckoutData;
   Map<String, dynamic>? _createdOrder;
   int get subtotalMinor => _cart.subtotalMinor;
@@ -54,9 +61,7 @@ class CheckoutController extends GetxController {
 
   String get currencySymbol =>
       _cart.items.isNotEmpty ? _cart.items.first.currencySymbol : '₹';
-
   int get minorUnit => _cart.items.isNotEmpty ? _cart.items.first.minorUnit : 2;
-
   int get _minorUnitDivisor {
     var divisor = 1;
     for (var i = 0; i < minorUnit; i++) {
@@ -76,6 +81,7 @@ class CheckoutController extends GetxController {
     _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
     _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+    loadSavedAddresses();
   }
 
   @override
@@ -133,6 +139,67 @@ class CheckoutController extends GetxController {
       'The coupon will be validated and calculated by the server.',
       snackPosition: SnackPosition.BOTTOM,
     );
+  }
+
+  Future<void> loadSavedAddresses() async {
+    if (!_addressServiceAuthCheck()) return;
+    isLoadingAddresses.value = true;
+    try {
+      final addresses = await _addressService.getAddresses(
+        addressType: 'shipping',
+      );
+      savedAddresses.assignAll(addresses);
+      if (addresses.isEmpty) {
+        selectedSavedAddress.value = null;
+        return;
+      }
+      final defaultAddress = addresses.firstWhereOrNull(
+        (address) => address.isDefault,
+      );
+      selectSavedAddress(defaultAddress ?? addresses.first);
+    } catch (error) {
+      debugPrint('Failed to load saved addresses: $error');
+      Get.snackbar(
+        'Addresses',
+        'Could not load saved addresses. You can still enter an address manually.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isLoadingAddresses.value = false;
+    }
+  }
+
+  bool _addressServiceAuthCheck() {
+    // AddressService already checks authentication when its methods run.
+    // Avoid introducing a second authentication implementation here.
+    return true;
+  }
+
+  void selectSavedAddress(SavedAddress address) {
+    selectedSavedAddress.value = address;
+    fullNameController.text = address.fullName;
+    phoneController.text = address.phone;
+    addressController.text = [
+      address.address1,
+      address.address2,
+    ].whereType<String>().where((part) => part.trim().isNotEmpty).join(', ');
+    cityController.text = address.city;
+    stateController.text = address.state;
+    postalCodeController.text = address.postcode;
+  }
+
+  void clearSelectedAddress() {
+    selectedSavedAddress.value = null;
+    fullNameController.clear();
+    phoneController.clear();
+    addressController.clear();
+    cityController.clear();
+    stateController.clear();
+    postalCodeController.clear();
+  }
+
+  Future<void> refreshSavedAddresses() async {
+    await loadSavedAddresses();
   }
 
   void removeCoupon() {
