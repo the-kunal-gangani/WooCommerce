@@ -831,13 +831,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                             context: context,
                             reviewService: Get.find<ProductReviewService>(),
                             onSubmittedSuccessfully: () {
-                              Get.snackbar(
-                                'Review Submitted',
-                                'Thank you for your review!',
-                                snackPosition: SnackPosition.BOTTOM,
-                                backgroundColor: Colors.green.shade600,
-                                colorText: Colors.white,
-                              );
+                              controller.reload();
                             },
                           );
                         },

@@ -23,6 +23,7 @@ import 'package:magna_data_ai_ecommerce/core/services/wishlist_service.dart';
 import 'package:magna_data_ai_ecommerce/features/blog/blog_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/favourites/favourites_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/product-comparison/product_compare_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/wishlist/wishlist_controller.dart';
 
 class InitialBinding extends Bindings {
@@ -89,10 +90,13 @@ class InitialBinding extends Bindings {
       ),
       fenix: true,
     );
-
     Get.lazyPut<ProductReviewService>(
       () => ProductReviewService(Get.find<ApiClient>()),
       fenix: true,
+    );
+    Get.put<ProductCompareController>(
+      ProductCompareController(productService, getStorage),
+      permanent: true,
     );
   }
 }

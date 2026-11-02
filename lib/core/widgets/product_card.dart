@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/app_network_image.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product.dart';
+import 'package:magna_data_ai_ecommerce/features/product-comparison/product_compare_controller.dart';
 
 class ProductCard extends StatelessWidget {
   const ProductCard({
@@ -20,6 +22,7 @@ class ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     const imageRadius = BorderRadius.vertical(top: Radius.circular(16));
+    final compareController = Get.find<ProductCompareController>();
 
     return GestureDetector(
       onTap: onTap,
@@ -90,29 +93,78 @@ class ProductCard extends StatelessWidget {
                       ),
                     ),
                   if (onFavoriteTap != null)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
+                    if (onFavoriteTap != null)
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          width: 30,
+                          height: 30,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            tooltip: isFavorite
+                                ? 'Remove from favourites'
+                                : 'Add to favourites',
+                            icon: Icon(
+                              isFavorite
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
+                              size: 16,
+                              color: isFavorite ? Colors.red : Colors.grey,
+                            ),
+                            onPressed: onFavoriteTap,
+                          ),
+                        ),
+                      ),
+                  Positioned(
+                    top: onFavoriteTap != null ? 44 : 8,
+                    right: 8,
+                    child: Obx(() {
+                      final isCompared = compareController.contains(product.id);
+                      final isFull = compareController.isFull;
+                      return Container(
                         width: 30,
                         height: 30,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: Colors.white,
                           shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isCompared
+                                ? const Color(0xFF2563EB)
+                                : Colors.transparent,
+                          ),
                         ),
                         child: IconButton(
                           padding: EdgeInsets.zero,
+                          tooltip: isCompared
+                              ? 'Remove from comparison'
+                              : 'Add to compare',
                           icon: Icon(
-                            isFavorite
-                                ? Icons.favorite_rounded
-                                : Icons.favorite_border_rounded,
-                            size: 16,
-                            color: isFavorite ? Colors.red : Colors.grey,
+                            isCompared
+                                ? Icons.compare_arrows_rounded
+                                : Icons.compare_arrows_outlined,
+                            size: 17,
+                            color: isCompared
+                                ? const Color(0xFF2563EB)
+                                : isFull
+                                ? Colors.grey
+                                : const Color(0xFF687386),
                           ),
-                          onPressed: onFavoriteTap,
+                          onPressed: () {
+                            if (isCompared) {
+                              compareController.removeProduct(product.id);
+                            } else {
+                              compareController.addProduct(product);
+                            }
+                          },
                         ),
-                      ),
-                    ),
+                      );
+                    }),
+                  ),
                 ],
               ),
             ),
