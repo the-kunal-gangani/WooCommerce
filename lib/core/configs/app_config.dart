@@ -4,7 +4,7 @@ class AppConfig {
   static const String appName = 'Magna Data Store';
   static const String baseUrl = String.fromEnvironment(
     'STORE_BASE_URL',
-    defaultValue: 'https://serverboat.com',
+    defaultValue: 'http://192.168.1.15:8080',
   );
   static const String storeApiPath = '/wp-json/wc/store/v1';
   static const String magnaApiPath = '/wp-json/magna/v1';
