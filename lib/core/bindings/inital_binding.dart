@@ -32,6 +32,7 @@ class InitialBinding extends Bindings {
     final blogService = BlogService();
     final blogController = BlogController(blogService);
     final apiClient = ApiClient();
+    final serverboatApiClient = ApiClient(baseUrl: AppConfig.serverboatBaseUrl);
     final secureStorage = SecureStorageService();
     final storage = StorageService();
     final getStorage = GetStorage();
@@ -42,6 +43,8 @@ class InitialBinding extends Bindings {
     );
     authService = AuthService(wpApiClient, secureStorage, storage);
     Get.put<ApiClient>(apiClient, permanent: true);
+    Get.put<ApiClient>(serverboatApiClient, tag: 'serverboat', permanent: true);
+    Get.put<Dio>(serverboatApiClient.dio, tag: 'serverboat', permanent: true);
     Get.put<ApiClient>(wpApiClient, tag: 'wordpress', permanent: true);
     Get.put<Dio>(wpApiClient.dio, tag: 'wordpress', permanent: true);
     Get.put<SecureStorageService>(secureStorage, permanent: true);

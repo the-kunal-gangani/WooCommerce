@@ -7,6 +7,10 @@ class AppConfig {
     defaultValue:
         'https://supreme-chainsaw-jxr7p6r5x6p3p7j6-8080.app.github.dev',
   );
+  static const String serverboatBaseUrl = String.fromEnvironment(
+    'SERVERBOAT_BASE_URL',
+    defaultValue: 'https://serverboat.com',
+  );
   static const String storeApiPath = '/wp-json/wc/store/v1';
   static const String magnaApiPath = '/wp-json/magna/v1';
   static const String blogBaseUrl = String.fromEnvironment(

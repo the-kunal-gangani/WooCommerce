@@ -42,6 +42,8 @@ class AddToCartRules {
   }
 }
 
+enum ProductSource { magna, serverboat }
+
 class Product {
   const Product({
     required this.id,
@@ -70,6 +72,7 @@ class Product {
     required this.soldIndividually,
     required this.addToCart,
     this.raw = const <String, dynamic>{},
+    this.source = ProductSource.magna,
   });
 
   final int id;
@@ -98,8 +101,12 @@ class Product {
   final bool soldIndividually;
   final AddToCartRules addToCart;
   final Map<String, dynamic> raw;
+  final ProductSource source;
 
-  factory Product.fromJson(Map<String, dynamic> json) {
+  factory Product.fromJson(
+    Map<String, dynamic> json, {
+    ProductSource source = ProductSource.magna,
+  }) {
     final lowStock = json['low_stock_remaining'];
     return Product(
       id: asInt(json['id']),
@@ -128,6 +135,7 @@ class Product {
       soldIndividually: asBool(json['sold_individually']),
       addToCart: AddToCartRules.fromJson(asMap(json['add_to_cart'])),
       raw: json,
+      source: source,
     );
   }
 
