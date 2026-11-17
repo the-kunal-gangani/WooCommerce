@@ -5,11 +5,15 @@ import '../configs/app_config.dart';
 import 'interceptors/error_interceptors.dart';
 import 'interceptors/logging_interceptors.dart';
 
+String _ensureTrailingSlash(String url) {
+  return url.endsWith('/') ? url : '$url/';
+}
+
 class ApiClient {
   ApiClient({String? baseUrl, this.tokenProvider, this._cookieProvider})
     : dio = Dio(
         BaseOptions(
-          baseUrl: baseUrl ?? AppConfig.baseUrl,
+          baseUrl: _ensureTrailingSlash(baseUrl ?? AppConfig.baseUrl),
           connectTimeout: AppConfig.connectTimeout,
           receiveTimeout: AppConfig.receiveTimeout,
           headers: {

@@ -4,7 +4,8 @@ class AppConfig {
   static const String appName = 'Magna Data Store';
   static const String baseUrl = String.fromEnvironment(
     'STORE_BASE_URL',
-    defaultValue: 'http://192.168.1.15:8080',
+    defaultValue:
+        'https://supreme-chainsaw-jxr7p6r5x6p3p7j6-8080.app.github.dev',
   );
   static const String storeApiPath = '/wp-json/wc/store/v1';
   static const String magnaApiPath = '/wp-json/magna/v1';
