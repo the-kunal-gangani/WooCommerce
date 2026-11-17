@@ -235,4 +235,22 @@ class AuthService extends GetxService {
       throw _toApiException(error);
     }
   }
+
+  Future<AuthUser> verifyEmail({
+    required String email,
+    required String otp,
+  }) async {
+    try {
+      await _api.post<dynamic>(
+        '/auth/verify-email',
+        data: {'email': email.trim(), 'otp': otp.trim()},
+      );
+      final verifiedUser = await _fetchCurrentUser();
+      user.value = verifiedUser;
+      await _storage.write(_userKey, verifiedUser.toJson());
+      return verifiedUser;
+    } on DioException catch (error) {
+      throw _toApiException(error);
+    }
+  }
 }

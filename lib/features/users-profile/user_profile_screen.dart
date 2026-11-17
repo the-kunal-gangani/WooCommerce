@@ -7,6 +7,7 @@ import 'package:magna_data_ai_ecommerce/core/network/api_exception.dart';
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 import 'package:magna_data_ai_ecommerce/core/services/auth_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/push_notification_service.dart';
+import 'package:magna_data_ai_ecommerce/features/auth/verify-email/email_verification_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -284,6 +285,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
+                onPressed: () => Get.to(() => const EmailVerificationScreen()),
+                icon: const Icon(Icons.verified_outlined, size: 17),
+                label: const Text('Verify Email'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: ProfileScreen.primary,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton.icon(
                 onPressed: _isResendingVerification || _resendCooldown > 0
                     ? null
                     : _resendVerificationEmail,
@@ -301,16 +320,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ? 'Resend in ${_resendCooldown}s'
                       : 'Resend Verification Email',
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: ProfileScreen.primary,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: const Color(0xFFCBD5E1),
-                  disabledForegroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                style: TextButton.styleFrom(
+                  foregroundColor: ProfileScreen.primary,
+                  disabledForegroundColor: const Color(0xFF94A3B8),
                 ),
               ),
             ),

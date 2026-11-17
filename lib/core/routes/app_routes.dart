@@ -17,6 +17,7 @@ class AppRoutes {
   static const String categories = '/categories';
   static const String recentlyViewed = '/recentlyViewed';
   static const String profile = '/profile';
+  static const String emailVerification = '/email-verification';
   static const String orders = '/orders';
   static const String orderDetails = '/orderDetails';
   static const String editProfile = '/edit-profile';

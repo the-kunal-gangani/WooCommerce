@@ -19,6 +19,7 @@ import 'package:magna_data_ai_ecommerce/features/auth/login/login_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/register/register_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/reset-password/reset_password_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/auth/reset-password/reset_password_screen.dart';
+import 'package:magna_data_ai_ecommerce/features/auth/verify-email/email_verification_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/blog/blog_details_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/blog/blog_list_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/categories/categories_screen.dart';
@@ -229,6 +230,11 @@ class AppPages {
     GetPage(name: AppRoutes.categories, page: () => const CategoriesScreen()),
 
     GetPage(name: AppRoutes.profile, page: () => const ProfileScreen()),
+
+    GetPage(
+      name: AppRoutes.emailVerification,
+      page: () => const EmailVerificationScreen(),
+    ),
 
     GetPage(
       name: AppRoutes.recentlyViewed,
