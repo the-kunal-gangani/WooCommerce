@@ -686,9 +686,9 @@ class CheckoutScreen extends GetView<CheckoutController> {
         children: [
           _buildPaymentOption(
             value: 'card',
-            title: 'Credit / Debit Card',
-            subtitle: 'Visa, Mastercard, RuPay and more',
-            icon: Icons.credit_card_rounded,
+            title: 'Razorpay',
+            subtitle: 'Pay securely using UPI, Cards, Net Banking & Wallets',
+            icon: Icons.account_balance_wallet_rounded,
           ),
           const SizedBox(height: 10),
           _buildPaymentOption(
@@ -704,16 +704,6 @@ class CheckoutScreen extends GetView<CheckoutController> {
             subtitle: 'Pay when your order arrives',
             icon: Icons.payments_outlined,
           ),
-          // Only this area listens to selectedPaymentMethod.
-          Obx(() {
-            if (controller.selectedPaymentMethod.value != 'card') {
-              return const SizedBox.shrink();
-            }
-            return Padding(
-              padding: const EdgeInsets.only(top: 14),
-              child: _buildCardDetails(context),
-            );
-          }),
         ],
       ),
     );
@@ -788,84 +778,6 @@ class CheckoutScreen extends GetView<CheckoutController> {
         ),
       );
     });
-  }
-
-  Widget _buildCardDetails(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFAFBFD),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.lock_outline_rounded, size: 15, color: primary),
-              SizedBox(width: 6),
-              Text(
-                'Card details',
-                style: TextStyle(
-                  color: navy,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 13),
-          _buildTextField(
-            controller: controller.cardHolderController,
-            label: 'Card Holder',
-            hint: 'Name on card',
-            icon: Icons.person_outline_rounded,
-          ),
-          const SizedBox(height: 12),
-          _buildTextField(
-            controller: controller.cardNumberController,
-            label: 'Card Number',
-            hint: '1234 5678 9012 3456',
-            icon: Icons.credit_card_rounded,
-            keyboardType: TextInputType.number,
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildTextField(
-                  controller: controller.expiryController,
-                  label: 'Expiry',
-                  hint: 'MM/YY',
-                  icon: Icons.calendar_today_outlined,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _buildTextField(
-                  controller: controller.cvvController,
-                  label: 'CVV',
-                  hint: '123',
-                  icon: Icons.lock_outline_rounded,
-                  keyboardType: TextInputType.number,
-                  obscureText: true,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 5),
-          Obx(
-            () => _buildCheckbox(
-              context: context,
-              value: controller.savePaymentMethod.value,
-              onChanged: controller.toggleSavePayment,
-              title: 'Save this payment method',
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildCouponCard() {
