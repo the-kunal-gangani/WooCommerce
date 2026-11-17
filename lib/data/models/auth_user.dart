@@ -18,6 +18,7 @@ class AuthUser {
     this.isDeliveryBoy = false,
     this.shipping,
     this.billing,
+    this.isVerified = false,
   });
 
   final int id;
@@ -41,6 +42,7 @@ class AuthUser {
 
   final Map<String, dynamic>? shipping;
   final Map<String, dynamic>? billing;
+  final bool isVerified;
 
   /// Creates our user from the response returned by:
   ///
@@ -153,6 +155,10 @@ class AuthUser {
       billing: json['billing'] is Map
           ? Map<String, dynamic>.from(json['billing'])
           : null,
+      isVerified:
+          json['is_verified'] == true ||
+          json['is_verified'] == 1 ||
+          json['is_verified']?.toString().toLowerCase() == 'true',
     );
   }
 
@@ -179,6 +185,7 @@ class AuthUser {
       billing: json['billing'] is Map
           ? Map<String, dynamic>.from(json['billing'])
           : null,
+      isVerified: json['isVerified'] == true,
     );
   }
 
@@ -200,6 +207,7 @@ class AuthUser {
       'isDeliveryBoy': isDeliveryBoy,
       'shipping': shipping,
       'billing': billing,
+      'isVerified': isVerified,
     };
   }
 

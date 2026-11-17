@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:magna_data_ai_ecommerce/core/network/api_exception.dart';
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
 import 'package:magna_data_ai_ecommerce/core/services/auth_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/push_notification_service.dart';
@@ -21,6 +24,70 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final pushService = Get.find<PushNotificationService>();
+  int _resendCooldown = 0;
+  bool _isResendingVerification = false;
+  Timer? _resendTimer;
+
+  Future<void> _resendVerificationEmail() async {
+    if (_isResendingVerification || _resendCooldown > 0) return;
+    setState(() => _isResendingVerification = true);
+    try {
+      await Get.find<AuthService>().resendVerificationEmail();
+      if (!mounted) return;
+      Get.snackbar(
+        'Verification email sent',
+        'Check your inbox for the 6-digit verification code.',
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+        backgroundColor: Colors.white,
+        colorText: ProfileScreen.navy,
+      );
+      setState(() => _resendCooldown = 60);
+      _resendTimer?.cancel();
+      _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (!mounted) {
+          timer.cancel();
+          return;
+        }
+        if (_resendCooldown <= 1) {
+          timer.cancel();
+          setState(() => _resendCooldown = 0);
+        } else {
+          setState(() => _resendCooldown--);
+        }
+      });
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      Get.snackbar(
+        'Unable to send email',
+        error.message,
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+        backgroundColor: Colors.white,
+        colorText: Colors.red.shade700,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      Get.snackbar(
+        'Something went wrong',
+        'Please try again later.',
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+        backgroundColor: Colors.white,
+        colorText: Colors.red.shade700,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isResendingVerification = false);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _resendTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -155,9 +222,102 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 22),
           _buildProfileCard(),
+          _buildEmailVerificationCard(),
         ],
       ),
     );
+  }
+
+  Widget _buildEmailVerificationCard() {
+    return Obx(() {
+      final user = Get.find<AuthService>().user.value;
+
+      if (user == null || user.isVerified) {
+        return const SizedBox.shrink();
+      }
+
+      return Container(
+        margin: const EdgeInsets.only(top: 14),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFFBEB),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFFDE68A)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.mark_email_unread_outlined,
+                  color: Color(0xFFD97706),
+                  size: 22,
+                ),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'Email not verified',
+                    style: TextStyle(
+                      color: Color(0xFF92400E),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Color(0xFFD97706),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Verify your email address to access payments, wishlist and other account features.',
+              style: TextStyle(
+                color: Color(0xFF92400E),
+                fontSize: 11,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isResendingVerification || _resendCooldown > 0
+                    ? null
+                    : _resendVerificationEmail,
+                icon: _isResendingVerification
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.send_rounded, size: 17),
+                label: Text(
+                  _isResendingVerification
+                      ? 'Sending...'
+                      : _resendCooldown > 0
+                      ? 'Resend in ${_resendCooldown}s'
+                      : 'Resend Verification Email',
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: ProfileScreen.primary,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: const Color(0xFFCBD5E1),
+                  disabledForegroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   // Widget _buildHeaderButton({

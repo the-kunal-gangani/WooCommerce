@@ -227,4 +227,12 @@ class AuthService extends GetxService {
   bool _isUnauthorized(ApiException error) =>
       error.type == ApiErrorType.unauthorized ||
       error.type == ApiErrorType.forbidden;
+
+  Future<void> resendVerificationEmail() async {
+    try {
+      await _api.post<dynamic>('/auth/resend-verification');
+    } on DioException catch (error) {
+      throw _toApiException(error);
+    }
+  }
 }
