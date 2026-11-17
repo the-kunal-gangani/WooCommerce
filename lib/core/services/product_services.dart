@@ -11,9 +11,9 @@ import 'package:magna_data_ai_ecommerce/data/models/filter_attribute.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product_filter.dart';
 
 class ProductService {
-  ProductService(this._client);
-
+  ProductService(this._client, {this.source = ProductSource.magna});
   final ApiClient _client;
+  final ProductSource source;
 
   Future<PagedResult<Product>> fetchProducts({
     int page = 1,
@@ -35,17 +35,11 @@ class ProductService {
       query: {
         'page': page,
         'per_page': perPage,
-
         if (search != null && search.isNotEmpty) 'search': search,
-
         if (category != null && category.isNotEmpty) 'category': category,
-
         if (tag != null && tag.isNotEmpty) 'tag': tag,
-
         if (orderBy != null && orderBy.isNotEmpty) 'orderby': orderBy,
-
         if (order != null && order.isNotEmpty) 'order': order,
-
         'on_sale': ?onSale,
         'featured': ?featured,
         'min_price': ?minPrice,
@@ -54,11 +48,10 @@ class ProductService {
       },
       cancelToken: cancelToken,
     );
-
     return PagedResult.fromResponse(
       response,
       page: page,
-      parse: Product.fromJson,
+      parse: (json) => Product.fromJson(json, source: source),
     );
   }
 
@@ -66,8 +59,10 @@ class ProductService {
     final response = await _client.get<dynamic>(
       '${AppConfig.storeApiPath}/products/$id',
     );
-
-    return Product.fromJson(Map<String, dynamic>.from(response.data as Map));
+    return Product.fromJson(
+      Map<String, dynamic>.from(response.data as Map),
+      source: source,
+    );
   }
 
   Future<List<Product>> fetchVariations(int parentId) async {
@@ -75,16 +70,15 @@ class ProductService {
       '${AppConfig.storeApiPath}/products',
       query: {'type': 'variation', 'parent': parentId, 'per_page': 100},
     );
-
     final data = response.data;
-
     if (data is! List) {
       return const [];
     }
-
     return data
         .whereType<Map>()
-        .map((e) => Product.fromJson(Map<String, dynamic>.from(e)))
+        .map(
+          (e) => Product.fromJson(Map<String, dynamic>.from(e), source: source),
+        )
         .toList();
   }
 
@@ -105,11 +99,10 @@ class ProductService {
       },
       cancelToken: cancelToken,
     );
-
     return PagedResult.fromResponse(
       response,
       page: page,
-      parse: Product.fromJson,
+      parse: (json) => Product.fromJson(json, source: source),
     );
   }
 

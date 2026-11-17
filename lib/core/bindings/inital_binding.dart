@@ -20,6 +20,7 @@ import 'package:magna_data_ai_ecommerce/core/services/recently_viewed_service.da
 import 'package:magna_data_ai_ecommerce/core/services/secure_storage_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/storage_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/wishlist_service.dart';
+import 'package:magna_data_ai_ecommerce/data/models/product.dart';
 import 'package:magna_data_ai_ecommerce/features/blog/blog_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/favourites/favourites_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
@@ -52,7 +53,14 @@ class InitialBinding extends Bindings {
     Get.put<AuthService>(authService, permanent: true);
     final locationService = LocationService(storage);
     final addressService = AddressService(wpApiClient, authService);
-    final productService = ProductService(apiClient);
+    final productService = ProductService(
+      apiClient,
+      source: ProductSource.magna,
+    );
+    final serverboatProductService = ProductService(
+      serverboatApiClient,
+      source: ProductSource.serverboat,
+    );
     final categoryService = CategoryService(apiClient);
     final cartService = CartService(storage, productService);
     final checkoutService = CheckoutService();
@@ -70,6 +78,11 @@ class InitialBinding extends Bindings {
 
     Get.put<LocationService>(locationService, permanent: true);
     Get.put<ProductService>(productService, permanent: true);
+    Get.put<ProductService>(
+      serverboatProductService,
+      tag: 'serverboat',
+      permanent: true,
+    );
     Get.put<CategoryService>(categoryService, permanent: true);
     Get.put<CartService>(cartService, permanent: true);
     Get.put<CheckoutService>(checkoutService, permanent: true);
