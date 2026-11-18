@@ -259,6 +259,15 @@ class CheckoutController extends GetxController {
       );
       if (selectedPaymentMethod.value == 'card') {
         _pendingCheckoutData = null;
+        for (final item in checkoutData.items) {
+          debugPrint(
+            'CHECKOUT PRODUCT: '
+            'ID=${item.productId}, '
+            'VARIATION=${item.variationId}, '
+            'NAME=${item.name}, '
+            'QTY=${item.quantity}',
+          );
+        }
         _createdOrder = null;
         final result = await _checkoutService.createRazorpayOrder(checkoutData);
         final key = result['key_id']?.toString();

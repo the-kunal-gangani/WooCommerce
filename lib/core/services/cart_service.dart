@@ -10,10 +10,25 @@ import '../services/storage_services.dart';
 import '../utils/logger.dart';
 
 class CartService extends GetxService {
-  CartService(this._storage, this._productService);
+  CartService(
+    this._storage,
+    this._productService, {
+    ProductService? serverboatProductService,
+  }) : _serverboatProductService = serverboatProductService ?? _productService;
 
   final StorageService _storage;
   final ProductService _productService;
+  final ProductService _serverboatProductService;
+
+  ProductService _serviceFor(ProductSource source) {
+    return source == ProductSource.serverboat
+        ? _serverboatProductService
+        : _productService;
+  }
+
+  String _variationKey(ProductSource source, int productId) {
+    return '${source.name}:$productId';
+  }
 
   static const String _storageKey = 'cart_items';
 
@@ -62,9 +77,7 @@ class CartService extends GetxService {
   }
 
   /// Compatibility method for AddToCartController.
-  ///
   /// This allows the controller to do:
-  ///
   ///   cart.addProduct(
   ///     product,
   ///     quantity: 2,
@@ -91,7 +104,8 @@ class CartService extends GetxService {
 
     if (variationId != null) {
       try {
-        final variations = await _productService.fetchVariations(product.id);
+        final service = _serviceFor(product.source);
+        final variations = await service.fetchVariations(product.id);
 
         final variation = variations.firstWhereOrNull(
           (item) => item.id == variationId,
@@ -136,6 +150,7 @@ class CartService extends GetxService {
       variationSelections: Map<String, String>.from(variationSelections),
       currencySymbol: activeProduct.prices.currencySymbol,
       minorUnit: activeProduct.prices.minorUnit,
+      source: product.source,
     );
     await addItem(item: cartItem);
     return true;
@@ -251,30 +266,46 @@ class CartService extends GetxService {
     _isRefreshing = true;
     try {
       final snapshot = List<CartItem>.from(items);
-      final variationParentIds = snapshot
-          .where((item) => item.variationId != null)
-          .map((item) => item.productId)
-          .toSet();
-      final variationMap = <int, List<Product>>{};
-      for (final productId in variationParentIds) {
+
+      // Identify variation parents using both source and product ID.
+      final variationParents = <String, CartItem>{};
+
+      for (final item in snapshot) {
+        if (item.variationId != null) {
+          final key = _variationKey(item.source, item.productId);
+          variationParents.putIfAbsent(key, () => item);
+        }
+      }
+
+      final variationMap = <String, List<Product>>{};
+
+      for (final entry in variationParents.entries) {
+        final parentItem = entry.value;
+        final service = _serviceFor(parentItem.source);
+
         try {
-          final variations = await _productService.fetchVariations(productId);
-          variationMap[productId] = variations;
+          final variations = await service.fetchVariations(
+            parentItem.productId,
+          );
+          variationMap[entry.key] = variations;
         } on ApiException catch (e) {
           printLog(
             'Cart: failed to refresh variations '
-            'for product $productId: ${e.message}',
+            'for ${parentItem.source.name} product '
+            '${parentItem.productId}: ${e.message}',
           );
         } catch (e) {
           printLog(
             'Cart: unexpected variation refresh error '
-            'for product $productId: $e',
+            'for ${parentItem.source.name} product '
+            '${parentItem.productId}: $e',
           );
         }
       }
       for (final item in snapshot) {
+        final service = _serviceFor(item.source);
         try {
-          final product = await _productService.fetchProduct(item.productId);
+          final product = await service.fetchProduct(item.productId);
           if (item.variationId == null) {
             if (!product.canBuy) {
               printLog(
@@ -295,9 +326,11 @@ class CartService extends GetxService {
             _replaceItem(item, updatedItem);
             continue;
           }
-          final variation = variationMap[item.productId]?.firstWhereOrNull(
-            (variation) => variation.id == item.variationId,
-          );
+          final variation =
+              variationMap[_variationKey(item.source, item.productId)]
+                  ?.firstWhereOrNull(
+                    (variation) => variation.id == item.variationId,
+                  );
           if (variation == null) {
             printLog(
               'Cart: removing missing variation '

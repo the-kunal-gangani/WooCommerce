@@ -1,3 +1,5 @@
+import 'product.dart';
+
 class CartItem {
   const CartItem({
     required this.productId,
@@ -10,6 +12,7 @@ class CartItem {
     this.variationSelections = const {},
     this.currencySymbol = '',
     this.minorUnit = 2,
+    this.source = ProductSource.magna,
   });
 
   final int productId;
@@ -23,6 +26,8 @@ class CartItem {
 
   final String currencySymbol;
   final int minorUnit;
+  final ProductSource source;
+
   String get lineKey {
     final selections = variationSelections.entries.toList()
       ..sort((a, b) => a.key.compareTo(b.key));
@@ -31,7 +36,7 @@ class CartItem {
         .map((entry) => '${entry.key}=${entry.value}')
         .join('|');
 
-    return '$productId:${variationId ?? 0}:$selectionKey';
+    return '${source.name}:$productId:${variationId ?? 0}:$selectionKey';
   }
 
   double get unitPrice {
@@ -57,6 +62,7 @@ class CartItem {
     Map<String, String>? variationSelections,
     String? currencySymbol,
     int? minorUnit,
+    ProductSource? source,
   }) {
     return CartItem(
       productId: productId ?? this.productId,
@@ -69,6 +75,7 @@ class CartItem {
       variationSelections: variationSelections ?? this.variationSelections,
       currencySymbol: currencySymbol ?? this.currencySymbol,
       minorUnit: minorUnit ?? this.minorUnit,
+      source: source ?? this.source,
     );
   }
 
@@ -84,6 +91,7 @@ class CartItem {
       'variationSelections': variationSelections,
       'currencySymbol': currencySymbol,
       'minorUnit': minorUnit,
+      'source': source.name,
     };
   }
 
@@ -111,6 +119,9 @@ class CartItem {
       variationSelections: selections,
       currencySymbol: json['currencySymbol']?.toString() ?? '',
       minorUnit: _asInt(json['minorUnit'], 2),
+      source: json['source'] == 'serverboat'
+          ? ProductSource.serverboat
+          : ProductSource.magna,
     );
   }
 

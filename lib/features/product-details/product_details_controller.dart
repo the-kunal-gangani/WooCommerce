@@ -286,6 +286,7 @@ class ProductDetailsController extends GetxController {
       variationSelections: Map<String, String>.from(selection),
       currencySymbol: active.prices.currencySymbol,
       minorUnit: active.prices.minorUnit,
+      source: p.source,
     );
     await _cart.addItem(item: cartItem);
     Get.snackbar(
