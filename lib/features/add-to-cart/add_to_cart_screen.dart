@@ -272,7 +272,7 @@ class CartScreen extends StatelessWidget {
   }
 
   Widget _buildCartItem(CartService cart, CartItem item) {
-    final lineTotal = item.price.toDouble() * item.quantity;
+    final lineTotal = item.totalPrice;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -326,7 +326,7 @@ class CartScreen extends StatelessWidget {
                     ],
                     const SizedBox(height: 9),
                     Text(
-                      _formatPrice(item.price.toDouble()),
+                      _formatPrice(item.unitPrice),
                       style: const TextStyle(
                         color: primary,
                         fontSize: 15,

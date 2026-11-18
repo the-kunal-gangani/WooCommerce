@@ -27,14 +27,30 @@ class CartService extends GetxService {
   }
 
   int get subtotalMinor {
-    return items.fold(0, (total, item) => total + (item.price * item.quantity));
+    if (items.isEmpty) return 0;
+
+    final minorUnit = items.first.minorUnit;
+    final targetDivisor = _minorUnitDivisor(minorUnit);
+
+    var total = 0.0;
+    for (final item in items) {
+      total += item.totalPrice;
+    }
+
+    return (total * targetDivisor).round();
   }
 
   double get subtotal {
     if (items.isEmpty) return 0;
-    final minorUnit = items.first.minorUnit;
-    final divisor = pow(10, minorUnit);
-    return subtotalMinor / divisor;
+    return subtotalMinor / _minorUnitDivisor(items.first.minorUnit);
+  }
+
+  int _minorUnitDivisor(int minorUnit) {
+    var divisor = 1;
+    for (var i = 0; i < minorUnit; i++) {
+      divisor *= 10;
+    }
+    return divisor;
   }
 
   bool get isRefreshing => _isRefreshing;
