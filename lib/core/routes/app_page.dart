@@ -109,7 +109,9 @@ class AppPages {
         Get.lazyPut<HomeController>(
           () => HomeController(
             Get.find<ProductService>(),
+            Get.find<ProductService>(tag: 'serverboat'),
             Get.find<CategoryService>(),
+            Get.find<CategoryService>(tag: 'serverboat'),
             Get.find<LocationService>(),
             Get.find<RecentlyViewedService>(),
           ),

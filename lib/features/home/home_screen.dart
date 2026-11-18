@@ -7,7 +7,7 @@ import 'package:magna_data_ai_ecommerce/core/widgets/app_network_image.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/product_card.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/state_views.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product.dart';
-import 'package:magna_data_ai_ecommerce/data/models/product_category.dart';
+import 'package:magna_data_ai_ecommerce/data/unified_category.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
 
 class HomeScreen extends GetView<HomeController> {
@@ -31,7 +31,7 @@ class HomeScreen extends GetView<HomeController> {
         final popular = controller.popular.toList();
         final onSale = controller.onSale.toList();
         final banners = controller.bannerProducts;
-        final selectedId = controller.selectedCategoryId.value;
+        final selectedSlug = controller.selectedCategorySlug.value;
         final loadingProducts = controller.isProductsLoading.value;
         final error = controller.errorMessage.value;
         final popularTitle = controller.popularTitle;
@@ -71,7 +71,7 @@ class HomeScreen extends GetView<HomeController> {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.only(top: 24),
-                    child: _buildCategorySection(categories, selectedId),
+                    child: _buildCategorySection(categories, selectedSlug),
                   ),
                 ),
               SliverToBoxAdapter(
@@ -442,8 +442,8 @@ class HomeScreen extends GetView<HomeController> {
   }
 
   Widget _buildCategorySection(
-    List<ProductCategory> categories,
-    int selectedId,
+    List<UnifiedCategory> categories,
+    String selectedSlug,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -469,11 +469,11 @@ class HomeScreen extends GetView<HomeController> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             itemCount: categories.length + 1,
             itemBuilder: (context, index) {
-              final id = index == 0 ? 0 : categories[index - 1].id;
+              final slug = index == 0 ? '' : categories[index - 1].slug;
               final label = index == 0 ? 'All' : categories[index - 1].name;
-              final isSelected = selectedId == id;
+              final isSelected = selectedSlug == slug;
               return GestureDetector(
-                onTap: () => controller.selectCategory(id),
+                onTap: () => controller.selectCategory(slug),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 220),
                   margin: const EdgeInsets.only(right: 9),

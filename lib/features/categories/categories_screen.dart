@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
-import 'package:magna_data_ai_ecommerce/data/models/product_category.dart';
+import 'package:magna_data_ai_ecommerce/data/unified_category.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/product-list/product_list_controller.dart';
 
@@ -126,7 +126,7 @@ class CategoriesScreen extends GetView<HomeController> {
     );
   }
 
-  Widget _buildCategoryCard(ProductCategory category) {
+  Widget _buildCategoryCard(UnifiedCategory category) {
     final imageUrl = category.image?.src;
 
     return GestureDetector(
@@ -135,7 +135,7 @@ class CategoriesScreen extends GetView<HomeController> {
           AppRoutes.productList,
           arguments: ProductListArgs(
             title: category.name,
-            categoryId: category.id,
+            categoryId: category.magnaCategoryId ?? category.serverboatCategoryId,
           ),
         );
       },

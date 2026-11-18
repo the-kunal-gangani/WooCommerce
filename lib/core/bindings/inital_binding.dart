@@ -68,13 +68,15 @@ class InitialBinding extends Bindings {
     final recentlyViewedService = RecentlyViewedService(getStorage);
     final favouriteController = FavouriteController(favouriteService);
     final orderService = OrderService(wpApiClient);
+    final serverboatCategoryService = CategoryService(serverboatApiClient);
     final homeController = HomeController(
       productService,
+      serverboatProductService,
       categoryService,
+      serverboatCategoryService,
       locationService,
       recentlyViewedService,
     );
-    final serverboatCategoryService = CategoryService(serverboatApiClient);
     // final reviewService = ProductReviewService(Get.find<ApiClient>());
 
     Get.put<LocationService>(locationService, permanent: true);

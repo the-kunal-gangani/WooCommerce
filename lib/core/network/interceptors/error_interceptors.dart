@@ -12,6 +12,8 @@ class ErrorInterceptor extends Interceptor {
       debugPrint('URL: ${err.requestOptions.uri}');
       debugPrint('Method: ${err.requestOptions.method}');
       debugPrint('Status: ${response?.statusCode}');
+      debugPrint('Response data: ${err.response?.data}');
+      debugPrint('Response headers: ${err.response?.headers}');
       debugPrint(
         'Authorization header present: '
         '${err.requestOptions.headers.containsKey('Authorization')}',

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter/services.dart';
 
 import 'package:magna_data_ai_ecommerce/core/network/api_exception.dart';
 import 'package:magna_data_ai_ecommerce/core/services/auth_service.dart';
@@ -15,6 +16,13 @@ class EmailVerificationScreen extends StatefulWidget {
 }
 
 class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
+  static const background = Color(0xFFF7F9FC);
+  static const navy = Color(0xFF111827);
+  static const muted = Color(0xFF687386);
+  static const primary = Color(0xFF2563EB);
+  static const violet = Color(0xFF6D4AFF);
+  static const border = Color(0xFFE5EAF1);
+
   final _otpController = TextEditingController();
   final _authService = Get.find<AuthService>();
   Timer? _resendTimer;
@@ -39,14 +47,15 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     try {
       await _authService.verifyEmail(email: _email, otp: otp);
       if (!mounted) return;
+      Get.back(result: true);
       Get.snackbar(
         'Email verified',
-        'Your email address has been verified.',
+        'Your email address is now verified.',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        backgroundColor: Colors.white,
+        colorText: const Color(0xFF15803D),
       );
-      Get.back();
     } on ApiException catch (error) {
       if (mounted) _showError(error.message);
     } catch (_) {
@@ -64,9 +73,12 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       await _authService.resendVerificationEmail();
       if (!mounted) return;
       Get.snackbar(
-        'Verification email sent',
+        'Code sent',
         'Check your inbox for the 6-digit verification code.',
         snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+        backgroundColor: Colors.white,
+        colorText: navy,
       );
       _startResendCooldown();
     } on ApiException catch (error) {
@@ -97,9 +109,10 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
   void _showError(String message) {
     Get.snackbar(
-      'Unable to verify email',
+      'Verification failed',
       message,
       snackPosition: SnackPosition.BOTTOM,
+      margin: const EdgeInsets.all(16),
       backgroundColor: Colors.white,
       colorText: Colors.red.shade700,
     );
@@ -115,124 +128,249 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FC),
-      appBar: AppBar(
-        title: const Text('Verify Email'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: const Color(0xFF111827),
+      backgroundColor: background,
+      body: Stack(
+        children: [
+          _buildAmbientBackground(),
+          SafeArea(
+            child: Column(
+              children: [
+                _buildTopBar(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+                    child: _buildVerificationCard(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 28, 20, 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Icon(
+    );
+  }
+
+  Widget _buildAmbientBackground() {
+    return IgnorePointer(
+      child: Stack(
+        children: [
+          Positioned(
+            top: -100,
+            right: -90,
+            child: Container(
+              width: 250,
+              height: 250,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    primary.withValues(alpha: 0.10),
+                    primary.withValues(alpha: 0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 250,
+            left: -120,
+            child: Container(
+              width: 240,
+              height: 240,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    violet.withValues(alpha: 0.07),
+                    violet.withValues(alpha: 0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 20, 4),
+      child: Row(
+        children: [
+          Material(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            child: InkWell(
+              onTap: Get.back,
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: border),
+                  boxShadow: [
+                    BoxShadow(
+                      color: navy.withValues(alpha: 0.04),
+                      blurRadius: 14,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: navy,
+                  size: 18,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          const Text(
+            'Verify email',
+            style: TextStyle(
+              color: navy,
+              fontSize: 19,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVerificationCard() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: border),
+        boxShadow: [
+          BoxShadow(
+            color: navy.withValues(alpha: 0.05),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            width: 82,
+            height: 82,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [
+                  primary.withValues(alpha: 0.14),
+                  violet.withValues(alpha: 0.12),
+                ],
+              ),
+            ),
+            child: const Icon(
               Icons.mark_email_unread_outlined,
-              color: Color(0xFF2563EB),
-              size: 64,
+              color: primary,
+              size: 40,
             ),
-            const SizedBox(height: 20),
-            const Text(
-              'Enter your verification code',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Color(0xFF111827),
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
+          ),
+          const SizedBox(height: 18),
+          const Text(
+            'Enter your verification code',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: navy,
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'We sent a 6-digit code to $_email.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: muted, fontSize: 13, height: 1.5),
+          ),
+          const SizedBox(height: 28),
+          TextField(
+            controller: _otpController,
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.done,
+            autofillHints: const [AutofillHints.oneTimeCode],
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            maxLength: 6,
+            onSubmitted: (_) => _verifyEmail(),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 8,
+            ),
+            decoration: InputDecoration(
+              counterText: '',
+              hintText: '000000',
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: primary, width: 2),
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'We sent a 6-digit code to $_email.',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Color(0xFF687386),
-                fontSize: 13,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 28),
-            TextField(
-              controller: _otpController,
-              autofocus: true,
-              keyboardType: TextInputType.number,
-              textInputAction: TextInputAction.done,
-              autofillHints: const [AutofillHints.oneTimeCode],
-              maxLength: 6,
-              onSubmitted: (_) => _verifyEmail(),
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 8,
-              ),
-              decoration: InputDecoration(
-                counterText: '',
-                hintText: '000000',
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 52,
+            child: ElevatedButton(
+              onPressed: _isVerifying ? null : _verifyEmail,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primary,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: const Color(0xFFCBD5E1),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Color(0xFFE7EBF1)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Color(0xFFE7EBF1)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(
-                    color: Color(0xFF2563EB),
-                    width: 2,
-                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 52,
-              child: ElevatedButton(
-                onPressed: _isVerifying ? null : _verifyEmail,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: const Color(0xFFCBD5E1),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                child: _isVerifying
-                    ? const SizedBox(
-                        width: 21,
-                        height: 21,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.3,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text(
-                        'Verify Email',
-                        style: TextStyle(fontWeight: FontWeight.w800),
+              child: _isVerifying
+                  ? const SizedBox(
+                      width: 21,
+                      height: 21,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.3,
+                        color: Colors.white,
                       ),
-              ),
+                    )
+                  : const Text(
+                      'Verify Email',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
             ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: _isResending || _resendCooldown > 0
-                  ? null
-                  : _resendVerificationEmail,
-              child: Text(
-                _isResending
-                    ? 'Sending...'
-                    : _resendCooldown > 0
-                    ? 'Resend in ${_resendCooldown}s'
-                    : 'Resend Verification Email',
-              ),
+          ),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: _isResending || _resendCooldown > 0
+                ? null
+                : _resendVerificationEmail,
+            child: Text(
+              _isResending
+                  ? 'Sending...'
+                  : _resendCooldown > 0
+                  ? 'Resend in ${_resendCooldown}s'
+                  : 'Resend Verification Email',
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
