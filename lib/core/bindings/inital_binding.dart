@@ -74,6 +74,7 @@ class InitialBinding extends Bindings {
       locationService,
       recentlyViewedService,
     );
+    final serverboatCategoryService = CategoryService(serverboatApiClient);
     // final reviewService = ProductReviewService(Get.find<ApiClient>());
 
     Get.put<LocationService>(locationService, permanent: true);
@@ -84,6 +85,11 @@ class InitialBinding extends Bindings {
       permanent: true,
     );
     Get.put<CategoryService>(categoryService, permanent: true);
+    Get.put<CategoryService>(
+      serverboatCategoryService,
+      tag: 'serverboat',
+      permanent: true,
+    );
     Get.put<CartService>(cartService, permanent: true);
     Get.put<CheckoutService>(checkoutService, permanent: true);
     Get.put<FavouriteService>(favouriteService, permanent: true);
