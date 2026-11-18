@@ -131,6 +131,10 @@ class AppPages {
             Get.find<ProductService>(),
             Get.find<CategoryService>(),
             args,
+            serverboatService: Get.find<ProductService>(tag: 'serverboat'),
+            serverboatCategoryService: Get.find<CategoryService>(
+              tag: 'serverboat',
+            ),
           ),
         );
       }),

@@ -18,6 +18,9 @@ class ProductListArgs {
   const ProductListArgs({
     this.title = 'Products',
     this.categoryId,
+    this.categorySlug,
+    this.magnaCategoryId,
+    this.serverboatCategoryId,
     this.onSale,
     this.featured,
     this.orderBy,
@@ -28,6 +31,9 @@ class ProductListArgs {
 
   final String title;
   final int? categoryId;
+  final String? categorySlug;
+  final int? magnaCategoryId;
+  final int? serverboatCategoryId;
   final bool? onSale;
   final bool? featured;
   final String? orderBy;
@@ -44,17 +50,30 @@ class ActiveFilterChip {
 }
 
 class ProductListController extends GetxController {
-  ProductListController(this._service, this._categoryService, this.args)
-    : baseFilter = ProductFilter.fromArgs(
-        categoryId: args.categoryId,
-        onSale: args.onSale,
-        featured: args.featured,
-        orderBy: args.orderBy,
-        order: args.order,
-      );
+  ProductListController(
+    this._service,
+    this._categoryService,
+    this.args, {
+    ProductService? serverboatService,
+    CategoryService? serverboatCategoryService,
+  }) : _serverboatService = serverboatService ?? _service,
+       _serverboatCategoryService =
+           serverboatCategoryService ?? _categoryService,
+       baseFilter = ProductFilter.fromArgs(
+         categoryId: args.categoryId,
+         onSale: args.onSale,
+         featured: args.featured,
+         orderBy: args.orderBy,
+         order: args.order,
+       );
 
   final ProductService _service;
   final CategoryService _categoryService;
+  final ProductService _serverboatService;
+  final CategoryService _serverboatCategoryService;
+
+  ProductService get serverboatService => _serverboatService;
+  CategoryService get serverboatCategoryService => _serverboatCategoryService;
   final ProductListArgs args;
   final ProductFilter baseFilter;
 

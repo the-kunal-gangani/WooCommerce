@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:magna_data_ai_ecommerce/core/routes/app_routes.dart';
-import 'package:magna_data_ai_ecommerce/data/unified_category.dart';
+import 'package:magna_data_ai_ecommerce/data/models/unified_category.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/product-list/product_list_controller.dart';
 
@@ -23,15 +23,12 @@ class CategoriesScreen extends GetView<HomeController> {
       appBar: _buildAppBar(),
       body: Obx(() {
         final categories = controller.categories.toList();
-
         if (controller.isLoading.value && categories.isEmpty) {
           return const Center(child: CircularProgressIndicator(color: primary));
         }
-
         if (categories.isEmpty) {
           return _buildEmptyState();
         }
-
         return RefreshIndicator(
           color: primary,
           backgroundColor: Colors.white,
@@ -128,14 +125,15 @@ class CategoriesScreen extends GetView<HomeController> {
 
   Widget _buildCategoryCard(UnifiedCategory category) {
     final imageUrl = category.image?.src;
-
     return GestureDetector(
       onTap: () {
         Get.toNamed(
           AppRoutes.productList,
           arguments: ProductListArgs(
             title: category.name,
-            categoryId: category.magnaCategoryId ?? category.serverboatCategoryId,
+            categorySlug: category.slug,
+            magnaCategoryId: category.magnaCategoryId,
+            serverboatCategoryId: category.serverboatCategoryId,
           ),
         );
       },
@@ -233,7 +231,6 @@ class CategoriesScreen extends GetView<HomeController> {
         child: const Icon(Icons.category_rounded, color: primary, size: 32),
       );
     }
-
     return ClipRRect(
       borderRadius: BorderRadius.circular(18),
       child: Image.network(

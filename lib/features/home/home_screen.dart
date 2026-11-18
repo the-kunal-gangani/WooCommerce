@@ -7,7 +7,7 @@ import 'package:magna_data_ai_ecommerce/core/widgets/app_network_image.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/product_card.dart';
 import 'package:magna_data_ai_ecommerce/core/widgets/state_views.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product.dart';
-import 'package:magna_data_ai_ecommerce/data/unified_category.dart';
+import 'package:magna_data_ai_ecommerce/data/models/unified_category.dart';
 import 'package:magna_data_ai_ecommerce/features/home/home_controller.dart';
 
 class HomeScreen extends GetView<HomeController> {

@@ -8,7 +8,7 @@ import 'package:magna_data_ai_ecommerce/core/services/location_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
 import 'package:magna_data_ai_ecommerce/core/services/recently_viewed_service.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product.dart';
-import 'package:magna_data_ai_ecommerce/data/unified_category.dart';
+import 'package:magna_data_ai_ecommerce/data/models/unified_category.dart';
 import 'package:magna_data_ai_ecommerce/features/product-list/product_list_controller.dart';
 
 class HomeController extends GetxController {

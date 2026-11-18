@@ -91,8 +91,42 @@ class CheckoutScreen extends GetView<CheckoutController> {
       elevation: 0,
       centerTitle: false,
       automaticallyImplyLeading: false,
+      leadingWidth: 64,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 20),
+        child: Center(
+          child: Material(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(13),
+            child: InkWell(
+              onTap: Get.back,
+              borderRadius: BorderRadius.circular(13),
+              child: Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(13),
+                  border: Border.all(color: border),
+                  boxShadow: [
+                    BoxShadow(
+                      color: navy.withValues(alpha: 0.035),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: navy,
+                  size: 17,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
       toolbarHeight: 64,
-      titleSpacing: 18,
+      titleSpacing: 14,
       title: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
