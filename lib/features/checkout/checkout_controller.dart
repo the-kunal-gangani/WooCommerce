@@ -13,6 +13,7 @@ import 'package:magna_data_ai_ecommerce/core/services/checkout_services.dart';
 import '../../core/services/cart_service.dart';
 import '../../data/models/checkout_address.dart';
 import '../../data/models/checkout_data.dart';
+import '../../data/models/product.dart';
 import '../order-confirmation/order_confirmation_screen.dart';
 
 class CheckoutController extends GetxController {
@@ -257,6 +258,34 @@ class CheckoutController extends GetxController {
         shippingMethod: selectedShippingMethod.value,
         couponCode: couponApplied.value ? appliedCoupon.value : null,
       );
+
+      for (final item in checkoutData.items) {
+        debugPrint(
+          'CHECKOUT SOURCE: '
+          '${item.source.name} | '
+          'ID: ${item.productId} | '
+          'NAME: ${item.name}',
+        );
+      }
+
+      // Magna checkout currently supports Magna products only.
+      final serverboatItems = checkoutData.items
+          .where((item) => item.source == ProductSource.serverboat)
+          .toList();
+      if (serverboatItems.isNotEmpty) {
+        debugPrint('Serverboat items found: $serverboatItems');
+        final productNames = serverboatItems
+            .map((item) => item.name)
+            .join(', ');
+        Get.snackbar(
+          'Separate checkout required',
+          'Serverboat products cannot yet be purchased through Magna checkout: '
+              '$productNames',
+          snackPosition: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 5),
+        );
+        return;
+      }
       if (selectedPaymentMethod.value == 'card') {
         _pendingCheckoutData = null;
         for (final item in checkoutData.items) {
@@ -265,6 +294,7 @@ class CheckoutController extends GetxController {
             'ID=${item.productId}, '
             'VARIATION=${item.variationId}, '
             'NAME=${item.name}, '
+            'SOURCE=${item.source.name}, '
             'QTY=${item.quantity}',
           );
         }

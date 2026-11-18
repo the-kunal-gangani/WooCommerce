@@ -1234,28 +1234,33 @@ class CheckoutScreen extends GetView<CheckoutController> {
     required ValueChanged<bool?> onChanged,
     required String title,
   }) {
-    return Theme(
-      data: Theme.of(context).copyWith(
-        checkboxTheme: CheckboxThemeData(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-          side: const BorderSide(color: Color(0xFFCBD2DC), width: 1.2),
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          visualDensity: VisualDensity.compact,
+    return Material(
+      color: Colors.transparent,
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          checkboxTheme: CheckboxThemeData(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5),
+            ),
+            side: const BorderSide(color: Color(0xFFCBD2DC), width: 1.2),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+          ),
         ),
-      ),
-      child: CheckboxListTile(
-        value: value,
-        onChanged: onChanged,
-        contentPadding: EdgeInsets.zero,
-        dense: true,
-        controlAffinity: ListTileControlAffinity.leading,
-        activeColor: primary,
-        title: Text(
-          title,
-          style: const TextStyle(
-            color: textSecondary,
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
+        child: CheckboxListTile(
+          value: value,
+          onChanged: onChanged,
+          contentPadding: EdgeInsets.zero,
+          dense: true,
+          controlAffinity: ListTileControlAffinity.leading,
+          activeColor: primary,
+          title: Text(
+            title,
+            style: const TextStyle(
+              color: textSecondary,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),

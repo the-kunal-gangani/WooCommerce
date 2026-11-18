@@ -62,7 +62,6 @@ class InitialBinding extends Bindings {
       source: ProductSource.serverboat,
     );
     final categoryService = CategoryService(apiClient);
-    final cartService = CartService(storage, productService);
     final checkoutService = CheckoutService();
     final favouriteService = FavouriteService(storage);
     final recentlyViewedService = RecentlyViewedService(getStorage);
@@ -86,13 +85,22 @@ class InitialBinding extends Bindings {
       tag: 'serverboat',
       permanent: true,
     );
+    Get.put<CartService>(
+      CartService(
+        storage,
+        productService,
+        serverboatProductService: Get.find<ProductService>(
+          tag: 'serverboat',
+        ),
+      ),
+      permanent: true,
+    );
     Get.put<CategoryService>(categoryService, permanent: true);
     Get.put<CategoryService>(
       serverboatCategoryService,
       tag: 'serverboat',
       permanent: true,
     );
-    Get.put<CartService>(cartService, permanent: true);
     Get.put<CheckoutService>(checkoutService, permanent: true);
     Get.put<FavouriteService>(favouriteService, permanent: true);
     Get.put<FavouriteController>(favouriteController, permanent: true);
