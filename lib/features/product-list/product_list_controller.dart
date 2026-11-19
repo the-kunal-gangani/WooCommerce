@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:magna_data_ai_ecommerce/core/network/api_exception.dart';
 import 'package:magna_data_ai_ecommerce/core/network/paged_result.dart';
 import 'package:magna_data_ai_ecommerce/core/services/category_service.dart';
 import 'package:magna_data_ai_ecommerce/core/services/product_services.dart';
@@ -83,7 +82,13 @@ class ProductListController extends GetxController {
   final ProductListArgs args;
   final ProductFilter baseFilter;
 
-  static const int _perPage = 20;
+  static const int _perPage = 10;
+
+  int _magnaPage = 1;
+  int _serverboatPage = 1;
+
+  bool _magnaHasMore = true;
+  bool _serverboatHasMore = true;
 
   final products = <Product>[].obs;
   final isLoading = false.obs;
@@ -107,7 +112,6 @@ class ProductListController extends GetxController {
   final scrollController = ScrollController();
   final searchField = TextEditingController();
 
-  int _page = 1;
   bool _optionsLoaded = false;
   CancelToken? _cancelToken;
 
@@ -318,8 +322,8 @@ class ProductListController extends GetxController {
     );
     if (magnaBounds != null || serverboatBounds != null) {
       final availableBounds = [
-        if (magnaBounds != null) magnaBounds,
-        if (serverboatBounds != null) serverboatBounds,
+        ?magnaBounds,
+        ?serverboatBounds,
       ];
       priceBounds.value = PriceBounds(
         min: availableBounds
@@ -367,65 +371,189 @@ class ProductListController extends GetxController {
   }
 
   Future<void> refreshList() async {
-    _cancelToken?.cancel();
+    _cancelToken?.cancel('Product list refreshed');
     final token = CancelToken();
     _cancelToken = token;
-    _page = 1;
+
+    isLoading.value = true;
     errorMessage.value = null;
 
+    _magnaPage = 1;
+    _serverboatPage = 1;
+    _magnaHasMore = true;
+    _serverboatHasMore = true;
+
+    hasMore.value = true;
+    products.clear();
+
     if (args.searchMode && query.value.trim().isEmpty) {
-      products.clear();
       hasMore.value = false;
       isLoading.value = false;
       return;
     }
 
-    hasMore.value = true;
-    isLoading.value = true;
     try {
-      final result = await _fetch(1, token);
-      products.assignAll(result.items);
-      hasMore.value = result.hasMore;
-    } on ApiException catch (e) {
-      if (e.type != ApiErrorType.cancelled) {
-        errorMessage.value = e.message;
+      final results = await Future.wait([
+        _fetchFromStore(
+          service: _service,
+          source: ProductSource.magna,
+          page: 1,
+          cancelToken: token,
+        ),
+        _fetchFromStore(
+          service: _serverboatService,
+          source: ProductSource.serverboat,
+          page: 1,
+          cancelToken: token,
+        ),
+      ]);
+
+      if (token.isCancelled) return;
+
+      final magnaResult = results[0];
+      final serverboatResult = results[1];
+
+      if (magnaResult == null && serverboatResult == null) {
+        errorMessage.value = 'Unable to load products. Please try again.';
+        return;
       }
+
+      if (magnaResult != null) {
+        _magnaHasMore = magnaResult.hasMore;
+      }
+
+      if (serverboatResult != null) {
+        _serverboatHasMore = serverboatResult.hasMore;
+      }
+
+      final combined = [
+        ...?magnaResult?.items,
+        ...?serverboatResult?.items,
+      ];
+
+      products.assignAll(_uniqueProducts(combined));
+
+      hasMore.value = _magnaHasMore || _serverboatHasMore;
     } finally {
-      if (_cancelToken == token) {
+      if (identical(_cancelToken, token)) {
         isLoading.value = false;
       }
     }
   }
 
   Future<void> loadMore() async {
-    if (isLoading.value || isLoadingMore.value || !hasMore.value) {
+    if (isLoadingMore.value || isLoading.value || !hasMore.value) {
       return;
     }
+
     final token = _cancelToken;
+    if (token == null || token.isCancelled) return;
+
     isLoadingMore.value = true;
+
     try {
-      final next = _page + 1;
-      final result = await _fetch(next, token);
-      _page = next;
-      products.addAll(result.items);
-      hasMore.value = result.hasMore;
-    } on ApiException catch (e) {
-      if (e.type != ApiErrorType.cancelled) {
-        Get.snackbar('Could not load more', e.message);
+      final futures = <Future<PagedResult<Product>?>>[];
+
+      if (_magnaHasMore) {
+        futures.add(
+          _fetchFromStore(
+            service: _service,
+            source: ProductSource.magna,
+            page: _magnaPage + 1,
+            cancelToken: token,
+          ),
+        );
       }
+
+      if (_serverboatHasMore) {
+        futures.add(
+          _fetchFromStore(
+            service: _serverboatService,
+            source: ProductSource.serverboat,
+            page: _serverboatPage + 1,
+            cancelToken: token,
+          ),
+        );
+      }
+
+      final results = await Future.wait(futures);
+
+      if (token.isCancelled) return;
+
+      var resultIndex = 0;
+      final newProducts = <Product>[];
+
+      if (_magnaHasMore) {
+        final result = results[resultIndex++];
+
+        if (result != null) {
+          _magnaPage++;
+          _magnaHasMore = result.hasMore;
+          newProducts.addAll(result.items);
+        } else {
+          _magnaHasMore = true;
+        }
+      }
+
+      if (_serverboatHasMore) {
+        final result = results[resultIndex++];
+
+        if (result != null) {
+          _serverboatPage++;
+          _serverboatHasMore = result.hasMore;
+          newProducts.addAll(result.items);
+        } else {
+          _serverboatHasMore = true;
+        }
+      }
+
+      if (newProducts.isNotEmpty) {
+        final merged = _uniqueProducts([
+          ...products,
+          ...newProducts,
+        ]);
+
+        products.assignAll(merged);
+      }
+
+      hasMore.value = _magnaHasMore || _serverboatHasMore;
     } finally {
       isLoadingMore.value = false;
     }
   }
 
-  Future<PagedResult<Product>> _fetch(int page, CancelToken? token) {
-    return _service.fetchProductsFiltered(
-      filter: filter.value,
-      page: page,
-      perPage: _perPage,
-      search: args.searchMode ? query.value.trim() : null,
-      cancelToken: token,
-    );
+  Future<PagedResult<Product>?> _fetchFromStore({
+    required ProductService service,
+    required ProductSource source,
+    required int page,
+    CancelToken? cancelToken,
+  }) async {
+    try {
+      return await service.fetchProductsFiltered(
+        filter: _filterFor(source),
+        page: page,
+        perPage: _perPage,
+        search: query.value.trim().isEmpty ? null : query.value.trim(),
+        cancelToken: cancelToken,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  List<Product> _uniqueProducts(Iterable<Product> items) {
+    final seen = <String>{};
+    final result = <Product>[];
+
+    for (final product in items) {
+      final key = '${product.source.name}:${product.id}';
+
+      if (seen.add(key)) {
+        result.add(product);
+      }
+    }
+
+    return result;
   }
 
   Future<T?> _guard<T>(Future<T> future) async {
