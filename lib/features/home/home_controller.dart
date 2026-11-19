@@ -190,8 +190,7 @@ class HomeController extends GetxController {
 
   void openSearch() {
     Get.toNamed(
-      AppRoutes.productList,
-      arguments: const ProductListArgs(title: 'Search', searchMode: true),
+      AppRoutes.searchDiscovery,
     );
   }
 

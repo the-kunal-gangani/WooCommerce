@@ -44,6 +44,8 @@ import 'package:magna_data_ai_ecommerce/features/product-details/product_details
 import 'package:magna_data_ai_ecommerce/features/product-details/product_details_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/product-list/product_list_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/product-list/product_list_screen.dart';
+import 'package:magna_data_ai_ecommerce/features/search-discovery/search_discovery_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/search-discovery/search_discovery_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/recently-viewed/recently_viewed_controller.dart';
 import 'package:magna_data_ai_ecommerce/features/recently-viewed/recently_viewed_screen.dart';
 import 'package:magna_data_ai_ecommerce/features/users-profile/user_profile_screen.dart';
@@ -135,6 +137,19 @@ class AppPages {
             serverboatCategoryService: Get.find<CategoryService>(
               tag: 'serverboat',
             ),
+          ),
+        );
+      }),
+    ),
+
+    GetPage(
+      name: AppRoutes.searchDiscovery,
+      page: () => const SearchDiscoveryScreen(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<SearchDiscoveryController>(
+          () => SearchDiscoveryController(
+            Get.find<ProductService>(),
+            Get.find<ProductService>(tag: 'serverboat'),
           ),
         );
       }),
