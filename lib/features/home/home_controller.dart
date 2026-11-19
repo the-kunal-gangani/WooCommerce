@@ -10,6 +10,8 @@ import 'package:magna_data_ai_ecommerce/core/services/recently_viewed_service.da
 import 'package:magna_data_ai_ecommerce/data/models/product.dart';
 import 'package:magna_data_ai_ecommerce/data/models/unified_category.dart';
 import 'package:magna_data_ai_ecommerce/features/product-list/product_list_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/search-discovery/search_discovery_controller.dart';
+import 'package:magna_data_ai_ecommerce/features/search-discovery/search_discovery_screen.dart';
 
 class HomeController extends GetxController {
   HomeController(
@@ -189,8 +191,16 @@ class HomeController extends GetxController {
   }
 
   void openSearch() {
-    Get.toNamed(
-      AppRoutes.searchDiscovery,
+    if (!Get.isRegistered<SearchDiscoveryController>()) {
+      Get.lazyPut<SearchDiscoveryController>(
+        () => SearchDiscoveryController(
+          _magnaProducts,
+          _serverboatProducts,
+        ),
+      );
+    }
+    Get.to(
+      () => const SearchDiscoveryScreen(),
     );
   }
 
