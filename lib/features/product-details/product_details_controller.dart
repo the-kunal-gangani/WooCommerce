@@ -60,7 +60,12 @@ class ProductDetailsController extends GetxController {
 
   Future<void> _load() async {
     try {
-      final fresh = await _service.fetchProduct(_productId);
+      // Select the correct store based on the product's original source.
+      final sourceProduct = product.value;
+      final service = sourceProduct?.source == ProductSource.serverboat
+          ? Get.find<ProductService>(tag: 'serverboat')
+          : _service;
+      final fresh = await service.fetchProduct(_productId);
       product.value = fresh;
       if (quantity.value < fresh.addToCart.minimum) {
         quantity.value = fresh.addToCart.minimum;
@@ -83,13 +88,16 @@ class ProductDetailsController extends GetxController {
   /// Maximum 6 products are displayed.
   Future<void> loadRelatedProducts(Product current) async {
     relatedProducts.clear();
+    final service = current.source == ProductSource.serverboat
+        ? Get.find<ProductService>(tag: 'serverboat')
+        : _service;
     final categoryIds = current.categories
         .where((c) => c.slug != 'uncategorized')
         .map((c) => c.id)
         .toSet();
     if (categoryIds.isEmpty) return;
     try {
-      final result = await _service.fetchProducts(
+      final result = await service.fetchProducts(
         page: 1,
         perPage: 13,
         category: categoryIds.join(','),
@@ -110,8 +118,13 @@ class ProductDetailsController extends GetxController {
   }
 
   Future<void> _loadVariations(int parentId) async {
+    final current = product.value;
+    if (current == null) return;
+    final service = current.source == ProductSource.serverboat
+        ? Get.find<ProductService>(tag: 'serverboat')
+        : _service;
     try {
-      final list = await _service.fetchVariations(parentId);
+      final list = await service.fetchVariations(parentId);
       variations.assignAll({for (final v in list) v.id: v});
       printLog('variations loaded for $parentId: ${list.length}');
     } on ApiException catch (e) {
