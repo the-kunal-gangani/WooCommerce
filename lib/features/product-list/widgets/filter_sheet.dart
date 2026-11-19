@@ -16,16 +16,14 @@ class FilterSheet extends StatefulWidget {
     ProductListController controller,
   ) async {
     controller.loadFilterOptions();
-    final result = await showModalBottomSheet<ProductFilter>(
+
+    await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (_) => FilterSheet(controller: controller),
     );
-    if (result != null) {
-      controller.applyFilter(result);
-    }
   }
 
   @override
@@ -39,13 +37,23 @@ class _FilterSheetState extends State<FilterSheet> {
   static const border = Color(0xFFE6EAF0);
 
   late ProductFilter _draft;
+  late Set<String> _categorySlugs;
+  late Map<String, Set<String>> _attributeSlugs;
 
   ProductListController get _controller => widget.controller;
 
   @override
   void initState() {
     super.initState();
+
     _draft = _controller.filter.value;
+
+    _categorySlugs = Set<String>.from(_controller.selectedCategorySlugs);
+
+    _attributeSlugs = {
+      for (final entry in _controller.selectedAttributeTerms.entries)
+        entry.key: Set<String>.from(entry.value),
+    };
   }
 
   @override
@@ -168,8 +176,8 @@ class _FilterSheetState extends State<FilterSheet> {
                 for (final category in categories)
                   _OptionChip(
                     label: category.name,
-                    selected: _draft.categoryIds.contains(category.id),
-                    onTap: () => _toggleCategory(category.id),
+                    selected: _categorySlugs.contains(category.slug),
+                    onTap: () => _toggleCategory(category.slug),
                   ),
               ],
             ),
@@ -185,11 +193,11 @@ class _FilterSheetState extends State<FilterSheet> {
                   _OptionChip(
                     label: term.name,
                     selected:
-                        _draft.attributeTerms[attribute.taxonomy]?.contains(
-                          term.id,
+                        _attributeSlugs[attribute.taxonomy]?.contains(
+                          term.slug,
                         ) ??
                         false,
-                    onTap: () => _toggleTerm(attribute.taxonomy, term.id),
+                    onTap: () => _toggleTerm(attribute.taxonomy, term.slug),
                   ),
               ],
             ),
@@ -252,26 +260,26 @@ class _FilterSheetState extends State<FilterSheet> {
     );
   }
 
-  void _toggleCategory(int id) {
-    final next = {..._draft.categoryIds};
-    if (!next.add(id)) {
-      next.remove(id);
-    }
-    setState(() => _draft = _draft.copyWith(categoryIds: next));
+  void _toggleCategory(String slug) {
+    setState(() {
+      if (!_categorySlugs.add(slug)) {
+        _categorySlugs.remove(slug);
+      }
+    });
   }
 
-  void _toggleTerm(String taxonomy, int termId) {
-    final terms = {
-      for (final e in _draft.attributeTerms.entries) e.key: {...e.value},
-    };
-    final set = terms.putIfAbsent(taxonomy, () => <int>{});
-    if (!set.add(termId)) {
-      set.remove(termId);
-    }
-    if (set.isEmpty) {
-      terms.remove(taxonomy);
-    }
-    setState(() => _draft = _draft.copyWith(attributeTerms: terms));
+  void _toggleTerm(String taxonomy, String termSlug) {
+    setState(() {
+      final terms = _attributeSlugs.putIfAbsent(taxonomy, () => <String>{});
+
+      if (!terms.add(termSlug)) {
+        terms.remove(termSlug);
+      }
+
+      if (terms.isEmpty) {
+        _attributeSlugs.remove(taxonomy);
+      }
+    });
   }
 
   Widget _buildFooter(BuildContext context) {
@@ -287,8 +295,23 @@ class _FilterSheetState extends State<FilterSheet> {
           children: [
             Expanded(
               child: OutlinedButton(
-                onPressed: () =>
-                    setState(() => _draft = _controller.baseFilter),
+                onPressed: () {
+                  final categorySlug = _controller.args.categorySlug?.trim();
+
+                  setState(() {
+                    _draft = _controller.baseFilter.copyWith(
+                      sort: _controller.filter.value.sort,
+                    );
+
+                    // Preserve the category page's original scope.
+                    _categorySlugs = {
+                      if (categorySlug != null && categorySlug.isNotEmpty)
+                        categorySlug.toLowerCase(),
+                    };
+
+                    _attributeSlugs.clear();
+                  });
+                },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: navy,
                   side: const BorderSide(color: border),
@@ -307,7 +330,15 @@ class _FilterSheetState extends State<FilterSheet> {
             Expanded(
               flex: 2,
               child: FilledButton(
-                onPressed: () => Navigator.of(context).pop(_draft),
+                onPressed: () {
+                  _controller.applyUnifiedSelections(
+                    nextFilter: _draft,
+                    categorySlugs: _categorySlugs,
+                    attributeSlugs: _attributeSlugs,
+                  );
+
+                  Navigator.of(context).pop();
+                },
                 style: FilledButton.styleFrom(
                   backgroundColor: primary,
                   minimumSize: const Size.fromHeight(48),

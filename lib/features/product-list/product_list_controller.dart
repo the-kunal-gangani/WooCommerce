@@ -13,6 +13,8 @@ import 'package:magna_data_ai_ecommerce/data/models/price_info.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product_category.dart';
 import 'package:magna_data_ai_ecommerce/data/models/product_filter.dart';
+import 'package:magna_data_ai_ecommerce/data/models/unified_category.dart';
+import 'package:magna_data_ai_ecommerce/data/models/unified_filter_attribute.dart';
 
 class ProductListArgs {
   const ProductListArgs({
@@ -60,12 +62,16 @@ class ProductListController extends GetxController {
        _serverboatCategoryService =
            serverboatCategoryService ?? _categoryService,
        baseFilter = ProductFilter.fromArgs(
-         categoryId: args.categoryId,
          onSale: args.onSale,
          featured: args.featured,
          orderBy: args.orderBy,
          order: args.order,
-       );
+       ) {
+    final slug = args.categorySlug?.trim().toLowerCase();
+    if (slug != null && slug.isNotEmpty) {
+      selectedCategorySlugs.add(slug);
+    }
+  }
 
   final ProductService _service;
   final CategoryService _categoryService;
@@ -86,8 +92,12 @@ class ProductListController extends GetxController {
   final errorMessage = RxnString();
   final query = ''.obs;
 
-  final categories = <ProductCategory>[].obs;
-  final attributes = <FilterAttribute>[].obs;
+  final RxList<UnifiedCategory> categories = <UnifiedCategory>[].obs;
+  final RxList<UnifiedFilterAttribute> attributes =
+      <UnifiedFilterAttribute>[].obs;
+  final RxSet<String> selectedCategorySlugs = <String>{}.obs;
+  final RxMap<String, Set<String>> selectedAttributeTerms =
+      <String, Set<String>>{}.obs;
   final priceBounds = Rxn<PriceBounds>();
   final isLoadingOptions = false.obs;
   final optionsFailed = false.obs;
@@ -100,6 +110,65 @@ class ProductListController extends GetxController {
   int _page = 1;
   bool _optionsLoaded = false;
   CancelToken? _cancelToken;
+
+  Set<int> _categoryIdsFor(ProductSource source) {
+    final ids = <int>{};
+
+    // Preserve the category supplied when opening a category page.
+    final argumentId = source == ProductSource.magna
+        ? args.magnaCategoryId
+        : args.serverboatCategoryId;
+    if (argumentId != null) {
+      ids.add(argumentId);
+    }
+
+    for (final slug in selectedCategorySlugs) {
+      final category = categories.firstWhereOrNull((item) => item.slug == slug);
+
+      final id = category?.categoryIdFor(source);
+      if (id != null) ids.add(id);
+    }
+
+    return ids;
+  }
+
+  Map<String, Set<int>> _attributeIdsFor(ProductSource source) {
+    final result = <String, Set<int>>{};
+
+    for (final entry in selectedAttributeTerms.entries) {
+      final attribute = attributes.firstWhereOrNull(
+        (item) => item.taxonomy == entry.key,
+      );
+
+      if (attribute == null || attribute.idFor(source) == null) {
+        continue;
+      }
+
+      final ids = <int>{};
+
+      for (final slug in entry.value) {
+        final term = attribute.terms.firstWhereOrNull(
+          (item) => item.slug == slug,
+        );
+
+        final id = term?.idFor(source);
+        if (id != null) ids.add(id);
+      }
+
+      if (ids.isNotEmpty) {
+        result[entry.key] = ids;
+      }
+    }
+
+    return result;
+  }
+
+  ProductFilter _filterFor(ProductSource source) {
+    return filter.value.copyWith(
+      categoryIds: _categoryIdsFor(source),
+      attributeTerms: _attributeIdsFor(source),
+    );
+  }
 
   @override
   void onInit() {
@@ -120,7 +189,6 @@ class ProductListController extends GetxController {
   List<ActiveFilterChip> get activeChips {
     final current = filter.value;
     final chips = <ActiveFilterChip>[];
-
     for (final id in current.categoryIds) {
       if (baseFilter.categoryIds.contains(id)) {
         continue;
@@ -136,7 +204,6 @@ class ProductListController extends GetxController {
         ),
       );
     }
-
     if (current.hasPrice) {
       chips.add(
         ActiveFilterChip(
@@ -147,7 +214,6 @@ class ProductListController extends GetxController {
         ),
       );
     }
-
     if (current.onSale && !baseFilter.onSale) {
       chips.add(
         ActiveFilterChip(
@@ -156,7 +222,6 @@ class ProductListController extends GetxController {
         ),
       );
     }
-
     if (current.featured && !baseFilter.featured) {
       chips.add(
         ActiveFilterChip(
@@ -165,7 +230,6 @@ class ProductListController extends GetxController {
         ),
       );
     }
-
     for (final entry in current.attributeTerms.entries) {
       for (final termId in entry.value) {
         chips.add(
@@ -186,7 +250,6 @@ class ProductListController extends GetxController {
         );
       }
     }
-
     return chips;
   }
 
@@ -202,6 +265,7 @@ class ProductListController extends GetxController {
   }
 
   void clearFilters() {
+    clearUnifiedSelections();
     applyFilter(baseFilter.copyWith(sort: filter.value.sort));
   }
 
@@ -214,32 +278,92 @@ class ProductListController extends GetxController {
     }
     isLoadingOptions.value = true;
     optionsFailed.value = false;
-
-    final (attributeResult, categoryResult, boundsResult) = await (
+    final results = await (
       _guard(_service.fetchFilterAttributes()),
+      _guard(_serverboatService.fetchFilterAttributes()),
       _guard(_categoryService.fetchCategories()),
-      _guard(_service.fetchPriceBounds(categoryIds: baseFilter.categoryIds)),
+      _guard(_serverboatCategoryService.fetchCategories()),
+      _guard(
+        _service.fetchPriceBounds(
+          categoryIds: _categoryIdsFor(ProductSource.magna),
+        ),
+      ),
+      _guard(
+        _serverboatService.fetchPriceBounds(
+          categoryIds: _categoryIdsFor(ProductSource.serverboat),
+        ),
+      ),
     ).wait;
-
-    if (attributeResult != null) {
-      attributes.assignAll(attributeResult);
-    }
-    if (categoryResult != null) {
-      categories.assignAll(
-        categoryResult.where((c) => c.slug != 'uncategorized'),
+    final magnaAttributes = results.$1 ?? <FilterAttribute>[];
+    final serverboatAttributes = results.$2 ?? <FilterAttribute>[];
+    final magnaCategories = results.$3 ?? <ProductCategory>[];
+    final serverboatCategories = results.$4 ?? <ProductCategory>[];
+    final magnaBounds = results.$5;
+    final serverboatBounds = results.$6;
+    attributes.assignAll(
+      UnifiedFilterAttribute.merge(
+        magna: magnaAttributes,
+        serverboat: serverboatAttributes,
+      ),
+    );
+    categories.assignAll(
+      UnifiedCategory.merge(
+        magna: magnaCategories
+            .where((category) => category.slug != 'uncategorized')
+            .toList(),
+        serverboat: serverboatCategories
+            .where((category) => category.slug != 'uncategorized')
+            .toList(),
+      ),
+    );
+    if (magnaBounds != null || serverboatBounds != null) {
+      final availableBounds = [
+        if (magnaBounds != null) magnaBounds,
+        if (serverboatBounds != null) serverboatBounds,
+      ];
+      priceBounds.value = PriceBounds(
+        min: availableBounds
+            .map((bounds) => bounds.min)
+            .reduce((a, b) => a < b ? a : b),
+        max: availableBounds
+            .map((bounds) => bounds.max)
+            .reduce((a, b) => a > b ? a : b),
+        currency: magnaBounds?.currency ?? serverboatBounds!.currency,
       );
     }
-    if (boundsResult != null) {
-      priceBounds.value = boundsResult;
-    }
-
     final failed =
-        attributeResult == null &&
-        categoryResult == null &&
-        boundsResult == null;
+        results.$1 == null &&
+        results.$2 == null &&
+        results.$3 == null &&
+        results.$4 == null &&
+        results.$5 == null &&
+        results.$6 == null;
     optionsFailed.value = failed;
     _optionsLoaded = !failed;
     isLoadingOptions.value = false;
+  }
+
+  void applyUnifiedSelections({
+    required ProductFilter nextFilter,
+    required Set<String> categorySlugs,
+    required Map<String, Set<String>> attributeSlugs,
+  }) {
+    selectedCategorySlugs.assignAll(categorySlugs);
+    selectedAttributeTerms.assignAll({
+      for (final entry in attributeSlugs.entries)
+        entry.key: Set<String>.from(entry.value),
+    });
+    applyFilter(
+      nextFilter.copyWith(
+        categoryIds: <int>{},
+        attributeTerms: <String, Set<int>>{},
+      ),
+    );
+  }
+
+  void clearUnifiedSelections() {
+    selectedCategorySlugs.clear();
+    selectedAttributeTerms.clear();
   }
 
   Future<void> refreshList() async {
@@ -314,7 +438,9 @@ class ProductListController extends GetxController {
   }
 
   String _categoryName(int id) {
-    final match = categories.firstWhereOrNull((c) => c.id == id);
+    final match = categories.firstWhereOrNull(
+      (c) => c.magnaCategoryId == id || c.serverboatCategoryId == id,
+    );
     return match?.name ?? 'Category';
   }
 
@@ -324,7 +450,7 @@ class ProductListController extends GetxController {
         continue;
       }
       for (final term in attribute.terms) {
-        if (term.id == termId) {
+        if (term.magnaTermId == termId || term.serverboatTermId == termId) {
           return term.name;
         }
       }
